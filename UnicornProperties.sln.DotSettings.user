@@ -1,0 +1,14 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=a83c5904_002Dd2a7_002D4b07_002D946c_002D110fc258fb55/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="All tests from CreateContractFunctionTest.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Or&gt;
+    &lt;ProjectFile&gt;DCFD76E6-4C0C-4169-8C6B-7E8883ECE240/f:CreateContractFunctionTest.cs&lt;/ProjectFile&gt;
+    &lt;TestAncestor&gt;
+      &lt;TestId&gt;xUnit::DCFD76E6-4C0C-4169-8C6B-7E8883ECE240::net6.0::Unicorn.Contracts.Tests.UpdateContractFunctionTest.UpdateContractPublishesApprovedContractStatusChangedEvent&lt;/TestId&gt;
+    &lt;/TestAncestor&gt;
+  &lt;/Or&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ede9962b_002D85f1_002D45a2_002Da461_002D639e0930c912/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="UpdateContractPublishesApprovedContractStatusChangedEvent" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::DCFD76E6-4C0C-4169-8C6B-7E8883ECE240::net6.0::Unicorn.Contracts.Tests.UpdateContractFunctionTest.UpdateContractPublishesApprovedContractStatusChangedEvent&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

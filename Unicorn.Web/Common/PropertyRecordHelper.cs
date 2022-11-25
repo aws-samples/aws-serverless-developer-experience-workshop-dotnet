@@ -1,0 +1,38 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
+namespace Unicorn.Web.Common;
+
+/// <summary>
+/// This class contains helper methods for PropertyRecord class
+/// </summary>
+public static class PropertyRecordHelper
+{
+    public static string GetPartitionKey(string country, string city)
+    {
+        var pkDetails = $"{country}#{city}".Replace(' ', '-').ToLower();
+        return $"property#{pkDetails}";
+    }
+
+    public static string GetSortKey(string street, string propertyNumber)
+    {
+        return $"{street}#{propertyNumber}".Replace(' ', '-').ToLower();
+    }
+
+    public static PropertyDto ToDto(PropertyRecord property)
+    {
+        return new PropertyDto
+        {
+            Country = property.Country,
+            City = property.City,
+            Street = property.Street,
+            PropertyNumber = property.PropertyNumber,
+            Description = property.Description,
+            Contract = property.Contract,
+            ListPrice = property.ListPrice,
+            Currency = property.Currency,
+            Images = property.Images,
+            Status = property.Status
+        };
+    }
+}

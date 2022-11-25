@@ -1,0 +1,54 @@
+{
+  "Records": [
+    {
+      "eventID": "ce16edd66e3812941e0d721e877c752a",
+      "eventName": "MODIFY",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "ap-southeast-2",
+      "dynamodb": {
+        "ApproximateCreationDateTime": 1661391844,
+        "Keys": {
+          "PropertyId": {
+            "S": "usa/anytown/main-street/111"
+          }
+        },
+        "NewImage": {
+          "ContractLastModifiedOn": {
+            "S": "25/08/2022 01:44:02"
+          },
+          "ContractId": {
+            "S": "ef3f01a5-79ec-411a-b59a-7dbb19208ead"
+          },
+          "ContractStatus": {
+            "S": "APPROVED"
+          },
+          "PropertyId": {
+            "S": "usa/anytown/main-street/111"
+          }
+        },
+        "OldImage": {
+          "ContractLastModifiedOn": {
+            "S": "24/08/2022 15:53:26"
+          },
+          "sfn_wait_approved_task_token": {
+            "S": "AQDIAAAAKgAAAAMAAAAAAAAAAapnwdMR3Z7RAg3IavSq2hbHt+CZPIQYaakFO6Em9Ik00VsGcaznxotIUGB2t7kihvuu/ffeoF+Z4yg4dggTxtzVwvRJwUDQr33/s/LhJyvEfNS57PXCv/CYFssJZ+28FRCAYbGekKaopYhaUlvq0taLGMaEfIbRBeLUmLHInDkPPDbwTA==N0LRrCP3bIFW1MPkMQC3kd35p8yflvpThHCeviqe3qeyKBX03+ziocuyvNHVpktMuECnHL3MN9a6BfpSM1KItYI+qdIC74ls83ALSjjOs8G8pOz4OudcliLYAvmZPRQXvFaw6aSMLfJJ7xRpEFSBwj1zDzbadMLtfudG78pmZX1m75/idMU5gz0UPkC87bVQN6Kyjl7obxAeUO4aoqGJeNz6WbJQtrsUhiQWVEH/AwjUAj9Q0DwRqRPqeWyrv4MIMKea/Xu9vhXbcS+zPWPq8onN9fyAqoMNh64K6wSGWxtAbaaByKxNpQu7o9ho/Iu/ME0KOAqyUK6vcnXOpIwIoMAZiG34KF4UnQsD0gIokQcGLbehMGRixvEJMDZIloLxkuH0jvpIvD5xokGxpHwiVMISi2XRJ92nnGmWTCLWqsqJlsg4We6snJp0Akw2w1Nt41lgY8kWkjxHNWEHDIMjzx1zeWiVa9b9aDDcckb71ouknJCN4gbxVs+yP30M97qnCEmMrc25Yq7cEXLhu5Dh"
+          },
+          "ContractId": {
+            "S": "ef3f01a5-79ec-411a-b59a-7dbb19208ead"
+          },
+          "ContractStatus": {
+            "S": "DRAFT"
+          },
+          "PropertyId": {
+            "S": "usa/anytown/main-street/111"
+          }
+        },
+        "SequenceNumber": "6547000000000005631781392",
+        "SizeBytes": 1869,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      },
+      "eventSourceARN": "arn:aws:dynamodb:ap-southeast-2:538510314095:table/aws-unicorn-properties-properties-service-local-ContractStatusTable-GPGCVR510KFA/stream/2022-08-23T15:46:44.107"
+    }
+  ]
+}
