@@ -13,6 +13,7 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Util;
 using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
@@ -62,6 +63,7 @@ namespace Unicorn.Contracts.ContractService
         /// <param name="context">The context for the Lambda function.</param>
         /// <returns>API Gateway Lambda Proxy Response.</returns>
         [Tracing]
+        [Metrics(CaptureColdStart = true)]
         [Logging(LogEvent = true, CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent,
             ILambdaContext context)

@@ -9,6 +9,7 @@ using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
@@ -54,6 +55,7 @@ public class WaitForContractApprovalFunction
     /// <param name="input">The input payload</param>
     /// <param name="context">Lambda Context runtime methods and attributes</param>
     [Logging(LogEvent = true)]
+    [Metrics(CaptureColdStart = true)]
     [Tracing]
     public async Task FunctionHandler(object input, ILambdaContext context)
     {

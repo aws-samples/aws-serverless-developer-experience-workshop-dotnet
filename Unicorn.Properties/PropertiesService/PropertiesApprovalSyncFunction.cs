@@ -12,6 +12,7 @@ using Amazon.StepFunctions.Model;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
@@ -69,6 +70,7 @@ public class PropertiesApprovalSyncFunction
     /// <param name="dynamoEvent">Instance of <see cref="DynamoDBEvent"/></param>
     /// <param name="context">Lambda Context runtime methods and attributes</param>
     [Logging(LogEvent = true)]
+    [Metrics(CaptureColdStart = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public async Task FunctionHandler(DynamoDBEvent dynamoEvent, ILambdaContext context)
     {
