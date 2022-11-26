@@ -110,9 +110,6 @@ public class CreateContractFunction
         // Create entry in DDB for new contract
         await CreateContract(contract).ConfigureAwait(false);
         
-        // Annotate trace with contract status
-        // tracer.put_annotation(key="ContractStatus", value=contract["contract_status"])
-        
         // Publish ContractStatusChanged event
         await _publisher.PublishEvent(contract).ConfigureAwait(false);
         
