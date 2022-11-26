@@ -9,6 +9,7 @@ using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
+using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
@@ -55,6 +56,7 @@ public class ContractExistsCheckerFunction
     /// <param name="context">Lambda Context runtime methods and attributes</param>
     /// <exception cref="ContractStatusNotFoundException"></exception>
     [Logging(LogEvent = true)]
+    [Metrics(CaptureColdStart = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public async Task FunctionHandler(object input, ILambdaContext context)
     {
