@@ -15,6 +15,7 @@ using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Tracing;
+using AWS.Lambda.Powertools.Metrics;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -68,6 +69,7 @@ public class CreateContractFunction
     /// <param name="context">The context for the Lambda function.</param>
     /// <returns>API Gateway Lambda Proxy Response.</returns>
     [Logging(LogEvent = true)]
+    [Metrics(CaptureColdStart = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent,
         ILambdaContext context)
@@ -96,7 +98,7 @@ public class CreateContractFunction
             };
         }
 
-        // new contract
+        // new contract 
         var contract = new Contract
         {
             PropertyId = contractRequest.PropertyId,
@@ -104,14 +106,12 @@ public class CreateContractFunction
             Address = contractRequest.Address,
             SellerName = contractRequest.SellerName
         };
+        
         Logger.AppendKey("Contract", contract);
         Logger.LogInformation("Creating new contract");
 
         // Create entry in DDB for new contract
         await CreateContract(contract).ConfigureAwait(false);
-        
-        // Annotate trace with contract status
-        // tracer.put_annotation(key="ContractStatus", value=contract["contract_status"])
         
         // Publish ContractStatusChanged event
         await _publisher.PublishEvent(contract).ConfigureAwait(false);
