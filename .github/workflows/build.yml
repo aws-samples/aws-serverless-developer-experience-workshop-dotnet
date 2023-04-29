@@ -1,0 +1,37 @@
+name: Build .NET
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET 6.0
+        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
+        with:
+          dotnet-version: 6.0.405
+      - name: Install solution dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Test & Code Coverage
+        run: dotnet test --collect:"XPlat Code Coverage" -r ./codecov --no-restore --verbosity normal
+      # - name: Codecov
+      #   uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # 3.1.0
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     flags: unittests
+      #     fail_ci_if_error: true
+      #     name: codecov-lambda-powertools-dotnet
+      #     verbose: true
+      #     directory: ./libraries/codecov
