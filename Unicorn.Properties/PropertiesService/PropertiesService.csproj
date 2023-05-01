@@ -12,6 +12,9 @@
         <AssemblyName>Unicorn.Properties.PropertiesService</AssemblyName>
         <RootNamespace>Unicorn.Properties.PropertiesService</RootNamespace>
     </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <Optimize>true</Optimize>
+    </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="4.3.0" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
