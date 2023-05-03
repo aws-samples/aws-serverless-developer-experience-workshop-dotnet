@@ -72,7 +72,7 @@ public class PropertiesApprovalSyncFunction
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-    public async Task FunctionHandler(DynamoDBEvent dynamoEvent, ILambdaContext context)
+    public async Task FunctionHandler(DynamoDBEvent? dynamoEvent, ILambdaContext context)
     {
         // process DDB
         foreach (var record in dynamoEvent.Records)

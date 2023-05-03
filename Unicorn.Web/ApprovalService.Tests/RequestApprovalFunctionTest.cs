@@ -15,6 +15,8 @@ public class RequestApprovalFunctionTest
     public RequestApprovalFunctionTest()
     {
         TestHelpers.SetEnvironmentVariables();
+        // Set env variable for Powertools Metrics 
+        Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","ContractService");
     }
     
     [Fact]

@@ -1,18 +1,20 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.APIGatewayEvents;
+using Moq;
+using Unicorn.Contracts.Tests;
 using Xunit;
 using Xunit.Abstractions;
-using Moq;
-using Unicorn.Contracts.ContractService;
 
-namespace Unicorn.Contracts.Tests;
+namespace Unicorn.Contracts.ContractService.Tests;
 
+[Collection("Sequential")]
 public class CreateContractFunctionTest
 {
     private readonly ITestOutputHelper _testOutputHelper;
@@ -20,12 +22,14 @@ public class CreateContractFunctionTest
     public CreateContractFunctionTest(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
+        
+        // Set env variable for Powertools Metrics 
+        Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","ContractService");
     }
 
     [Fact]
     public async Task CreateValidContractPublishesDraftContractStatusChangedEvent()
     {
-        // Arrange
         var request = TestHelpers.LoadApiGatewayProxyRequest("./events/create_valid_event.json");
         
         var mockDynamoDbContext = new Mock<IDynamoDBContext>();
