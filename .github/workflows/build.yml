@@ -24,14 +24,8 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --configuration Release --no-restore
-      - name: Test & Code Coverage
-        run: dotnet test --collect:"XPlat Code Coverage" -r ./codecov --no-restore --verbosity normal
-      # - name: Codecov
-      #   uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # 3.1.0
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     flags: unittests
-      #     fail_ci_if_error: true
-      #     name: codecov-lambda-powertools-dotnet
-      #     verbose: true
-      #     directory: ./libraries/codecov
+      - name: Test
+        env:
+          AWS_DEFAULT_REGION: us-west-2
+          AWS_REGION: us-west-2
+        run: dotnet test
