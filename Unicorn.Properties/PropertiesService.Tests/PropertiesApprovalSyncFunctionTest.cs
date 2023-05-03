@@ -14,6 +14,7 @@ namespace Unicorn.Properties.PropertiesService.Tests;
 public class PropertiesApprovalSyncFunctionTest
 {
     private readonly ITestOutputHelper _testOutputHelper;
+
     private const string Token = "AQDIAAAAKgAAAAMAAAAAAAAAAapnwdMR3Z7RAg3IavSq2hbHt+CZPIQYaakFO6Em9Ik00VsGcaznxo" +
                                  "tIUGB2t7kihvuu/ffeoF+Z4yg4dggTxtzVwvRJwUDQr33/s/LhJyvEfNS57PXCv/CYFssJZ+28FRCAYb" +
                                  "GekKaopYhaUlvq0taLGMaEfIbRBeLUmLHInDkPPDbwTA==N0LRrCP3bIFW1MPkMQC3kd35p8yflvpThH" +
@@ -28,9 +29,11 @@ public class PropertiesApprovalSyncFunctionTest
     public PropertiesApprovalSyncFunctionTest(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
+        // Set env variable for Powertools Metrics 
+        Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "ContractService");
     }
 
-    [Fact]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+    [Fact]
     public void StatusIsDraftSyncShouldNotSendTaskSuccess()
     {
         // Setup
@@ -44,13 +47,13 @@ public class PropertiesApprovalSyncFunctionTest
             ContractLastModifiedOn = DateTime.Today,
             SfnWaitApprovedTaskToken = null
         };
-            
+
         var mockDynamoDbContext = new Mock<IDynamoDBContext>();
-            
+
         mockDynamoDbContext
             .Setup(x => x.LoadAsync<ContractStatusItem>(It.IsAny<string>(), CancellationToken.None).Result)
             .Returns(retContractStatusItem);
-            
+
         var mockStepFunctionsClient = new Mock<AmazonStepFunctionsClient>();
 
         var context = TestHelpers.NewLambdaContext();
@@ -63,14 +66,14 @@ public class PropertiesApprovalSyncFunctionTest
         mockStepFunctionsClient.Verify(
             client => client.SendTaskSuccessAsync(It.IsAny<SendTaskSuccessRequest>(),
                 It.IsAny<CancellationToken>()), Times.Never);
-            
     }
 
 
     [Fact]
     public Task StatusIsApprovedNoTokenSyncShouldNotSendTaskSuccess()
     {
-        var ddbEvent = TestHelpers.LoadDynamoDbEventSource("./events/StreamEvents/contract_status_changed_approved.json");
+        var ddbEvent =
+            TestHelpers.LoadDynamoDbEventSource("./events/StreamEvents/contract_status_changed_approved.json");
 
         var retContractStatusItem = new ContractStatusItem
         {
@@ -80,12 +83,12 @@ public class PropertiesApprovalSyncFunctionTest
             ContractLastModifiedOn = DateTime.Today,
             SfnWaitApprovedTaskToken = null
         };
-            
+
         var mockDynamoDbContext = new Mock<IDynamoDBContext>();
         mockDynamoDbContext
             .Setup(x => x.LoadAsync<ContractStatusItem>(It.IsAny<string>(), CancellationToken.None).Result)
             .Returns(retContractStatusItem);
-            
+
         var mockStepFunctionsClient = new Mock<AmazonStepFunctionsClient>();
 
         var context = TestHelpers.NewLambdaContext();
@@ -106,7 +109,9 @@ public class PropertiesApprovalSyncFunctionTest
     [Fact]
     public Task StatusIsDraftWithTokenSyncShouldNotSendTaskSuccess()
     {
-        var ddbEvent = TestHelpers.LoadDynamoDbEventSource("./events/StreamEvents/contract_status_draft_waiting_for_approval.json");
+        var ddbEvent =
+            TestHelpers.LoadDynamoDbEventSource(
+                "./events/StreamEvents/contract_status_draft_waiting_for_approval.json");
 
         var retContractStatusItem = new ContractStatusItem
         {
@@ -116,12 +121,12 @@ public class PropertiesApprovalSyncFunctionTest
             ContractLastModifiedOn = DateTime.Today,
             SfnWaitApprovedTaskToken = Token
         };
-            
+
         var mockDynamoDbContext = new Mock<IDynamoDBContext>();
         mockDynamoDbContext
             .Setup(x => x.LoadAsync<ContractStatusItem>(It.IsAny<string>(), CancellationToken.None).Result)
             .Returns(retContractStatusItem);
-            
+
         var mockStepFunctionsClient = new Mock<AmazonStepFunctionsClient>();
 
         var context = TestHelpers.NewLambdaContext();
@@ -137,13 +142,15 @@ public class PropertiesApprovalSyncFunctionTest
 
         return Task.CompletedTask;
     }
-        
-        
+
+
     [Fact]
     public Task StatusIsApprovedWithTokenSyncShouldSendTaskSuccess()
     {
-        var ddbEvent = TestHelpers.LoadDynamoDbEventSource("./events/StreamEvents/contract_status_changed_approved_waiting_for_approval.json");
-            
+        var ddbEvent =
+            TestHelpers.LoadDynamoDbEventSource(
+                "./events/StreamEvents/contract_status_changed_approved_waiting_for_approval.json");
+
         var retContractStatusItem = new ContractStatusItem
         {
             PropertyId = "usa/anytown/main-street/999",
@@ -152,12 +159,12 @@ public class PropertiesApprovalSyncFunctionTest
             ContractLastModifiedOn = DateTime.Today,
             SfnWaitApprovedTaskToken = Token
         };
-        
+
         var mockStepFunctionsClient = new Mock<AmazonStepFunctionsClient>();
         var mockDynamoDbContext = new Mock<IDynamoDBContext>();
         mockDynamoDbContext
-            .Setup(x => 
-                x.LoadAsync<ContractStatusItem>(It.IsAny<string>(), 
+            .Setup(x =>
+                x.LoadAsync<ContractStatusItem>(It.IsAny<string>(),
                     CancellationToken.None).Result)
             .Returns(retContractStatusItem);
         var context = TestHelpers.NewLambdaContext();
@@ -165,7 +172,7 @@ public class PropertiesApprovalSyncFunctionTest
         var function =
             new PropertiesApprovalSyncFunction(mockStepFunctionsClient.Object, mockDynamoDbContext.Object);
         var handler = function.FunctionHandler(ddbEvent, context);
-        
+
         mockStepFunctionsClient.Verify(
             client => client.SendTaskSuccessAsync(It.IsAny<SendTaskSuccessRequest>(),
                 It.IsAny<CancellationToken>()), Times.Once);

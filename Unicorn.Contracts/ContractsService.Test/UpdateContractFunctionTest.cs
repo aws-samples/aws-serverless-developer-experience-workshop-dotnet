@@ -22,14 +22,14 @@ public class UpdateContractFunctionTest
     public UpdateContractFunctionTest(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
+        // Set env variable for Powertools Metrics 
+        Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","ContractService");
     }
     
     [Trait("Category", "MetricsImplementation")]
     [Fact]
     public async Task UpdateContractPublishesApprovedContractStatusChangedEvent()
     {
-        // Arrange
-        Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE","ContractService");
         var request = TestHelpers.LoadApiGatewayProxyRequest("./events/update_valid_event.json");
         
         var mockDynamoDbContext = new Mock<IDynamoDBContext>();
