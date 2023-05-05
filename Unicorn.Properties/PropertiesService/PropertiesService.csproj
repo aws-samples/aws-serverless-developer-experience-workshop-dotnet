@@ -24,8 +24,8 @@
         <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.0.1" />
         <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.0.1" />
         <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.0.1" />
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.102.27" />
-        <PackageReference Include="AWSSDK.StepFunctions" Version="3.7.102.86" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.102.38" />
+        <PackageReference Include="AWSSDK.StepFunctions" Version="3.7.102.97" />
         <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.12.0" />
     </ItemGroup>
 </Project>
