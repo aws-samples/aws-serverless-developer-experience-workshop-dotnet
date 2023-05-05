@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD041 MD043 -->
 **Issue number:**
 
 ## Summary
@@ -19,19 +18,6 @@ Please leave checklist items unchecked if they do not apply to your change.
 * [ ] Changes have been tested
 * [ ] Changes are documented
 * [ ] PR title follows [conventional commit semantics](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-dotnet/blob/develop/.github/semantic.yml)
-
-
-<details>
-<summary>Is this a breaking change?</summary>
-
-**RFC issue number**:
-
-Checklist:
-
-* [ ] Migration process documented
-* [ ] Implement warnings (if it can live side by side)
-
-</details>
 
 ## Acknowledgment
 
