@@ -14,7 +14,7 @@ numberOfReviewers: 1
 
 # A list of assignees, overrides reviewers if set
 # assignees:
-  - @aws-samples/aws-serverless-developer-experience-workshop-dotnet
+#   - sliedig
 
 # A number of assignees to add to the pull request
 # Set to 0 to add all of the assignees.
