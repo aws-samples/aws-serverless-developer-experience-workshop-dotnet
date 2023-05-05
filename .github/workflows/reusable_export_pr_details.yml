@@ -39,7 +39,7 @@ on:
 jobs:
   export_pr_details:
   
-    if: inputs.workflow_origin == 'awslabs/aws-lambda-powertools-dotnet'
+    if: inputs.workflow_origin == 'aws-samples/aws-serverless-developer-experience-workshop-dotnet'
     runs-on: ubuntu-latest
     env:
       FILENAME: pr.txt
