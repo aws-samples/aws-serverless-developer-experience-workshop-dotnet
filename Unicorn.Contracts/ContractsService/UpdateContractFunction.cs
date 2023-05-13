@@ -12,6 +12,7 @@ using Amazon.EventBridge;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Util;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
@@ -25,12 +26,17 @@ namespace Unicorn.Contracts.ContractService
     public class UpdateContractFunction
     {
         private readonly IDynamoDBContext _dynamoDbContext;
+        private readonly IPublisher _publisher;
 
         /// <summary>
         /// Default constructor for CreateContractFunction
         /// </summary>
         public UpdateContractFunction()
         {
+            AWSSDKHandler.RegisterXRayForAllServices();
+
+            _publisher = new Publisher();
+            
             var dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE");
             if (string.IsNullOrEmpty(dynamodbTable))
             {
@@ -45,15 +51,14 @@ namespace Unicorn.Contracts.ContractService
         }
 
         /// <summary>
-        /// 
+        /// Testing constructor for UpdateContractFunction
         /// </summary>
-        /// <param name="dynamoDbContext"></param>
-        /// <param name="eventBridgeClient"></param>
-        /// <param name="serviceNamespace"></param>
-        public UpdateContractFunction(IDynamoDBContext dynamoDbContext, AmazonEventBridgeClient eventBridgeClient,
-            string serviceNamespace)
+        /// <param name="dynamoDbContext">Instance of IDynamoDbContext</param>
+        /// <param name="publisher">Instance of IPublisher</param>
+        public UpdateContractFunction(IDynamoDBContext dynamoDbContext, IPublisher publisher)
         {
             _dynamoDbContext = dynamoDbContext;
+            _publisher = publisher;
         }
 
         /// <summary>
@@ -82,10 +87,9 @@ namespace Unicorn.Contracts.ContractService
 
             // Create entry in DDB for new contract
             await UpdateContract(existingContract).ConfigureAwait(false);
-
+            
             // Publish ContractStatusChanged event
-            var publisher = new Publisher();
-            await publisher.PublishEvent(existingContract);
+            await _publisher.PublishEvent(existingContract).ConfigureAwait(false);
 
             // return generated contract ID back to user:
             return new APIGatewayProxyResponse

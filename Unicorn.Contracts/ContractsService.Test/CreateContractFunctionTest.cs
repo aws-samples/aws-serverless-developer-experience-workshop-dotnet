@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.APIGatewayEvents;
 using Moq;
-using Unicorn.Contracts.Tests;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -30,6 +29,7 @@ public class CreateContractFunctionTest
     [Fact]
     public async Task CreateValidContractPublishesDraftContractStatusChangedEvent()
     {
+        // Arrange
         var request = TestHelpers.LoadApiGatewayProxyRequest("./events/create_valid_event.json");
         
         var mockDynamoDbContext = new Mock<IDynamoDBContext>();

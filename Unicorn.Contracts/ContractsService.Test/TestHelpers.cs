@@ -9,7 +9,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.TestUtilities;
 
-namespace Unicorn.Contracts.Tests;
+namespace Unicorn.Contracts.ContractService.Tests;
 
 public static class TestHelpers
 {
