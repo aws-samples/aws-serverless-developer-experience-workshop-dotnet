@@ -59,7 +59,7 @@ public class ContentIntegrityValidatorFunction
         }
         
         var jsonObject = JsonObject.Create(document.RootElement);
-        jsonObject.Add("ValidationResult", status);
+        jsonObject.Add("ValidationResult", status);  //TODO: review this implementation
         return jsonObject;
     }
 }
