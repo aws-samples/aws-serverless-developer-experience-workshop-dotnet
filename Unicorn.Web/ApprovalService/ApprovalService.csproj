@@ -6,6 +6,8 @@
         <Nullable>enable</Nullable>
         <AssemblyName>Unicorn.Web.ApprovalService</AssemblyName>
         <RootNamespace>Unicorn.Web.ApprovalService</RootNamespace>
+        <OutputType>Library</OutputType>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,12 +15,12 @@
         <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="4.3.0" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.1" />
-        <PackageReference Include="AWS.Lambda.Powertools.Common" Version="1.1.0" />
-        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.1.0" />
-        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.2.0" />
-        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.1.0" />
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.103" />
-        <PackageReference Include="AWSSDK.EventBridge" Version="3.7.102.15" />
+        <PackageReference Include="AWS.Lambda.Powertools.Common" Version="1.1.1" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.1.1" />
+        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.3.2" />
+        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.1.1" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.200.9" />
+        <PackageReference Include="AWSSDK.EventBridge" Version="3.7.200.10" />
         <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.12.0" />
     </ItemGroup>
 
