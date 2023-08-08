@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.EventBridge;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Util;
@@ -17,9 +16,6 @@ using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-// [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace Unicorn.Contracts.ContractService
 {
@@ -138,14 +134,14 @@ namespace Unicorn.Contracts.ContractService
         {
             try
             {
-                Console.WriteLine($"Getting contract {propertyId}");
+                Logger.LogInformation($"Getting contract {propertyId}");
                 var contract = await _dynamoDbContext.LoadAsync<Contract>(propertyId).ConfigureAwait(false);
-                Console.WriteLine($"Found contact: {contract != null}");
+                Logger.LogInformation($"Found contact: {contract != null}");
                 return contract;
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error loading contract {propertyId}: {e.Message}");
+                Logger.LogError($"Error loading contract {propertyId}: {e.Message}");
                 return null;
             }
         }
@@ -160,12 +156,12 @@ namespace Unicorn.Contracts.ContractService
         {
             try
             {
-                Console.WriteLine($"Saving contract with id {contract.PropertyId}");
+                Logger.LogInformation($"Saving contract with id {contract.PropertyId}");
                 await _dynamoDbContext.SaveAsync(contract).ConfigureAwait(false);
             }
             catch (AmazonDynamoDBException e)
             {
-                Console.WriteLine(e);
+                Logger.LogError(e);
                 throw;
             }
         }

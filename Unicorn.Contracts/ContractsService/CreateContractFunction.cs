@@ -196,6 +196,9 @@ public class CreateContractFunction
         {
             Logger.LogInformation($"Saving contract for Property ID: {contract.PropertyId}");
             await _dynamoDbContext.SaveAsync(contract);
+            
+            // Add custom metric for "New Contracts"
+            Metrics.AddMetric("NewContracts", 1, MetricUnit.Count, MetricResolution.Standard);
         }
         catch (Exception e)
         {
