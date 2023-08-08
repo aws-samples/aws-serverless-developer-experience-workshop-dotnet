@@ -1,4 +1,7 @@
-﻿using System.Net;
+﻿// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+
+using System.Net;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.EventBridge;
@@ -21,15 +24,13 @@ public class RequestApprovalFunctionTest
     
     [Fact]
     public async Task RequestApprovalFunction_WhenPropertyFound_SendsApprovalRequest()
-    {
+    {        
         // Arrange
         var request = TestHelpers.LoadApiGatewayProxyRequest("./events/request_approval_event.json");
         var context = TestHelpers.NewLambdaContext();
         
         var dynamoDbContext = new Mock<IDynamoDBContext>();
         var eventBindingClient = new Mock<IAmazonEventBridge>();
-        var eventBusName = Guid.NewGuid().ToString();
-        var serviceNamespace = Guid.NewGuid().ToString();
 
         var searchResult = new List<PropertyRecord>
         {
@@ -39,14 +40,19 @@ public class RequestApprovalFunctionTest
                 City = "Anytown",
                 Street = "Main Street",
                 PropertyNumber = "123",
-                Status = "NEW"
+                ListPrice = 2000000.00M,
+                Images = new() { "image1.jpg", "image2.jpg", "image3.jpg" }
             }
         };
 
         dynamoDbContext.Setup(c =>
                 c.FromQueryAsync<PropertyRecord>(It.IsAny<QueryOperationConfig>(), It.IsAny<DynamoDBOperationConfig>()))
             .Returns(TestHelpers.NewDynamoDBSearchResult(searchResult));
-        
+
+        // dynamoDbContext.Setup(c => 
+        //         c.SaveAsync(It.IsAny<PropertyRecord>(), It.IsAny<CancellationToken>()).ConfigureAwait(false))
+        //     .Returns(new ConfiguredTaskAwaitable());
+
         eventBindingClient.Setup(c =>
                 c.PutEventsAsync(It.IsAny<PutEventsRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutEventsResponse { FailedEntryCount = 0 });
@@ -62,8 +68,7 @@ public class RequestApprovalFunctionTest
         };
         
         // Act
-        var function = new RequestApprovalFunction(dynamoDbContext.Object, eventBindingClient.Object, eventBusName,
-            serviceNamespace);
+        var function = new RequestApprovalFunction(dynamoDbContext.Object, eventBindingClient.Object);
         var response = await function.FunctionHandler(request, context);
         
         // Assert

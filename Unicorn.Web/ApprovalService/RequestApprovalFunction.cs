@@ -1,6 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
+using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Amazon;
@@ -16,6 +17,7 @@ using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Unicorn.Web.Common;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
@@ -28,9 +30,11 @@ public class RequestApprovalFunction
 {
     private readonly IDynamoDBContext _dynamoDbContext;
     private readonly IAmazonEventBridge _eventBindingClient;
-    private readonly string _eventBusName;
-    private readonly string _serviceNamespace;
-  
+    private string? _dynamodbTable;
+    private string? _eventBusName;
+    private string? _serviceNamespace;
+    private const string Pattern = @"[a-z-]+\/[a-z-]+\/[a-z][a-z0-9-]*\/[0-9-]+";
+
     /// <summary>
     /// Default constructor. Initialises global variables for function.
     /// </summary>
@@ -40,23 +44,16 @@ public class RequestApprovalFunction
         // Instrument all AWS SDK calls
         AWSSDKHandler.RegisterXRayForAllServices();
         
-        var dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE") ?? "";
-        if (string.IsNullOrEmpty(dynamodbTable))
-            throw new Exception("Environment variable DYNAMODB_TABLE is not defined.");
+        // Validate and set environment variables
+        SetEnvironmentVariables();
 
-        _eventBusName = Environment.GetEnvironmentVariable("EVENT_BUS") ?? "";
-        if (string.IsNullOrEmpty(_eventBusName))
-            throw new Exception("Environment variable EVENT_BUS is not defined.");
-        
-        _serviceNamespace = Environment.GetEnvironmentVariable("SERVICE_NAMESPACE") ?? "";
-        if (string.IsNullOrEmpty(_eventBusName))
-            throw new Exception("Environment variable SERVICE_NAMESPACE is not defined.");
-
+        // Initialise DDB client
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(PropertyRecord)] =
-            new TypeMapping(typeof(PropertyRecord), dynamodbTable);
-
+            new TypeMapping(typeof(PropertyRecord), _dynamodbTable);
         var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
         _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
+        
+        // Initialise EventBridge client
         _eventBindingClient = new AmazonEventBridgeClient();
     }
 
@@ -65,19 +62,59 @@ public class RequestApprovalFunction
     /// </summary>
     /// <param name="dynamoDbContext"></param>
     /// <param name="eventBindingClient"></param>
-    /// <param name="eventBusName"></param>
-    /// <param name="serviceNamespace"></param>
-    public RequestApprovalFunction(IDynamoDBContext dynamoDbContext,
-        IAmazonEventBridge eventBindingClient, 
-        string eventBusName, 
-        string serviceNamespace)
+    public RequestApprovalFunction(IDynamoDBContext dynamoDbContext, IAmazonEventBridge eventBindingClient)
     {
+        // Validate and set environment variables
+        SetEnvironmentVariables();
+
         _dynamoDbContext = dynamoDbContext;
         _eventBindingClient = eventBindingClient;
-        _eventBusName = eventBusName;
-        _serviceNamespace = serviceNamespace;
     }
-        
+
+    /// <summary>
+    /// Validate and set environment variables
+    /// </summary>
+    /// <exception cref="Exception">Generic exception thrown if any of the required environment variables cannot be set.</exception>
+    private void SetEnvironmentVariables()
+    {
+        _dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE") ?? "";
+        if (string.IsNullOrEmpty(_dynamodbTable))
+            throw new Exception("Environment variable DYNAMODB_TABLE is not defined.");
+
+        _eventBusName = Environment.GetEnvironmentVariable("EVENT_BUS") ?? "";
+        if (string.IsNullOrEmpty(_eventBusName))
+            throw new Exception("Environment variable EVENT_BUS is not defined.");
+
+        _serviceNamespace = Environment.GetEnvironmentVariable("SERVICE_NAMESPACE") ?? "";
+        if (string.IsNullOrEmpty(_eventBusName))
+            throw new Exception("Environment variable SERVICE_NAMESPACE is not defined.");
+    }
+
+    /// <summary>
+    /// Helper method to generate APIGatewayProxyResponse
+    /// </summary>
+    /// <param name="message">The message to include in the payload.</param>
+    /// <param name="statusCode">the HTTP status code</param>
+    /// <returns>APIGatewayProxyResponse</returns>
+    private static Task<APIGatewayProxyResponse> ApiResponse(string message, HttpStatusCode statusCode)
+    {
+        var body = new Dictionary<string, string>
+        {
+            { "message", message }
+        };
+
+        return Task.FromResult(new APIGatewayProxyResponse
+        {
+            Body = JsonSerializer.Serialize(body),
+            StatusCode = (int)statusCode,
+            Headers = new Dictionary<string, string>
+            {
+                { "Content-Type", "application/json" },
+                { "X-Custom-Header", "application/json" }
+            }
+        });
+    }
+
     /// <summary>
     /// Lambda Handler for creating new Contracts.
     /// </summary>
@@ -90,18 +127,8 @@ public class RequestApprovalFunction
     public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent,
         ILambdaContext context)
     {
-        var response = new APIGatewayProxyResponse
-        {
-            Body = string.Empty,
-            StatusCode = 200,
-            Headers = new Dictionary<string, string>
-            {
-                { "Content-Type", "application/json" },
-                { "X-Custom-Header", "application/json" }
-            }
-        };
-
         string propertyId;
+        
         try
         {
             var request = JsonSerializer.Deserialize<RequestApprovalRequest>(apigProxyEvent.Body);
@@ -111,25 +138,14 @@ public class RequestApprovalFunction
         catch (Exception e)
         {
             Logger.LogError(e);
-            var body = new Dictionary<string, string>
-            {
-                { "message", $"Unable to parse event input as JSON: {e.Message}" }
-            };
-            response.Body = JsonSerializer.Serialize(body);
-            response.StatusCode = 400;
-            return response;
+            return await ApiResponse("Unable to parse event input as JSON", HttpStatusCode.BadRequest);
         }
 
-        var pattern = @"[a-z-]+\/[a-z-]+\/[a-z][a-z0-9-]*\/[0-9-]+";
-        if (string.IsNullOrWhiteSpace(propertyId) || !Regex.Match(propertyId, pattern).Success)
+        // Validate property ID
+        if (string.IsNullOrWhiteSpace(propertyId) || !Regex.Match(propertyId, Pattern).Success)
         {
-            var body = new Dictionary<string, string>
-            {
-                { "message", $"Input invalid; must conform to regular expression: {pattern}" }
-            };
-            response.Body = JsonSerializer.Serialize(body);
-            response.StatusCode = 400;
-            return response;
+            return await ApiResponse($"Input invalid; must conform to regular expression: {Pattern}",
+                HttpStatusCode.BadRequest);
         }
 
         var splitString = propertyId.Split('/');
@@ -144,54 +160,42 @@ public class RequestApprovalFunction
         try
         {
             var properties = await QueryTableAsync(pk, sk).ConfigureAwait(false);
+            
             if (!properties.Any())
             {
-                var body = new Dictionary<string, string>
-                {
-                    { "message", "No property found in database with the requested property id" }
-                };
-                response.Body = JsonSerializer.Serialize(body);
-                response.StatusCode = 500;
-                return response;
+                return await ApiResponse("No property found in database with the requested property id",
+                    HttpStatusCode.InternalServerError);
             }
 
             var property = properties.First();
-            if (string.Equals(property.Status, PropertyStatus.Approved, StringComparison.CurrentCultureIgnoreCase) ||
-                string.Equals(property.Status, PropertyStatus.Declined, StringComparison.CurrentCultureIgnoreCase) ||
-                string.Equals(property.Status, PropertyStatus.Pending, StringComparison.CurrentCultureIgnoreCase))
-            {
-                response.Body = JsonSerializer.Serialize(new Dictionary<string, string>
-                {
-                    { "message", $"Property is already {property.Status}; no action taken" }
-                });
-                return response;
-            }
-
-            property.Status = PropertyStatus.Pending;
             
-            await SendEventAsync(propertyId, property).ConfigureAwait(false);
+            // Do not approve properties in an approved state
+            if (string.Equals(property.Status, PropertyStatus.Approved, StringComparison.CurrentCultureIgnoreCase))
+            {
+                return await ApiResponse($"Property is already {property.Status}; no action taken", HttpStatusCode.InternalServerError);
+            }
+            // Reset status to pending, awaiting the result of the check.
+            property.Status = PropertyStatus.Pending;
 
+            // Publish the event
+            await SendEventAsync(propertyId, property).ConfigureAwait(false);
+            
+            // Add custom metric for the number of approval requests
+            Metrics.AddMetric("ApprovalsRequested", 1, MetricUnit.Count);
+            
             Logger.LogInformation($"Storing new property in DynamoDB with PK {pk} and SK {sk}");
+            
             await _dynamoDbContext.SaveAsync(property).ConfigureAwait(false);
             Logger.LogInformation($"Stored item in DynamoDB;");
         }
         catch (Exception e)
         {
             Logger.LogError(e);
-            var body = new Dictionary<string, string>
-            {
-                { "message", e.Message }
-            };
-            response.Body = JsonSerializer.Serialize(body);
-            response.StatusCode = 500;
-            return response;
+            return await ApiResponse(e.Message, HttpStatusCode.InternalServerError);
+            
         }
-
-        response.Body = JsonSerializer.Serialize(new Dictionary<string, string>
-        {
-            { "message", "Approval Requested" }
-        });
-        return response;
+        
+        return await ApiResponse("Approval Requested", HttpStatusCode.OK);
     }
 
     private async Task<List<PropertyRecord>> QueryTableAsync(string partitionKey, string sortKey)
@@ -204,7 +208,7 @@ public class RequestApprovalFunction
             .GetRemainingAsync()
             .ConfigureAwait(false);
     }
-        
+
     private async Task SendEventAsync(string propertyId, PropertyRecord property)
     {
         var requestApprovalEvent = new RequestApprovalEvent
@@ -244,9 +248,6 @@ public class RequestApprovalFunction
 
         Logger.LogInformation(
             $"Sent event to EventBridge; {response.FailedEntryCount} records failed; {response.Entries.Count} entries received");
-            
-        Metrics.AddMetric("ApprovalsRequested", 1, MetricUnit.Count);
+        
     }
-        
-        
 }
