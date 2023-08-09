@@ -55,7 +55,7 @@ public class ContractStatusChangedEventHandler
     public async Task FunctionHandler(CloudWatchEvent<ContractStatusChangedEvent> contractStatusChangedEvent,
         ILambdaContext context)
     {
-        context.Logger.LogInformation(JsonSerializer.Serialize(contractStatusChangedEvent));
+        Logger.LogInformation(JsonSerializer.Serialize(contractStatusChangedEvent));
         try
         {
             await SaveContractStatus(contractStatusChangedEvent.Detail).ConfigureAwait(false);
