@@ -6,8 +6,6 @@
         <Nullable>enable</Nullable>
         <AssemblyName>Unicorn.Web.ApprovalService</AssemblyName>
         <RootNamespace>Unicorn.Web.ApprovalService</RootNamespace>
-        <OutputType>Library</OutputType>
-        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>
