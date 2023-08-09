@@ -17,7 +17,6 @@ using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Unicorn.Web.Common;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
@@ -116,7 +115,7 @@ public class RequestApprovalFunction
     }
 
     /// <summary>
-    /// Lambda Handler for creating new Contracts.
+    /// Lambda handler for approving properties.
     /// </summary>
     /// <param name="apigProxyEvent">API Gateway Lambda Proxy Request that triggers the function.</param>
     /// <param name="context">The context for the Lambda function.</param>
@@ -192,7 +191,6 @@ public class RequestApprovalFunction
         {
             Logger.LogError(e);
             return await ApiResponse(e.Message, HttpStatusCode.InternalServerError);
-            
         }
         
         return await ApiResponse("Approval Requested", HttpStatusCode.OK);
