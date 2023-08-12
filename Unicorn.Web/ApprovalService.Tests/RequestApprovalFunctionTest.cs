@@ -7,7 +7,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.EventBridge;
 using Amazon.EventBridge.Model;
 using Amazon.Lambda.APIGatewayEvents;
-using Moq;
+using NSubstitute;
 using Unicorn.Web.Common;
 using Xunit;
 
@@ -29,8 +29,8 @@ public class RequestApprovalFunctionTest
         var request = TestHelpers.LoadApiGatewayProxyRequest("./events/request_approval_event.json");
         var context = TestHelpers.NewLambdaContext();
         
-        var dynamoDbContext = new Mock<IDynamoDBContext>();
-        var eventBindingClient = new Mock<IAmazonEventBridge>();
+        var dynamoDbContext = Substitute.For<IDynamoDBContext>();
+        var eventBindingClient = Substitute.For<IAmazonEventBridge>();
 
         var searchResult = new List<PropertyRecord>
         {
@@ -45,17 +45,15 @@ public class RequestApprovalFunctionTest
             }
         };
 
-        dynamoDbContext.Setup(c =>
-                c.FromQueryAsync<PropertyRecord>(It.IsAny<QueryOperationConfig>(), It.IsAny<DynamoDBOperationConfig>()))
+        dynamoDbContext.FromQueryAsync<PropertyRecord>(Arg.Any<QueryOperationConfig>(), Arg.Any<DynamoDBOperationConfig>())
             .Returns(TestHelpers.NewDynamoDBSearchResult(searchResult));
 
         // dynamoDbContext.Setup(c => 
-        //         c.SaveAsync(It.IsAny<PropertyRecord>(), It.IsAny<CancellationToken>()).ConfigureAwait(false))
+        //         c.SaveAsync(Arg.Any<PropertyRecord>(), Arg.Any<CancellationToken>()).ConfigureAwait(false))
         //     .Returns(new ConfiguredTaskAwaitable());
 
-        eventBindingClient.Setup(c =>
-                c.PutEventsAsync(It.IsAny<PutEventsRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PutEventsResponse { FailedEntryCount = 0 });
+        eventBindingClient.PutEventsAsync(Arg.Any<PutEventsRequest>(), Arg.Any<CancellationToken>())
+            .Returns(new PutEventsResponse { FailedEntryCount = 0 });
 
         var expectedResponse = new APIGatewayProxyResponse
         {
@@ -68,25 +66,22 @@ public class RequestApprovalFunctionTest
         };
         
         // Act
-        var function = new RequestApprovalFunction(dynamoDbContext.Object, eventBindingClient.Object);
+        var function = new RequestApprovalFunction(dynamoDbContext, eventBindingClient);
         var response = await function.FunctionHandler(request, context);
         
         // Assert
         Assert.Equal(expectedResponse.Headers, response.Headers);
         Assert.Equal(expectedResponse.StatusCode, response.StatusCode);
         
-        dynamoDbContext.Verify(v =>
-                v.FromQueryAsync<PropertyRecord>(It.IsAny<QueryOperationConfig>(), It.IsAny<DynamoDBOperationConfig>()),
-            Times.Once);
+        dynamoDbContext.Received(1)
+            .FromQueryAsync<PropertyRecord>(Arg.Any<QueryOperationConfig>(), Arg.Any<DynamoDBOperationConfig>());
 
-        dynamoDbContext.Verify(v =>
-                v.SaveAsync(It.Is<PropertyRecord>(p => p.Status == PropertyStatus.Pending),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        await dynamoDbContext.Received(1)
+            .SaveAsync(Arg.Is<PropertyRecord>(p => p.Status == PropertyStatus.Pending),
+                Arg.Any<CancellationToken>());
         
-        eventBindingClient.Verify(v =>
-                v.PutEventsAsync(It.Is<PutEventsRequest>(r=> r.Entries.First().DetailType == "PublicationApprovalRequested"),
-                    It.IsAny<CancellationToken>()),
-            Times.Once);
+        await eventBindingClient.Received(1)
+            .PutEventsAsync(Arg.Is<PutEventsRequest>(r=> r.Entries.First().DetailType == "PublicationApprovalRequested"),
+                Arg.Any<CancellationToken>());
     }
 }
