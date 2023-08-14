@@ -6,7 +6,7 @@ using System.Text.Json;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.Lambda.APIGatewayEvents;
-using Moq;
+using NSubstitute;
 using Unicorn.Web.Common;
 using Xunit;
 
@@ -44,9 +44,8 @@ public class PropertySearchFunctionTest
             }
         };
         
-        var mockDynamoDbContext = new Mock<IDynamoDBContext>();
-        mockDynamoDbContext.Setup(c =>
-                c.FromQueryAsync<PropertyRecord>(It.IsAny<QueryOperationConfig>(), It.IsAny<DynamoDBOperationConfig>()))
+        var mockDynamoDbContext = Substitute.For<IDynamoDBContext>();
+        mockDynamoDbContext.FromQueryAsync<PropertyRecord>(Arg.Any<QueryOperationConfig>(), Arg.Any<DynamoDBOperationConfig>())
             .Returns(TestHelpers.NewDynamoDBSearchResult(searchResult));
 
         var expectedResponse = new APIGatewayProxyResponse
@@ -60,7 +59,7 @@ public class PropertySearchFunctionTest
         };
         
         // Act
-        var function = new PropertySearchFunction(mockDynamoDbContext.Object);
+        var function = new PropertySearchFunction(mockDynamoDbContext);
         var response = await function.FunctionHandler(request, context);
         
         // Assert
@@ -68,9 +67,8 @@ public class PropertySearchFunctionTest
         Assert.Equal(expectedResponse.StatusCode, response.StatusCode);
         Assert.NotEmpty(response.Body);
 
-        mockDynamoDbContext.Verify(v =>
-                v.FromQueryAsync<PropertyRecord>(It.IsAny<QueryOperationConfig>(), It.IsAny<DynamoDBOperationConfig>()),
-            Times.Once);
+        mockDynamoDbContext.Received(1)
+            .FromQueryAsync<PropertyRecord>(Arg.Any<QueryOperationConfig>(), Arg.Any<DynamoDBOperationConfig>());
 
         var items = JsonSerializer.Deserialize<List<PropertyDto>>(response.Body);
         Assert.NotNull(items);

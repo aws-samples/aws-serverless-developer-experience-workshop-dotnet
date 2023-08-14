@@ -7,9 +7,11 @@ using System.Net;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.APIGatewayEvents;
-using Moq;
+using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Unicorn.Contracts.ContractService.Tests;
 
@@ -31,10 +33,10 @@ public class CreateContractFunctionTest
     {
         // Arrange
         var request = TestHelpers.LoadApiGatewayProxyRequest("./events/create_valid_event.json");
-        
-        var mockDynamoDbContext = new Mock<IDynamoDBContext>();
 
-        var mockPublisher = new Mock<IPublisher>();
+        var mockDynamoDbContext = Substitute.For<IDynamoDBContext>();
+
+        var mockPublisher = Substitute.For<IPublisher>();
         
         var context = TestHelpers.NewLambdaContext();
 
@@ -45,13 +47,12 @@ public class CreateContractFunctionTest
         };
         
         var function =
-            new CreateContractFunction(mockDynamoDbContext.Object, mockPublisher.Object);
+            new CreateContractFunction(mockDynamoDbContext, mockPublisher);
 
         var response = await function.FunctionHandler(request, context);
-        
-        mockPublisher.Verify(
-            client => client.PublishEvent(It.IsAny<Contract>()), Times.Once); //TODO: Verify with contract status = DRAFT
-        
+
+        await mockPublisher.Received(1).PublishEvent(Arg.Any<Contract>());
+
         _testOutputHelper.WriteLine("Lambda Response: \n" + response.Body);
         _testOutputHelper.WriteLine("Expected Response: \n" + expectedResponse.Body);
 

@@ -63,9 +63,9 @@ namespace Unicorn.Contracts.ContractService
         /// <param name="apigProxyEvent">API Gateway Lambda Proxy Request that triggers the function.</param>
         /// <param name="context">The context for the Lambda function.</param>
         /// <returns>API Gateway Lambda Proxy Response.</returns>
-        [Tracing]
+        [Logging(LogEvent = true)]
         [Metrics(CaptureColdStart = true)]
-        [Logging(LogEvent = true, CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
+        [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent,
             ILambdaContext context)
         {

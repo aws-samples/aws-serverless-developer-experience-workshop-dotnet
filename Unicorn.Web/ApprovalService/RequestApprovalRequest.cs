@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT-0
 
 using System.Text.Json.Serialization;
-using Unicorn.Web.Common;
 
 namespace Unicorn.Web.ApprovalService;
 
