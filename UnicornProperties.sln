@@ -4,6 +4,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Contracts", "Unicor
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Contracts\README.md = Unicorn.Contracts\README.md
 		Unicorn.Contracts\template.yaml = Unicorn.Contracts\template.yaml
+		Unicorn.Contracts\api.yml = Unicorn.Contracts\api.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Web", "Unicorn.Web", "{7CE383EB-7FD5-44C9-A470-5C603D4E06DC}"

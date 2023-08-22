@@ -6,6 +6,8 @@ disable_rollback = true
 stack_name = "uni-prop-local-contract"
 s3_prefix = "uni-prop-local-contract"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Stage=\"Local\""
+parameter_overrides = "Stage=\"Local\" ContractsServiceNamespace=\"unicorn.contracts\""
 resolve_s3 = true
 resolve_image_repositories = true
+region = "ap-southeast-2"
+image_repositories = []
