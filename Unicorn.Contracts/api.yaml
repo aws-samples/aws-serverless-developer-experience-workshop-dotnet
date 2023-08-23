@@ -24,7 +24,7 @@ paths:
         credentials: 
           Fn::GetAtt: [ContractsApiIntegrationRole, Arn]
         httpMethod: "POST"
-        uri: {"Fn::Sub":"arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${ContractServiceIngestQueue}"}
+        uri: {"Fn::Sub":"arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${ContractServiceIngestQueue.QueueName}"}
         responses:
           default:
             statusCode: "200"
@@ -83,7 +83,7 @@ paths:
         credentials: 
           Fn::GetAtt: [ContractsApiIntegrationRole, Arn]
         httpMethod: "PUT"
-        uri: {"Fn::Sub":"arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${ContractServiceIngestQueue}"}
+        uri: {"Fn::Sub":"arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${ContractServiceIngestQueue.QueueName}"}
         responses:
           default:
             statusCode: "200"
@@ -125,7 +125,6 @@ components:
     UpdateContractModel:
       required:
         - "property_id"
-        - "seller_name"
       type: "object"
       properties:
         property_id:
