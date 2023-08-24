@@ -24,10 +24,12 @@ paths:
         credentials: 
           Fn::GetAtt: [ContractsApiIntegrationRole, Arn]
         httpMethod: "POST"
-        uri: {"Fn::Sub":"arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${ContractServiceIngestQueue.QueueName}"}
+        uri: {"Fn::Sub":"arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${UnicornContractsIngestQueue.QueueName}"}
         responses:
           default:
             statusCode: "200"
+            responseTemplates:
+              application/json: "{\n \"message\":\"OK\" \n}"
         requestParameters:
           integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
         requestTemplates:
@@ -83,10 +85,12 @@ paths:
         credentials: 
           Fn::GetAtt: [ContractsApiIntegrationRole, Arn]
         httpMethod: "POST"
-        uri: {"Fn::Sub":"arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${ContractServiceIngestQueue.QueueName}"}
+        uri: {"Fn::Sub":"arn:aws:apigateway:${AWS::Region}:sqs:path/${AWS::AccountId}/${UnicornContractsIngestQueue.QueueName}"}
         responses:
           default:
             statusCode: "200"
+            responseTemplates:
+              application/json: "{\n \"message\":\"OK\" \n}"
         requestParameters:
           integration.request.header.Content-Type: "'application/x-www-form-urlencoded'"
         requestTemplates:

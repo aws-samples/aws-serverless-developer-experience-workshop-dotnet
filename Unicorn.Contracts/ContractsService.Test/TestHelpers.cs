@@ -7,6 +7,7 @@ using System.Text;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
+using Amazon.Lambda.SQSEvents;
 using Amazon.Lambda.TestUtilities;
 
 namespace Unicorn.Contracts.ContractService.Tests;
@@ -28,6 +29,21 @@ public static class TestHelpers
         }
 
         return request;
+    }
+    
+    public static SQSEvent LoadSqsEvent(string filename)
+    {
+        var serializer = Activator.CreateInstance(typeof(DefaultLambdaJsonSerializer)) as ILambdaSerializer;
+
+        SQSEvent sqsEvent = null;
+
+        using var fileStream = LoadJsonTestFile(filename);
+        if (serializer != null)
+        {
+            sqsEvent = serializer.Deserialize<SQSEvent>(fileStream);
+        }
+
+        return sqsEvent;
     }
 
     // This utility method takes care of removing the BOM that System.Text.Json doesn't like.

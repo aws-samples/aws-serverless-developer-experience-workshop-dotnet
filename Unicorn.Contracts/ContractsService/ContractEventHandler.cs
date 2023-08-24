@@ -71,9 +71,13 @@ public class ContractEventHandler
 
         foreach (var record in sqsEvent.Records)
         {
-
+            // if record.MessageAttributes["HttpMethod"] == "POST"
+            // {
+                
+            // }
+            
             // if POST 
-            // CreateContract()
+            CreateContract(record);
             // If PUT 
             // UpdateContract()
 
@@ -89,10 +93,13 @@ public class ContractEventHandler
 
         return Task.FromResult($"Processed {sqsEvent.Records.Count} records.");
     }
-    
-    
-    
-    
+
+    private void CreateContract(SQSEvent.SQSMessage record)
+    {
+        throw new NotImplementedException();
+    }
+
+
     /// <summary>
     /// Queries database for existing contract
     /// </summary>
