@@ -241,10 +241,10 @@ Resources:
           integration-integrationStatus: $context.integration.integrationStatus
           response-latency: $context.responseLatency
           status: $context.status
-      # DefinitionBody: !Transform
-      #   Name: "AWS::Include"
-      #   Parameters:
-      #     Location: "./api.yaml"
+      DefinitionBody: !Transform
+        Name: "AWS::Include"
+        Parameters:
+          Location: "./api.yaml"
       Tags:
         stage: !Ref Stage
         project: !FindInMap [Constants, ProjectName, Value]
@@ -272,6 +272,33 @@ Resources:
         - >-
           arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
 
+  UnicornWebApiIntegrationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          Effect: Allow
+          Action: sts:AssumeRole
+          Principal:
+            Service: apigateway.amazonaws.com
+      Policies:
+        - PolicyName: AllowSqsIntegration
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'sqs:SendMessage'
+                  - 'sqs:GetQueueUrl'
+                Resource: !GetAtt UnicornWebIngestQueue.Arn
+        - PolicyName: AllowLambdaInvocation
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource: !GetAtt SearchFunction.Arn
   # API GW Cloudwatch Log Group
   UnicornWebApiLogGroup:
     Type: AWS::Logs::LogGroup
