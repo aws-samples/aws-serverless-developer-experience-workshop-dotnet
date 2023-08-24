@@ -23,12 +23,6 @@ Parameters:
       - Dev
       - Prod
 
-  ContractsServiceNamespace:
-    Type: String
-    Default: "unicorn.contracts"
-    AllowedValues:
-      - "unicorn.contracts"
-
 #### MAPPINGS
 Mappings:
   LogsRetentionPeriodMap:
@@ -39,8 +33,10 @@ Mappings:
     Prod:
       Days: 14
   Constants:
+    ServiceNamespace:
+      Value: "unicorn.web"
     ProjectName:
-     Value: "AWS Serverless Developer Experience"
+      Value: "AWS Serverless Developer Experience"
 
 #### CONDITIONS
 Conditions:
@@ -62,17 +58,17 @@ Globals:
     Environment:
       Variables:
         DYNAMODB_TABLE: !Ref ContractsTable
-        SERVICE_NAMESPACE: !Ref ContractsServiceNamespace
-        POWERTOOLS_SERVICE_NAME: !Ref ContractsServiceNamespace
+        SERVICE_NAMESPACE: !FindInMap [Constants, ServiceNamespace, Value]
+        POWERTOOLS_SERVICE_NAME: !FindInMap [Constants, ServiceNamespace, Value]
         POWERTOOLS_TRACE_DISABLED: "false"                                    # Explicitly disables tracing, default
         POWERTOOLS_LOGGER_LOG_EVENT: !If [ IsProd, "false", "true" ]            # Logs incoming event, default
         POWERTOOLS_LOGGER_SAMPLE_RATE: !If [ IsProd, "0.1", "0" ]               # Debug log sampling percentage, default
-        POWERTOOLS_METRICS_NAMESPACE: !Ref ContractsServiceNamespace          # Metric Namespace
+        POWERTOOLS_METRICS_NAMESPACE: !FindInMap [Constants, ServiceNamespace, Value]          # Metric Namespace
         LOG_LEVEL: INFO                                                       # Log level for Logger (INFO, DEBUG, etc.), default
     Tags:
       stage: !Ref Stage
       project: !FindInMap [ Constants, ProjectName, Value ]
-      namespace: !Ref ContractsServiceNamespace
+      namespace: !FindInMap [Constants, ServiceNamespace, Value]
 
 ##### RESOURCES
 Resources:
@@ -84,7 +80,7 @@ Resources:
     Properties:
       Type: String
       Name: !Sub /UniProp/${Stage}/UnicornContractsNamespace
-      Value: !Ref ContractsServiceNamespace
+      Value: !FindInMap [Constants, ServiceNamespace, Value]
       
   # Services share their event bus name and arn
   UnicornContractsEventBusNameParam:
@@ -133,7 +129,6 @@ Resources:
         - !Ref Stage
         - Days
   
-  
   #### API GATEWAY REST API
   UnicornContractsApi:
     Type: AWS::Serverless::Api
@@ -172,7 +167,7 @@ Resources:
       Tags:
         stage: !Ref Stage
         project: !FindInMap [ Constants, ProjectName, Value ]
-        namespace: !Ref ContractsServiceNamespace
+        namespace: !FindInMap [Constants, ServiceNamespace, Value]
   
   ContractsApiGwAccountConfig:
     Type: AWS::ApiGateway::Account
@@ -246,7 +241,7 @@ Resources:
         - Key: project
           Value: !FindInMap [ Constants, ProjectName, Value ]
         - Key: namespace
-          Value: !Ref ContractsServiceNamespace
+          Value: !FindInMap [Constants, ServiceNamespace, Value]
       
   UnicornContractsIngestDLQ:
     Type: AWS::SQS::Queue
@@ -262,7 +257,7 @@ Resources:
         - Key: project
           Value: !FindInMap [ Constants, ProjectName, Value ]
         - Key: namespace
-          Value: !Ref ContractsServiceNamespace
+          Value: !FindInMap [Constants, ServiceNamespace, Value]
   
   #### DYNAMODB TABLE
   ContractsTable:
@@ -283,7 +278,7 @@ Resources:
         - Key: project
           Value: !FindInMap [ Constants, ProjectName, Value ]
         - Key: namespace
-          Value: !Ref ContractsServiceNamespace
+          Value: !FindInMap [Constants, ServiceNamespace, Value]
         - Key: stage
           Value: !Ref Stage
   
@@ -295,7 +290,7 @@ Resources:
     Properties:
       Name: !Sub UnicornContractsBus-${Stage}
 
-  # Event bus policy to restrict who can publish events (should only be services from ContractsServiceNamespace)
+  # Event bus policy to restrict who can publish events (should only be services from ServiceNamespace)
   ContractEventsBusPublishPolicy:
     Type: AWS::Events::EventBusPolicy
     Properties:
@@ -311,7 +306,7 @@ Resources:
         Condition:
           StringEquals:
             events:source:
-              - !Ref ContractsServiceNamespace
+              - !FindInMap [Constants, ServiceNamespace, Value]
 
   # Event bus policy to restrict who can create rules on the event bus to subscribe to events published by the Contracts Service.
   # Update this policy as you get new subscribers by adding their namespace to events:source
@@ -355,7 +350,7 @@ Resources:
         account:
           - !Ref AWS::AccountId
         source:
-          - !Ref ContractsServiceNamespace
+          - !FindInMap [Constants, ServiceNamespace, Value]
       State: ENABLED #You may want to disable this rule in production
       Targets:
         - Arn: !GetAtt UnicornContractsCatchAllLogGroup.Arn
@@ -367,7 +362,10 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      LogGroupName: !Sub /aws/events/${Stage}/${ContractsServiceNamespace}-catchall
+      LogGroupName: !Sub
+        - "/aws/events/${Stage}/${NS}-catchall"
+        - Stage: !Ref Stage
+          NS: !FindInMap [Constants, ServiceNamespace, Value]
       RetentionInDays: 3
 
   # Permissions to allow EventBridge to send logs to CloudWatch
