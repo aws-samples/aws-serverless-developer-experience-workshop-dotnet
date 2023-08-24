@@ -1,7 +1,9 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 AWSTemplateFormatVersion: 2010-09-09
-Transform: AWS::Serverless-2016-10-31
+Transform:
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
 Description: >
   Unicorn Contracts Service resources.
 
@@ -150,15 +152,15 @@ Resources:
           ThrottlingRateLimit: 100
       AccessLogSetting:
         DestinationArn: !GetAtt UnicornContractsApiLogGroup.Arn
-        Format: >
-          {"requestId":"$context.requestId",
-          "integration-error":"$context.integration.error",
-          "integration-status":"$context.integration.status",
-          "integration-latency":"$context.integration.latency",
-          "integration-requestId":"$context.integration.requestId",
-          "integration-integrationStatus":"$context.integration.integrationStatus",
-          "response-latency":"$context.responseLatency",
-          "status":"$context.status"}
+        Format: !ToJsonString
+          requestId: $context.requestId
+          integration-error: $context.integration.error
+          integration-status: $context.integration.status
+          integration-latency: $context.integration.latency
+          integration-requestId: $context.integration.requestId
+          integration-integrationStatus: $context.integration.integrationStatus
+          response-latency: $context.responseLatency
+          status: $context.status
       DefinitionBody:
         !Transform
           Name: 'AWS::Include'
