@@ -29,3 +29,15 @@ default:
   local_start_lambda:
     parameters:
       warm_containers: "EAGER"
+
+subscriptions:
+  global:
+    parameters: 
+      stack_name: uni-prop-local-web-subscriptions
+  deploy:
+    parameters:
+      parameter_overrides: Stage="Local"
+      capabilities: CAPABILITY_IAM
+      template_file: "subscriptions.yaml"
+      fail_on_empty_changeset: false
+      on_failure: ROLLBACK

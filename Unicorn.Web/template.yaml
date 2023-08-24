@@ -59,7 +59,7 @@ Globals:
     Environment:
       Variables:
         DYNAMODB_TABLE: !Ref WebTable
-        EVENT_BUS: !FindInMap [Constants, ServiceNamespace, Value]
+        EVENT_BUS: !Ref UnicornWebEventBus
         SERVICE_NAMESPACE: !FindInMap [Constants, ServiceNamespace, Value]
         POWERTOOLS_SERVICE_NAME: !FindInMap [Constants, ServiceNamespace, Value]
         POWERTOOLS_TRACE_DISABLED: "false" # Explicitly disables tracing, default
@@ -455,12 +455,12 @@ Resources:
                   "logs:PutLogEvents"
                 ],
                 "Resource": [
-                  "${contractsServiceLogGroup}"
+                  "${logGroup}"
                 ]
               }
             ]
           }
-        - { contractsServiceLogGroup: UnicornWebCatchAllLogGroup.Arn }
+        - { logGroup: UnicornWebCatchAllLogGroup.Arn }
 
   ##### DLQs
   UnicornWebEventBusDLQ:
