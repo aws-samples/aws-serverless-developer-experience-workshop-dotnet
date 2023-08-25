@@ -49,6 +49,8 @@ Conditions:
 
 #### GLOBALS
 Globals:
+  Api:
+    OpenApiVersion: 3.0.1
   Function:
     Runtime: dotnet6
     MemorySize: 512
@@ -299,6 +301,7 @@ Resources:
                 Action:
                   - 'lambda:InvokeFunction'
                 Resource: !GetAtt SearchFunction.Arn
+                
   # API GW Cloudwatch Log Group
   UnicornWebApiLogGroup:
     Type: AWS::Logs::LogGroup
