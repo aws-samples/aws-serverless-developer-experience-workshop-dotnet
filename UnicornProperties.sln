@@ -4,13 +4,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Contracts", "Unicor
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Contracts\README.md = Unicorn.Contracts\README.md
 		Unicorn.Contracts\template.yaml = Unicorn.Contracts\template.yaml
-		Unicorn.Contracts\api.yml = Unicorn.Contracts\api.yml
+		Unicorn.Contracts\api.yaml = Unicorn.Contracts\api.yaml
+		Unicorn.Contracts\samconfig.yaml = Unicorn.Contracts\samconfig.yaml
+		Unicorn.Contracts\subscriptions.yaml = Unicorn.Contracts\subscriptions.yaml
+		Unicorn.Contracts\subscribers.yaml = Unicorn.Contracts\subscribers.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Web", "Unicorn.Web", "{7CE383EB-7FD5-44C9-A470-5C603D4E06DC}"
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Web\README.md = Unicorn.Web\README.md
 		Unicorn.Web\template.yaml = Unicorn.Web\template.yaml
+		Unicorn.Web\api.yaml = Unicorn.Web\api.yaml
+		Unicorn.Web\samconfig.yaml = Unicorn.Web\samconfig.yaml
+		Unicorn.Web\subscriptions.yaml = Unicorn.Web\subscriptions.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Properties", "Unicorn.Properties", "{F04908B5-232B-4007-A4DA-572106DF05FA}"

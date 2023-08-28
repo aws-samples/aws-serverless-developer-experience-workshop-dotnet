@@ -1,0 +1,30 @@
+{
+  "records": [
+    {
+      "message_id": "a2ac27b8-7c55-4ed7-9483-51b43b61c404",
+      "receipt_handle": "AQEBWRbenSnSsq89RXd31v37vn3W3PoK3KMylNLglT+S7xlTZTHsZyj/zXzJhYBlQPDWvHb9nZi3ZHynZOUq52qFVBmHiDMIlxVBY6BBjw50wytSoDA4DyfkdP6UPIDf+f0WgMXcuizFwdPScOXvUjUKFgw4ghfsc3EDzq8g8sCfmu6sDUqXJtRoK7k3lnRUaRkAu2GwsRN/4CEH/LXTiWnGTBE1rSXfI/dhyfJMsC1rsMYQ8sL9Tc8/rMWoStvHAt13dIxUWcVyHh9W//oL7OlHH3HBcR8XWYHNPIPtewFsBpJ1ggENblMsfy1TFeMIu7qHhDAINaoH6UoWZE8UTrkly1BLoEHnI6w/eAwUphyhnALGmFiAFfRgTp02vXDNP+du1jnyvZ+UKEJqyl1uRkvO+mpEGvyN9P/NwbyranSVPwQ=",
+      "body": "{\n\"address\": {\n\"country\": \"USA\",\n\"city\": \"Anytown\",\n\"street\": \"Main Street\",\n\"number\": 111\n},\n\"seller_name\": \"John Doe\",\n\"property_id\": \"usa/anytown/main-street/111\"\n}",
+      "md5_of_body": "b886edd2bff032c4d10fed7606d17e8f",
+      "md5_of_message_attributes": "b51fb21666798a04bb45833ff6dc08ad",
+      "event_source_arn": "arn:aws:sqs:ap-southeast-2:538510314095:UnicornContractsIngestQueue-Local",
+      "event_source": "aws:sqs",
+      "aws_region": "ap-southeast-2",
+      "attributes": {
+        "approximate_receive_count": "1",
+        "a_w_s_trace_header": "Root=1-64ecc50d-048d9102059947eb4331a049;Parent=53a713ec0415da68;Sampled=1",
+        "sent_timestamp": "1693238541359",
+        "sender_id": "AROAX2YNXJJX23OWVT6JY:BackplaneAssumeRoleSession",
+        "approximate_first_receive_timestamp": "1693238541369"
+      },
+      "message_attributes": {
+        "http_method": {
+          "string_value": "POST",
+          "binary_value": null,
+          "string_list_values": [],
+          "binary_list_values": [],
+          "data_type": "String"
+        }
+      }
+    }
+  ]
+}

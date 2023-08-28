@@ -14,6 +14,8 @@ Metadata:
       ignore_checks:
         - I3042
         - ES1007
+        - ES1001
+        - WS2001
 
 #### PARAMETERS
 Parameters:
@@ -36,7 +38,7 @@ Mappings:
       Days: 14
   Constants:
     ServiceNamespace:
-      Value: "unicorn.web"
+      Value: "unicorn.contracts"
     ProjectName:
       Value: "AWS Serverless Developer Experience"
 
@@ -61,29 +63,33 @@ Globals:
       Variables:
         DYNAMODB_TABLE: !Ref ContractsTable
         SERVICE_NAMESPACE: !FindInMap [Constants, ServiceNamespace, Value]
+        POWERTOOLS_LOGGER_CASE: PascalCase
         POWERTOOLS_SERVICE_NAME: !FindInMap [Constants, ServiceNamespace, Value]
-        POWERTOOLS_TRACE_DISABLED: "false"                                    # Explicitly disables tracing, default
-        POWERTOOLS_LOGGER_LOG_EVENT: !If [ IsProd, "false", "true" ]            # Logs incoming event, default
-        POWERTOOLS_LOGGER_SAMPLE_RATE: !If [ IsProd, "0.1", "0" ]               # Debug log sampling percentage, default
-        POWERTOOLS_METRICS_NAMESPACE: !FindInMap [Constants, ServiceNamespace, Value]          # Metric Namespace
-        LOG_LEVEL: INFO                                                       # Log level for Logger (INFO, DEBUG, etc.), default
+        POWERTOOLS_TRACE_DISABLED: "false" # Explicitly disables tracing, default
+        POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"] # Logs incoming event, default
+        POWERTOOLS_LOGGER_SAMPLE_RATE: !If [IsProd, "0.1", "0"] # Debug log sampling percentage, default
+        POWERTOOLS_METRICS_NAMESPACE: !FindInMap [
+            Constants,
+            ServiceNamespace,
+            Value,
+          ] # Metric Namespace
+        LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
     Tags:
       stage: !Ref Stage
-      project: !FindInMap [ Constants, ProjectName, Value ]
+      project: !FindInMap [Constants, ProjectName, Value]
       namespace: !FindInMap [Constants, ServiceNamespace, Value]
 
 ##### RESOURCES
 Resources:
-  
   #### SSM PARAMETERS
   # Services own and share their namespace
-  UnicornContractsNamespaceParam: 
+  UnicornContractsNamespaceParam:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
       Name: !Sub /UniProp/${Stage}/UnicornContractsNamespace
       Value: !FindInMap [Constants, ServiceNamespace, Value]
-      
+
   # Services share their event bus name and arn
   UnicornContractsEventBusNameParam:
     Type: AWS::SSM::Parameter
@@ -91,7 +97,7 @@ Resources:
       Type: String
       Name: !Sub /UniProp/${Stage}/UnicornContractsEventBus
       Value: !GetAtt UnicornContractsEventBus.Name
-      
+
   UnicornContractsEventBusArnParam:
     Type: AWS::SSM::Parameter
     Properties:
@@ -119,7 +125,7 @@ Resources:
             Enabled: true
             ScalingConfig:
               MaximumConcurrency: 5
-  
+
   ContractEventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Delete
@@ -130,7 +136,7 @@ Resources:
         - LogsRetentionPeriodMap
         - !Ref Stage
         - Days
-  
+
   #### API GATEWAY REST API
   UnicornContractsApi:
     Type: AWS::Serverless::Api
@@ -161,22 +167,21 @@ Resources:
           integration-integrationStatus: $context.integration.integrationStatus
           response-latency: $context.responseLatency
           status: $context.status
-      DefinitionBody:
-        !Transform
-          Name: 'AWS::Include'
-          Parameters:
-            Location: './api.yaml'
+      DefinitionBody: !Transform
+        Name: "AWS::Include"
+        Parameters:
+          Location: "./api.yaml"
       Tags:
         stage: !Ref Stage
-        project: !FindInMap [ Constants, ProjectName, Value ]
+        project: !FindInMap [Constants, ProjectName, Value]
         namespace: !FindInMap [Constants, ServiceNamespace, Value]
-  
+
   ContractsApiGwAccountConfig:
     Type: AWS::ApiGateway::Account
     Properties:
       CloudWatchRoleArn: !GetAtt UnicornContractsApiGwAccountConfigRole.Arn
 
-  # API GW IAM roles 
+  # API GW IAM roles
   ContractsApiIntegrationRole:
     Type: AWS::IAM::Role
     Properties:
@@ -193,8 +198,8 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'sqs:SendMessage'
-                  - 'sqs:GetQueueUrl'
+                  - "sqs:SendMessage"
+                  - "sqs:GetQueueUrl"
                 Resource: !GetAtt UnicornContractsIngestQueue.Arn
 
   # API GW Cloudwatch Log Group
@@ -218,12 +223,12 @@ Resources:
             Principal:
               Service:
                 - apigateway.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: "sts:AssumeRole"
       Path: /
       ManagedPolicyArns:
         - >-
           arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
-          
+
   #### INGEST QUEUES
   UnicornContractsIngestQueue:
     Type: AWS::SQS::Queue
@@ -241,10 +246,10 @@ Resources:
         - Key: stage
           Value: !Ref Stage
         - Key: project
-          Value: !FindInMap [ Constants, ProjectName, Value ]
+          Value: !FindInMap [Constants, ProjectName, Value]
         - Key: namespace
           Value: !FindInMap [Constants, ServiceNamespace, Value]
-      
+
   UnicornContractsIngestDLQ:
     Type: AWS::SQS::Queue
     UpdateReplacePolicy: Delete
@@ -257,10 +262,10 @@ Resources:
         - Key: stage
           Value: !Ref Stage
         - Key: project
-          Value: !FindInMap [ Constants, ProjectName, Value ]
+          Value: !FindInMap [Constants, ProjectName, Value]
         - Key: namespace
           Value: !FindInMap [Constants, ServiceNamespace, Value]
-  
+
   #### DYNAMODB TABLE
   ContractsTable:
     Type: AWS::DynamoDB::Table
@@ -278,14 +283,14 @@ Resources:
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: project
-          Value: !FindInMap [ Constants, ProjectName, Value ]
+          Value: !FindInMap [Constants, ProjectName, Value]
         - Key: namespace
           Value: !FindInMap [Constants, ServiceNamespace, Value]
         - Key: stage
           Value: !Ref Stage
-  
+
   #### EVENT BUS
-  
+
   # Event bus for Contract Service used to publish and consume events
   UnicornContractsEventBus:
     Type: AWS::Events::EventBus
@@ -309,37 +314,6 @@ Resources:
           StringEquals:
             events:source:
               - !FindInMap [Constants, ServiceNamespace, Value]
-
-  # Event bus policy to restrict who can create rules on the event bus to subscribe to events published by the Contracts Service.
-  # Update this policy as you get new subscribers by adding their namespace to events:source
-#  PropertiesServiceRulePolicy:
-#    Type: "AWS::Events::EventBusPolicy"
-#    Properties:
-#      EventBusName: !Ref UnicornContractsEventBus
-#      StatementId: !Sub CreateRulePolicy-${Stage}
-#      Statement:
-#        Effect: Allow
-#        Principal:
-#          AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
-#        Action:
-#          - "events:PutRule"
-#          - "events:DeleteRule"
-#          - "events:DescribeRule"
-#          - "events:DisableRule"
-#          - "events:EnableRule"
-#          - "events:PutTargets"
-#          - "events:RemoveTargets"
-#        Resource:
-#          - !Sub >-
-#            arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${UnicornContractsEventBus.Name}/*
-#        Condition:
-#          StringEqualsIfExists:
-#            "events:creatorAccount": "${aws:PrincipalAccount}"
-#          StringEquals:
-#            "events:source":
-#              - !Sub "{{resolve:ssm:/UniProp/${Stage}/UnicornPropertiesNamespace}}"
-#          "Null":
-#            "events:source": "false"
 
   # Catchall rule used for development purposes.
   UnicornContractsCatchAllRule:
@@ -374,7 +348,7 @@ Resources:
   EventBridgeCloudWatchLogGroupPolicy:
     Type: AWS::Logs::ResourcePolicy
     Properties:
-      PolicyName: !Sub EventBridgeToCWLogsPolicy-${Stage}
+      PolicyName: !Sub EvBToCWLogs-${AWS::StackName}
       # Note: PolicyDocument has to be established this way. See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-resourcepolicy.html#cfn-logs-resourcepolicy-policydocument
       PolicyDocument: !Sub
         - |
@@ -399,14 +373,72 @@ Resources:
               }
             ]
           }
-        - {
-          contractsServiceLogGroup: UnicornContractsCatchAllLogGroup.Arn,
-        }
+        - { contractsServiceLogGroup: UnicornContractsCatchAllLogGroup.Arn }
+          
+          
+  #### EVENT BRIDGE PIPES
+  # Pipe changed on DynamoDB Table to UnicornContractsEventBus
+  DdbStreamToEventPipe:
+    Type: AWS::Pipes::Pipe
+    Properties:
+      RoleArn: !GetAtt DdbStreamToEventPipeRole.Arn
+      Source: !GetAtt ContractsTable.StreamArn
+      SourceParameters:
+        DynamoDBStreamParameters:
+          StartingPosition: LATEST
+          OnPartialBatchItemFailure: AUTOMATIC_BISECT
+          BatchSize: 1
+          # DeadLetterConfig:
+          #   Arn: String
+        FilterCriteria:
+          Filters:
+            - Pattern: !ToJsonString
+                eventName: [INSERT, MODIFY]
+                dynamodb:
+                  NewImage:
+                    contract_status:
+                      S: [DRAFT, APPROVED]
+      # Enrichment: arn:aws:execute-api:us-east-1:123456789123:53eo2i89p9/*/POST/pets
+      Target: !GetAtt UnicornContractsEventBus.Arn
+      TargetParameters:
+        EventBridgeEventBusParameters:
+          Source: !FindInMap [Constants, ServiceNamespace, Value]
+          DetailType: ContractStatusChanged
+        InputTemplate: !ToJsonString
+          PropertyId: "<$.dynamodb.NewImage.PropertyId.S>"
+          ContractId: "<$.dynamodb.NewImage.ContractId.S>"
+          ContractStatus: "<$.dynamodb.NewImage.ContractStatus.S>"
+          ContractLastModifiedOn: "<$.dynamodb.NewImage.ContractLastModifiedOn.S>"
 
-
-
+  # IAM Role for Event Bridge Pipe
+  DdbStreamToEventPipeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: pipes.amazonaws.com
+      Policies:
+        - PolicyName: AllowDdbStreamRead
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:ListStreams
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:DescribeStream
+                  - dynamodb:GetRecords
+                  - dynamodb:GetShardIterator
+                Resource: !GetAtt ContractsTable.StreamArn
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource: !GetAtt UnicornContractsEventBus.Arn
 # OUTPUTS
-
 Outputs:
   ApiUrl:
     Description: Contract service API endpoint
@@ -415,11 +447,11 @@ Outputs:
   BaseUrl:
     Description: Web service API endpoint
     Value: !Sub "https://${UnicornContractsApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
-  
+
   ContractsTableName:
     Description: DynamoDB table storing contract information
     Value: !Ref ContractsTable
-  
+
   ContractEventHandlerFunction:
     Description: Create Contract function ARN
     Value: !GetAtt ContractEventHandlerFunction.Arn
@@ -428,6 +460,5 @@ Outputs:
     Description: Is Production?
     Value: !If
       - IsProd
-      - 'true'
-      - 'false'
-
+      - "true"
+      - "false"

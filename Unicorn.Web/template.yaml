@@ -465,7 +465,7 @@ Resources:
   EventBridgeCloudWatchLogGroupPolicy:
     Type: AWS::Logs::ResourcePolicy
     Properties:
-      PolicyName: !Sub EventBridgeToCWLogsPolicy-${Stage}
+      PolicyName: !Sub EvBToCWLogs-${AWS::StackName}
       # Note: PolicyDocument has to be established this way. See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-resourcepolicy.html#cfn-logs-resourcepolicy-policydocument
       PolicyDocument: !Sub
         - |

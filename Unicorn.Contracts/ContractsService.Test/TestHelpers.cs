@@ -30,7 +30,7 @@ public static class TestHelpers
 
         return request;
     }
-    
+
     public static SQSEvent LoadSqsEvent(string filename)
     {
         var serializer = Activator.CreateInstance(typeof(DefaultLambdaJsonSerializer)) as ILambdaSerializer;
@@ -67,5 +67,5 @@ public static class TestHelpers
             AwsRequestId = Guid.NewGuid().ToString("D")
         };
     }
-    
+
 }

@@ -12,6 +12,7 @@
         <PackageReference Include="Amazon.Lambda.TestUtilities" Version="2.0.0" />
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.200.17" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.0" />
+        <PackageReference Include="NBuilder" Version="6.1.0" />
         <PackageReference Include="NSubstitute" Version="5.0.0" />
         <PackageReference Include="xunit" Version="2.5.0" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0">
@@ -25,29 +26,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="events\create_valid_event.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <None Update="events\create_contract_valid_payload_1.json">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-        <None Update="events\create_empty_dict_body_event.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-        <None Update="events\create_missing_body_event.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-        <None Update="events\create_wrong_event.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-        <None Update="events\update_empty_dict_body_event.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-        <None Update="events\update_missing_body_event.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-        <None Update="events\update_valid_event.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-        <None Update="events\update_wrong_event.json">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <None Update="events\update_contract_valid_payload_1.json">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 

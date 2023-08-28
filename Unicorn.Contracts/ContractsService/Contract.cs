@@ -13,19 +13,18 @@ namespace Unicorn.Contracts.ContractService;
 [Serializable]
 public class Contract
 {
-    [DynamoDBHashKey]
-    public string? PropertyId { get; init; }
-    
+    [DynamoDBHashKey] public string? PropertyId { get; init; }
+
     public Guid ContractId { get; init; }
-    
+
     public string ContractStatus { get; set; } = Unicorn.Contracts.ContractService.ContractStatus.Draft;
-    
+
     public DateTime ContractCreated { get; } = DateTime.Now;
-    
+
     public DateTime ContractLastModifiedOn { get; set; } = DateTime.Now;
-    
+
     public Address? Address { get; set; }
-    
+
     public string? SellerName { get; set; }
 }
 
