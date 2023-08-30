@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -13,6 +14,9 @@ using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
+
+// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
+[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace Unicorn.Contracts.ContractService;
 
@@ -158,12 +162,9 @@ public class ContractEventHandler
                 }
             };
 
-            Console.WriteLine(JsonSerializer.Serialize(request));
+            Logger.LogInformation(JsonSerializer.Serialize(request));
 
-            var putItemResponse = await _dynamoDbClient.PutItemAsync(request).ConfigureAwait(false);
-
-            Console.WriteLine(putItemResponse);
-
+            var putItemResponse = await _dynamoDbClient.PutItemAsync(request);
 
             // Add custom metric for "New Contracts"
             Metrics.AddMetric("NewContracts", 1, MetricUnit.Count, MetricResolution.Standard);
