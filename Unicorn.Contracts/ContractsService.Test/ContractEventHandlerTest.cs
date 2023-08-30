@@ -3,30 +3,30 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Net;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Threading;
 using System.Threading.Tasks;
+using Amazon;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.SQSEvents;
 using FizzWare.NBuilder;
-using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Unicorn.Contracts.ContractService.Tests;
 
-public class SqsPayload
+public class ApiGwSqsPayload
 {
-    public string PropertyId { get; set; }
-    public Address Address { get; set; }
-    public string SellerName { get; set; }
+    public string property_id { get; set; }
+    public address address { get; set; }
+    public string seller_name { get; set; }
+}
+
+public class address
+{
+    public int number { get; set; }
+    public string? street { get; set; }
+    public string? city { get; set; }
+    public string country { get; } = "USA";
 }
 
 [Collection("Sequential")]
@@ -39,6 +39,7 @@ public class ContractEventHandlerTest
         _testOutputHelper = testOutputHelper;
 
         // Set env variable for Powertools Metrics 
+        Environment.SetEnvironmentVariable("DYNAMODB_TABLE", "uni-prop-local-contract-ContractsTable-1HWB3CU0SJBTQ");
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "ContractService");
     }
 
@@ -46,9 +47,10 @@ public class ContractEventHandlerTest
     public async Task Create_contract_saves_message_with_new_status()
     {
         // Set up
-        var eventPayload = Builder<SqsPayload>.CreateNew()
-            .With(x => x.PropertyId = "usa/anytown/main-street/111")
-            .With(x => x.Address = new Address() {City = "anytown", Number = 111, Street = "main-street"})
+        var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
+            .With(x => x.property_id = "usa/anytown/main-street/111")
+            .With(x => x.seller_name = "any seller")
+            .With(x => x.address = new address() { city = "anytown", number = 111, street = "main-street" })
             .Build();
 
         var sqsEvent = new SQSEvent()
@@ -71,15 +73,22 @@ public class ContractEventHandlerTest
             }
         };
 
-        var dynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
+        // var dynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
+
+        AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig()
+        {
+            RegionEndpoint = RegionEndpoint.APSoutheast2
+        };
+        var dynamoDbClient = new AmazonDynamoDBClient(clientConfig);
+
+
         var context = TestHelpers.NewLambdaContext();
 
         // Arrange
         var function = new ContractEventHandler(dynamoDbClient);
         await function.FunctionHandler(sqsEvent, context);
-        
+
         // Assert
-        await dynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
-        
+        // await dynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
     }
 }

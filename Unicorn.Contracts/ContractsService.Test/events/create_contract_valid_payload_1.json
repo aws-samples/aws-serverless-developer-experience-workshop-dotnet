@@ -1,28 +1,28 @@
 {
-  "records": [
+  "Records": [
     {
-      "message_id": "a2ac27b8-7c55-4ed7-9483-51b43b61c404",
-      "receipt_handle": "AQEBWRbenSnSsq89RXd31v37vn3W3PoK3KMylNLglT+S7xlTZTHsZyj/zXzJhYBlQPDWvHb9nZi3ZHynZOUq52qFVBmHiDMIlxVBY6BBjw50wytSoDA4DyfkdP6UPIDf+f0WgMXcuizFwdPScOXvUjUKFgw4ghfsc3EDzq8g8sCfmu6sDUqXJtRoK7k3lnRUaRkAu2GwsRN/4CEH/LXTiWnGTBE1rSXfI/dhyfJMsC1rsMYQ8sL9Tc8/rMWoStvHAt13dIxUWcVyHh9W//oL7OlHH3HBcR8XWYHNPIPtewFsBpJ1ggENblMsfy1TFeMIu7qHhDAINaoH6UoWZE8UTrkly1BLoEHnI6w/eAwUphyhnALGmFiAFfRgTp02vXDNP+du1jnyvZ+UKEJqyl1uRkvO+mpEGvyN9P/NwbyranSVPwQ=",
-      "body": "{\n\"address\": {\n\"country\": \"USA\",\n\"city\": \"Anytown\",\n\"street\": \"Main Street\",\n\"number\": 111\n},\n\"seller_name\": \"John Doe\",\n\"property_id\": \"usa/anytown/main-street/111\"\n}",
-      "md5_of_body": "b886edd2bff032c4d10fed7606d17e8f",
-      "md5_of_message_attributes": "b51fb21666798a04bb45833ff6dc08ad",
-      "event_source_arn": "arn:aws:sqs:ap-southeast-2:538510314095:UnicornContractsIngestQueue-Local",
-      "event_source": "aws:sqs",
-      "aws_region": "ap-southeast-2",
-      "attributes": {
-        "approximate_receive_count": "1",
-        "a_w_s_trace_header": "Root=1-64ecc50d-048d9102059947eb4331a049;Parent=53a713ec0415da68;Sampled=1",
-        "sent_timestamp": "1693238541359",
-        "sender_id": "AROAX2YNXJJX23OWVT6JY:BackplaneAssumeRoleSession",
-        "approximate_first_receive_timestamp": "1693238541369"
+      "MessageId": "44d10dcd-a95c-4f5e-ae1c-1ed8eb57d5d9",
+      "ReceiptHandle": "AQEBa6L4iYnFwdWMN1hX53Z/M4DUPIzthQm5zAl3QmXPG3ULYDQmguq4QnCTHS6+bmBqyW0y1rtwYAdAKOMavaTm3KlgPZ3oE5gB96h+7IuZ7TpFmdXII/2/RPt0tdNEqEpzQvOtwAal6oc8ku++LrD4E1rQS6rHq0gP0EVTNvHrWvKWRH6YjdKCDk7V6Lz7cEa/3C0A2W6FVY59qCPNm2i2hHJ1LfdCq1OvFtYvdYNNCt8AnwtO1TbIxHD619/w4J3Bplh4dtlCCl3V8gU2RQDC5dTV+w18p1lCAGxPvOtg3AHGjuIO7bcP3sTypx+Zk0St7f9uAb9GjYOq6IWJn1f2NW1YNvRL4Q9dViYTh2edosheXgf0inJcVhmCAhRws68nLwo3z9GMWQ3Dnmy63oUpcLdIeAKFmL1TpXDX+MkzpF8=",
+      "Body": "{\n\"address\": {\n\"country\": \"USA\",\n\"city\": \"Anytown\",\n\"street\": \"Main Street\",\n\"number\": 222\n},\n\"seller_name\": \"John Doe\",\n\"property_id\": \"usa/anytown/main-street/222\"\n}",
+      "Md5OfBody": "14f0625a4851cfef106e357a8c1d35d5",
+      "Md5OfMessageAttributes": "b51fb21666798a04bb45833ff6dc08ad",
+      "EventSourceArn": "arn:aws:sqs:ap-southeast-2:538510314095:UnicornContractsIngestQueue-Local",
+      "EventSource": "aws:sqs",
+      "AwsRegion": "ap-southeast-2",
+      "Attributes": {
+        "ApproximateReceiveCount": "1",
+        "AWSTraceHeader": "Root=1-64ecd84d-4a2da7f65382e046529ea845;Parent=6b5b612e4092a87f;Sampled=1",
+        "SentTimestamp": "1693243469540",
+        "SenderId": "AROAX2YNXJJX23OWVT6JY:BackplaneAssumeRoleSession",
+        "ApproximateFirstReceiveTimestamp": "1693243469542"
       },
-      "message_attributes": {
-        "http_method": {
-          "string_value": "POST",
-          "binary_value": null,
-          "string_list_values": [],
-          "binary_list_values": [],
-          "data_type": "String"
+      "MessageAttributes": {
+        "HttpMethod": {
+          "StringValue": "POST",
+          "BinaryValue": null,
+          "StringListValues": [],
+          "BinaryListValues": [],
+          "DataType": "String"
         }
       }
     }

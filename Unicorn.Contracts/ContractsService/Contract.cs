@@ -13,7 +13,7 @@ namespace Unicorn.Contracts.ContractService;
 [Serializable]
 public class Contract
 {
-    [DynamoDBHashKey] public string? PropertyId { get; init; }
+    public string? PropertyId { get; set; }
 
     public Guid ContractId { get; init; }
 

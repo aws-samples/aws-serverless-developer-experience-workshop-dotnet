@@ -6,8 +6,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Contracts", "Unicor
 		Unicorn.Contracts\template.yaml = Unicorn.Contracts\template.yaml
 		Unicorn.Contracts\api.yaml = Unicorn.Contracts\api.yaml
 		Unicorn.Contracts\samconfig.yaml = Unicorn.Contracts\samconfig.yaml
-		Unicorn.Contracts\subscriptions.yaml = Unicorn.Contracts\subscriptions.yaml
-		Unicorn.Contracts\subscribers.yaml = Unicorn.Contracts\subscribers.yaml
+		Unicorn.Contracts\subscriber-policies.yaml = Unicorn.Contracts\subscriber-policies.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Web", "Unicorn.Web", "{7CE383EB-7FD5-44C9-A470-5C603D4E06DC}"

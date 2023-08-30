@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.WebSockets;
-using System.Reflection.Metadata.Ecma335;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -24,7 +22,7 @@ namespace Unicorn.Contracts.ContractService;
 public class ContractEventHandler
 {
     private readonly AmazonDynamoDBClient _dynamoDbClient;
-    private readonly string _dynamodbTable = null!;
+    private readonly string? _dynamodbTable;
 
     /// <summary>
     /// Default constructor for ContractEventHandler
@@ -33,18 +31,18 @@ public class ContractEventHandler
     {
         // Instrument all AWS SDK calls
         AWSSDKHandler.RegisterXRayForAllServices();
-        _dynamoDbClient = new AmazonDynamoDBClient();
 
-        _dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE") ?? string.Empty;
+        // Initialise DDB Client 
+        _dynamoDbClient = new AmazonDynamoDBClient(); 
+        
+        // Initialise DDB table name from Environment Variables
+        _dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE");
         if (string.IsNullOrEmpty(_dynamodbTable))
         {
             throw new Exception("Environment variable DYNAMODB_TABLE is not defined.");
         }
-
-        _dynamoDbClient = new AmazonDynamoDBClient();
-        
     }
-    
+
     /// <summary>
     /// Testing constructor for ContractEventHandler
     /// </summary>
@@ -52,17 +50,7 @@ public class ContractEventHandler
     public ContractEventHandler(AmazonDynamoDBClient dynamoDbClient)
     {
         _dynamoDbClient = dynamoDbClient;
-        
-        // _dynamoDbClient = new AmazonDynamoDBClient()
-        // {
-        //     Config =
-        //     {
-        //         Profile = { Name  = "Default"}
-        //     }
-        // };
-        // _dynamodbTable =
-        //     "uni-prop-local-contract-ContractsTable-17AH9W3IEUX2H";
-
+        _dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE") ?? string.Empty;
     }
 
     /// <summary>
@@ -83,7 +71,7 @@ public class ContractEventHandler
         {
             var method = record.MessageAttributes["HttpMethod"].StringValue; //?? "No attribute with HttpMethod";
             Logger.LogInformation($"Identified HTTP Method : {method}");
-            
+
             switch (method)
             {
                 case "POST":
@@ -113,33 +101,36 @@ public class ContractEventHandler
     ///  log exception message
     /// </summary>
     /// <param name="sqsMessage"></param>
+    [Tracing(SegmentName = "Create Contract")]
     private async void CreateContractAsync(SQSEvent.SQSMessage sqsMessage)
     {
         Logger.LogInformation("Converting SQSMessage body to CreateContractRequest object.");
         Logger.LogInformation(sqsMessage.Body);
-        var body = JsonSerializer.Deserialize<CreateContractRequest>(sqsMessage.Body, new JsonSerializerOptions()
-        {
-            PropertyNameCaseInsensitive = true
-        });
-        
+        var createContractRequest = JsonSerializer.Deserialize<CreateContractRequest>(sqsMessage.Body,
+            new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
         var contract = new Contract // ContractCreated and ContractLastModifiedOn set in constructor
         {
-            PropertyId = body.PropertyId,
+            PropertyId = createContractRequest.PropertyId,
             ContractId = Guid.NewGuid(),
-            Address = body?.Address,
-            SellerName = body?.SellerName,
+            Address = createContractRequest?.Address,
+            SellerName = createContractRequest?.SellerName,
             ContractStatus = ContractStatus.Draft
         };
-        
+
         try
         {
-            Logger.LogInformation($"Creating new contract for Property ID: {contract.PropertyId}");
+            Logger.LogInformation(
+                $"Creating new contract for Property ID: {contract.PropertyId} in table '{_dynamodbTable}' ");
 
             var request = new PutItemRequest()
             {
                 TableName = _dynamodbTable,
                 ConditionExpression =
-                    "attribute_not_exists(#property_id) OR (#contract_status IN ([:cs1, :cs2, :cs3]))",
+                    "attribute_not_exists(#property_id) | (#contract_status IN ([:cs1, :cs2, :cs3]))",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     { "#property_id", "PropertyId" },
@@ -156,7 +147,7 @@ public class ContractEventHandler
                 {
                     { "PropertyId", new AttributeValue { S = contract.PropertyId } },
                     { "ContractId", new AttributeValue { S = contract.ContractId.ToString("D") } },
-                    { "Address", new AttributeValue { S = JsonSerializer.Serialize(contract.Address) } },
+                    // { "Address", new AttributeValue { S = JsonSerializer.Serialize(contract.Address) } },
                     { "SellerName", new AttributeValue { S = contract.SellerName } },
                     { "ContractStatus", new AttributeValue { S = contract.ContractStatus } },
                     { "ContractCreated", new AttributeValue { S = contract.ContractCreated.ToString("O") } },
@@ -167,8 +158,13 @@ public class ContractEventHandler
                 }
             };
 
-            await _dynamoDbClient.PutItemAsync(request);
-            
+            Console.WriteLine(JsonSerializer.Serialize(request));
+
+            var putItemResponse = await _dynamoDbClient.PutItemAsync(request).ConfigureAwait(false);
+
+            Console.WriteLine(putItemResponse);
+
+
             // Add custom metric for "New Contracts"
             Metrics.AddMetric("NewContracts", 1, MetricUnit.Count, MetricResolution.Standard);
         }
@@ -179,12 +175,14 @@ public class ContractEventHandler
         }
     }
 
+    [Tracing(SegmentName = "Update Contract")]
     private async void UpdateContractAsync(SQSEvent.SQSMessage sqsMessage)
     {
-        var updateContractRequest = JsonSerializer.Deserialize<UpdateContractRequest>(sqsMessage.Body, new JsonSerializerOptions()
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var updateContractRequest = JsonSerializer.Deserialize<UpdateContractRequest>(sqsMessage.Body,
+            new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            });
 
         Logger.LogInformation("Creating new contract");
 
@@ -194,6 +192,7 @@ public class ContractEventHandler
             Logger.LogError("Unable to Update contract. UpdateContractRequest is null.");
             return;
         }
+
         var request = new UpdateItemRequest()
         {
             TableName = _dynamodbTable,
@@ -214,9 +213,9 @@ public class ContractEventHandler
             },
             ReturnValues = "UPDATED_NEW"
         };
-        
+
         await _dynamoDbClient.UpdateItemAsync(request);
-        
+
         Logger.LogInformation($"Contract {updateContractRequest.PropertyId} updated successfully.");
     }
 }

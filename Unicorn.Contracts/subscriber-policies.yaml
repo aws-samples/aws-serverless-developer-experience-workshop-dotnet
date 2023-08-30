@@ -1,7 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Defines the event bus policies that determine who can create rules on the event bus to 
+Description: Defines the event bus policies that determine who can create rules on the event bus to
   subscribe to events published by the Contracts Service.
 
 Parameters:
@@ -19,9 +19,9 @@ Parameters:
       - UnicornContractsBus-Local
       - UnicornContractsBus-Dev
       - UnicornContractsBus-Prod
-    
+
 Resources:
-# Update this policy as you get new subscribers by adding their namespace to events:source
+  # Update this policy as you get new subscribers by adding their namespace to events:source
   PropertiesServiceRulePolicy:
     Type: "AWS::Events::EventBusPolicy"
     Properties:
@@ -40,8 +40,7 @@ Resources:
           - "events:PutTargets"
           - "events:RemoveTargets"
         Resource:
-          - !Sub >-
-            arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${UnicornContractsEventBus.Name}/*
+          - !Sub "arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${UnicornContractsEventBus}/*"
         Condition:
           StringEqualsIfExists:
             "events:creatorAccount": "${aws:PrincipalAccount}"

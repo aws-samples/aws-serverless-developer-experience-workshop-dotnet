@@ -77,6 +77,6 @@ Resources:
   #               "aws:SourceArn": !GetAtt BlueServiceE2SubscriptionRule.Arn
 
 Outputs:
-  BlueE2Subscription:
+  ContractStatusChangedSubscription:
     Description: Rule ARN for blue service event 2 subscription
-    Value: !GetAtt PublicationApprovedSubscriptionRule.Arn
+    Value: !GetAtt ContractStatusChangedSubscriptionRule.Arn

@@ -2,3 +2,5 @@
 .idea/*
 **/.aws-sam/
 *.DotSettings.user
+.vscode/*
+UnicornProperties.sln.DotSettings.user

@@ -1,28 +1,28 @@
 {
-  "records": [
+  "Records": [
     {
-      "message_id": "9f14cda3-bc19-4d45-b81a-bc9928e43312",
-      "receipt_handle": "AQEBXLH2UIrSCjPJZqv1IkCgpuSfRq0n06vyOoFYN1FUpIDnefa5OeLPs2powKh8p1m3lN1BXjVGPvXStccwcWq8/R+Cv69wD6RaUN1uxTY/elC2BHULoLtN8rWwnfdWqSuiID5yGntxXjgkk3zamepuZC6YgyX3DEG2Ndya42pa0SX3454Rc9Ks2YsDv3LpgN6O31PcpP1qg1YA/UnKViaXfPPnm0omawjFTJ4OKqees74E42uo3c0zhvjCAsSQ87C0zLgTZLTETiZ65tYW9SGKTk0R+bbt9XZqAfz/gHVSQvScUTONRwsqgnVufBwklaIP8cn6lHc6ks1uKOXtBnaFfkN7wLbLyJM9w+195xLlURBet65xzXrWVbfhNI6gN9w7o9JoLfFtwBRN8m7eFes6sfVB4veUHl03LlmhE/SbeHQ=",
-      "body": "{\n\"property_id\": \"usa/anytown/main-street/111\"\n}",
-      "md5_of_body": "eca14730bc295db1474c33fafb1ef7eb",
-      "md5_of_message_attributes": "39c36267fdf9c8d354b1069e44662d24",
-      "event_source_arn": "arn:aws:sqs:ap-southeast-2:538510314095:UnicornContractsIngestQueue-Local",
-      "event_source": "aws:sqs",
-      "aws_region": "ap-southeast-2",
-      "attributes": {
-        "approximate_receive_count": "1",
-        "a_w_s_trace_header": "Root=1-64ecc6d6-0051170b2f97a7f13a2c66c3;Parent=2ce6ff6583f3eb16;Sampled=1",
-        "sent_timestamp": "1693238998550",
-        "sender_id": "AROAX2YNXJJX23OWVT6JY:BackplaneAssumeRoleSession",
-        "approximate_first_receive_timestamp": "1693238998567"
+      "MessageId": "44d10dcd-a95c-4f5e-ae1c-1ed8eb57d5d9",
+      "ReceiptHandle": "AQEBa6L4iYnFwdWMN1hX53Z/M4DUPIzthQm5zAl3QmXPG3ULYDQmguq4QnCTHS6+bmBqyW0y1rtwYAdAKOMavaTm3KlgPZ3oE5gB96h+7IuZ7TpFmdXII/2/RPt0tdNEqEpzQvOtwAal6oc8ku++LrD4E1rQS6rHq0gP0EVTNvHrWvKWRH6YjdKCDk7V6Lz7cEa/3C0A2W6FVY59qCPNm2i2hHJ1LfdCq1OvFtYvdYNNCt8AnwtO1TbIxHD619/w4J3Bplh4dtlCCl3V8gU2RQDC5dTV+w18p1lCAGxPvOtg3AHGjuIO7bcP3sTypx+Zk0St7f9uAb9GjYOq6IWJn1f2NW1YNvRL4Q9dViYTh2edosheXgf0inJcVhmCAhRws68nLwo3z9GMWQ3Dnmy63oUpcLdIeAKFmL1TpXDX+MkzpF8=",
+      "Body": "{\n\"property_id\": \"usa/anytown/main-street/111\"\n}",
+      "Md5OfBody": "14f0625a4851cfef106e357a8c1d35d5",
+      "Md5OfMessageAttributes": "b51fb21666798a04bb45833ff6dc08ad",
+      "EventSourceArn": "arn:aws:sqs:ap-southeast-2:538510314095:UnicornContractsIngestQueue-Local",
+      "EventSource": "aws:sqs",
+      "AwsRegion": "ap-southeast-2",
+      "Attributes": {
+        "ApproximateReceiveCount": "1",
+        "AWSTraceHeader": "Root=1-64ecd84d-4a2da7f65382e046529ea845;Parent=6b5b612e4092a87f;Sampled=1",
+        "SentTimestamp": "1693243469540",
+        "SenderId": "AROAX2YNXJJX23OWVT6JY:BackplaneAssumeRoleSession",
+        "ApproximateFirstReceiveTimestamp": "1693243469542"
       },
-      "message_attributes": {
-        "http_method": {
-          "string_value": "PUT",
-          "binary_value": null,
-          "string_list_values": [],
-          "binary_list_values": [],
-          "data_type": "String"
+      "MessageAttributes": {
+        "HttpMethod": {
+          "StringValue": "POST",
+          "BinaryValue": null,
+          "StringListValues": [],
+          "BinaryListValues": [],
+          "DataType": "String"
         }
       }
     }

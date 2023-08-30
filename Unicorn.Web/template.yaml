@@ -374,6 +374,7 @@ Resources:
           Value: !FindInMap [Constants, ServiceNamespace, Value]
         - Key: stage
           Value: !Ref Stage
+
   #### EVENT BUS
 
   # Event bus for Properties Web used to publish and consume events
