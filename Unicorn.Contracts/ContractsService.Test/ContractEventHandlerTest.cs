@@ -7,8 +7,10 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.SQSEvents;
 using FizzWare.NBuilder;
+using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -46,6 +48,43 @@ public class ContractEventHandlerTest
     [Fact]
     public async Task Create_contract_saves_message_with_new_status()
     {
+        // Arrange
+        var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
+            .With(x => x.property_id = "usa/anytown/main-street/777")
+            .With(x => x.seller_name = "any seller")
+            .With(x => x.address = new address() { city = "anytown", number = 777, street = "main-street" })
+            .Build();
+
+        var sqsEvent = new SQSEvent()
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    Body = JsonSerializer.Serialize(eventPayload),
+                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
+                    {
+                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "POST" } }
+                    }
+                }
+            }
+        };
+
+        var dynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
+        var context = TestHelpers.NewLambdaContext();
+
+        // Act
+        var function = new ContractEventHandler(dynamoDbClient);
+        await function.FunctionHandler(sqsEvent, context);
+
+        // Assert
+        await dynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
+        
+    }
+
+    [Fact]
+    public async Task Update_contract_saves_message_with_new_status()
+    {
         // Set up
         var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
             .With(x => x.property_id = "usa/anytown/main-street/111")
@@ -62,26 +101,13 @@ public class ContractEventHandlerTest
                     Body = JsonSerializer.Serialize(eventPayload),
                     MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
                     {
-                        {
-                            "HttpMethod", new SQSEvent.MessageAttribute
-                            {
-                                StringValue = "POST"
-                            }
-                        }
+                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "PUT" } }
                     }
                 }
             }
         };
 
-        // var dynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
-
-        AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig()
-        {
-            RegionEndpoint = RegionEndpoint.APSoutheast2
-        };
-        var dynamoDbClient = new AmazonDynamoDBClient(clientConfig);
-
-
+        var dynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
         var context = TestHelpers.NewLambdaContext();
 
         // Arrange
@@ -89,6 +115,6 @@ public class ContractEventHandlerTest
         await function.FunctionHandler(sqsEvent, context);
 
         // Assert
-        // await dynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
+        await dynamoDbClient.Received(1).UpdateItemAsync(Arg.Any<UpdateItemRequest>());
     }
 }

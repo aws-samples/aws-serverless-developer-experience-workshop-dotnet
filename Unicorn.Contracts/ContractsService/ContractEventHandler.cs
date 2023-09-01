@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -14,6 +13,7 @@ using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
+using Microsoft.VisualBasic.CompilerServices;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -37,8 +37,8 @@ public class ContractEventHandler
         AWSSDKHandler.RegisterXRayForAllServices();
 
         // Initialise DDB Client 
-        _dynamoDbClient = new AmazonDynamoDBClient(); 
-        
+        _dynamoDbClient = new AmazonDynamoDBClient();
+
         // Initialise DDB table name from Environment Variables
         _dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE");
         if (string.IsNullOrEmpty(_dynamodbTable))
@@ -66,7 +66,7 @@ public class ContractEventHandler
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-    public Task<string> FunctionHandler(SQSEvent sqsEvent, ILambdaContext context)
+    public async Task<string> FunctionHandler(SQSEvent sqsEvent, ILambdaContext context)
     {
         // Multiple records can be delivered in a single event
         Logger.LogInformation($"Beginning to process {sqsEvent.Records.Count} records...");
@@ -79,10 +79,10 @@ public class ContractEventHandler
             switch (method)
             {
                 case "POST":
-                    CreateContractAsync(record);
+                    await CreateContractAsync(record);
                     break;
                 case "PUT":
-                    UpdateContractAsync(record);
+                    await UpdateContractAsync(record);
                     break;
                 default:
                     Logger.LogInformation("Nothing to process.");
@@ -92,7 +92,7 @@ public class ContractEventHandler
 
         Logger.LogInformation("Processing complete.");
 
-        return Task.FromResult($"Processed {sqsEvent.Records.Count} records.");
+        return $"Processed {sqsEvent.Records.Count} records.";
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public class ContractEventHandler
     /// </summary>
     /// <param name="sqsMessage"></param>
     [Tracing(SegmentName = "Create Contract")]
-    private async void CreateContractAsync(SQSEvent.SQSMessage sqsMessage)
+    private async Task CreateContractAsync(SQSEvent.SQSMessage sqsMessage)
     {
         Logger.LogInformation("Converting SQSMessage body to CreateContractRequest object.");
         Logger.LogInformation(sqsMessage.Body);
@@ -134,7 +134,7 @@ public class ContractEventHandler
             {
                 TableName = _dynamodbTable,
                 ConditionExpression =
-                    "attribute_not_exists(#property_id) | (#contract_status IN ([:cs1, :cs2, :cs3]))",
+                    "attribute_not_exists(#property_id) or #contract_status IN (:cs1, :cs2, :cs3)",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
                     { "#property_id", "PropertyId" },
@@ -142,7 +142,6 @@ public class ContractEventHandler
                 },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    { ":id", new AttributeValue { S = contract.PropertyId } },
                     { ":cs1", new AttributeValue { S = ContractStatus.Cancelled } },
                     { ":cs2", new AttributeValue { S = ContractStatus.Closed } },
                     { ":cs3", new AttributeValue { S = ContractStatus.Expired } },
@@ -151,7 +150,7 @@ public class ContractEventHandler
                 {
                     { "PropertyId", new AttributeValue { S = contract.PropertyId } },
                     { "ContractId", new AttributeValue { S = contract.ContractId.ToString("D") } },
-                    // { "Address", new AttributeValue { S = JsonSerializer.Serialize(contract.Address) } },
+                    { "Address", new AttributeValue { M = contract.Address.ToMap() } },
                     { "SellerName", new AttributeValue { S = contract.SellerName } },
                     { "ContractStatus", new AttributeValue { S = contract.ContractStatus } },
                     { "ContractCreated", new AttributeValue { S = contract.ContractCreated.ToString("O") } },
@@ -164,10 +163,16 @@ public class ContractEventHandler
 
             Logger.LogInformation(JsonSerializer.Serialize(request));
 
-            var putItemResponse = await _dynamoDbClient.PutItemAsync(request);
+            var response = await _dynamoDbClient.PutItemAsync(request).ConfigureAwait(false);
+
+            Logger.LogInformation(response);
 
             // Add custom metric for "New Contracts"
             Metrics.AddMetric("NewContracts", 1, MetricUnit.Count, MetricResolution.Standard);
+        }
+        catch (ConditionalCheckFailedException e)
+        {
+            Logger.LogError($"Unable to create new contract, because `{e.Message}`. Perhaps you are trying to add a contract that already has an active status?");
         }
         catch (Exception e)
         {
@@ -177,7 +182,7 @@ public class ContractEventHandler
     }
 
     [Tracing(SegmentName = "Update Contract")]
-    private async void UpdateContractAsync(SQSEvent.SQSMessage sqsMessage)
+    private async Task UpdateContractAsync(SQSEvent.SQSMessage sqsMessage)
     {
         var updateContractRequest = JsonSerializer.Deserialize<UpdateContractRequest>(sqsMessage.Body,
             new JsonSerializerOptions()
@@ -194,29 +199,38 @@ public class ContractEventHandler
             return;
         }
 
-        var request = new UpdateItemRequest()
+        try
         {
-            TableName = _dynamodbTable,
-            Key = new Dictionary<string, AttributeValue>
+            var request = new UpdateItemRequest()
             {
-                { "PropertyId", new AttributeValue { S = updateContractRequest.PropertyId } }
-            },
-            UpdateExpression = "SET #contract_status=:cs, #modified_date=:md",
-            ExpressionAttributeNames = new Dictionary<string, string>
-            {
-                { "#modified_date", "ContractLastModifiedOn" },
-                { "#contract_status", "ContractStatus" }
-            },
-            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
-            {
-                { ":md", new AttributeValue { S = DateTime.Now.ToString("O") } },
-                { ":cs", new AttributeValue { S = ContractStatus.Approved } }
-            },
-            ReturnValues = "UPDATED_NEW"
-        };
+                TableName = _dynamodbTable,
+                Key = new Dictionary<string, AttributeValue>
+                {
+                    { "PropertyId", new AttributeValue { S = updateContractRequest.PropertyId } }
+                },
+                UpdateExpression = "SET #contract_status=:cs, #modified_date=:md",
+                ExpressionAttributeNames = new Dictionary<string, string>
+                {
+                    { "#modified_date", "ContractLastModifiedOn" },
+                    { "#contract_status", "ContractStatus" }
+                },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":md", new AttributeValue { S = DateTime.Now.ToString("O") } },
+                    { ":cs", new AttributeValue { S = ContractStatus.Approved } }
+                },
+                ReturnValues = "UPDATED_NEW"
+            };
 
-        await _dynamoDbClient.UpdateItemAsync(request);
-
-        Logger.LogInformation($"Contract {updateContractRequest.PropertyId} updated successfully.");
+            var response = await _dynamoDbClient.UpdateItemAsync(request);
+        
+            Logger.LogInformation(response);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e.Message);
+            throw;
+        }
+        
     }
 }
