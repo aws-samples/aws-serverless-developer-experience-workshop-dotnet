@@ -59,6 +59,7 @@ Globals:
         CONTRACT_STATUS_TABLE: !Ref ContractStatusTable
         EVENT_BUS: !Ref UnicornPropertiesEventBus
         SERVICE_NAMESPACE: !FindInMap [Constants, ServiceNamespace, Value]
+        POWERTOOLS_LOGGER_CASE: PascalCase
         POWERTOOLS_SERVICE_NAME: !FindInMap [Constants, ServiceNamespace, Value]
         POWERTOOLS_TRACE_DISABLED: "false" # Explicitly disables tracing, default
         POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"] # Logs incoming event, default
@@ -409,39 +410,7 @@ Resources:
             events:source:
               - !FindInMap [Constants, ServiceNamespace, Value]
 
-
-  # Event bus policy to restrict who can create rules on the event bus to subscribe to events published by the Contracts Service.
-  # Update this policy as you get new subscribers by adding their namespace to events:source
-#  PropertiesServiceRulePolicy:
-#    Type: "AWS::Events::EventBusPolicy"
-#    Properties:
-#      EventBusName: !Ref UnicornContractsEventBus
-#      StatementId: !Sub CreateRulePolicy-${Stage}
-#      Statement:
-#        Effect: Allow
-#        Principal:
-#          AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
-#        Action:
-#          - "events:PutRule"
-#          - "events:DeleteRule"
-#          - "events:DescribeRule"
-#          - "events:DisableRule"
-#          - "events:EnableRule"
-#          - "events:PutTargets"
-#          - "events:RemoveTargets"
-#        Resource:
-#          - !Sub >-
-#            arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${UnicornContractsEventBus.Name}/*
-#        Condition:
-#          StringEqualsIfExists:
-#            "events:creatorAccount": "${aws:PrincipalAccount}"
-#          StringEquals:
-#            "events:source":
-#              - !Sub "{{resolve:ssm:/UniProp/${Stage}/UnicornPropertiesNamespace}}"
-#          "Null":
-#            "events:source": "false"
-
-# Catchall rule used for development purposes.
+  # Catchall rule used for development purposes.
   UnicornPropertiesCatchAllRule:
     Type: AWS::Events::Rule
     Properties:
