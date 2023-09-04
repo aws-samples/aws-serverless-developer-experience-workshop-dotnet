@@ -396,7 +396,7 @@ Resources:
                 eventName: [INSERT, MODIFY]
                 dynamodb:
                   NewImage:
-                    contract_status:
+                    ContractStatus:                   # Careful of the property names
                       S: [DRAFT, APPROVED]
       # Enrichment: arn:aws:execute-api:us-east-1:123456789123:53eo2i89p9/*/POST/pets
       Target: !GetAtt UnicornContractsEventBus.Arn
