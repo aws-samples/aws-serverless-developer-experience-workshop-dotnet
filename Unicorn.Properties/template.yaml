@@ -115,7 +115,7 @@ Resources:
           Type: EventBridgeRule
           Properties:
             RuleName: properties.contstatuschangedhdr-contracts.contstatuschanged
-            EventBusName: !Sub "{{resolve:ssm:/UniProp/${Stage}/EventBusName}}"
+            EventBusName: !GetAtt UnicornPropertiesEventBus.Name
             Pattern:
               source:
                 - !Sub "{{resolve:ssm:/UniProp/${Stage}/UnicornContractsNamespace}}"
@@ -142,11 +142,8 @@ Resources:
             TableName: !Ref ContractStatusTable
         - DynamoDBStreamReadPolicy:
             TableName: !Ref ContractStatusTable
-            StreamName: !Select
-              - 3
-              - !Split
-                - /
-                - !GetAtt ContractStatusTable.StreamArn
+            StreamName:
+              !Select [3, !Split ["/", !GetAtt ContractStatusTable.StreamArn]]
         - SQSSendMessagePolicy:
             QueueName: !GetAtt PropertiesServiceDLQ.QueueName
         - Statement:
@@ -248,19 +245,19 @@ Resources:
         - ComprehendBasicAccessPolicy: {}
         - RekognitionDetectOnlyPolicy: {}
         - EventBridgePutEventsPolicy:
-            EventBusName: !Sub "{{resolve:ssm:/UniProp/${Stage}/EventBusName}}"
+            EventBusName: !GetAtt UnicornPropertiesEventBus.Name
         - Statement:
             - Effect: Allow
               Action:
-                - "logs:CreateLogDelivery"
-                - "logs:GetLogDelivery"
-                - "logs:UpdateLogDelivery"
-                - "logs:DeleteLogDelivery"
-                - "logs:ListLogDeliveries"
-                - "logs:PutResourcePolicy"
-                - "logs:DescribeResourcePolicies"
-                - "logs:DescribeLogGroups"
-                - "cloudwatch:PutMetricData"
+                - logs:CreateLogDelivery
+                - logs:GetLogDelivery
+                - logs:UpdateLogDelivery
+                - logs:DeleteLogDelivery
+                - logs:ListLogDeliveries
+                - logs:PutResourcePolicy
+                - logs:DescribeResourcePolicies
+                - logs:DescribeLogGroups
+                - cloudwatch:PutMetricData
               Resource: "*"
       Logging:
         Destinations:
@@ -273,7 +270,7 @@ Resources:
           Type: EventBridgeRule
           Properties:
             RuleName: properties.pubapprovalwf-web.pubapprovalrequested
-            EventBusName: !Sub "{{resolve:ssm:/UniProp/${Stage}/EventBusName}}"
+            EventBusName: !GetAtt UnicornPropertiesEventBus.Name
             Pattern:
               source:
                 - !Sub "{{resolve:ssm:/UniProp/${Stage}/UnicornWebNamespace}}"
@@ -290,7 +287,7 @@ Resources:
         WaitForContractApproval: !GetAtt WaitForContractApprovalFunction.Arn
         ContentIntegrityValidator: !GetAtt ContentIntegrityValidatorFunction.Arn
         ImageUploadBucketName: !Sub "{{resolve:ssm:/UniProp/${Stage}/ImagesBucket}}"
-        EventBusName: !Sub "{{resolve:ssm:/UniProp/${Stage}/EventBusName}}"
+        EventBusName: !GetAtt UnicornPropertiesEventBus.Name
         ServiceName: !FindInMap [Constants, ServiceNamespace, Value]
 
   #### CLOUDWATCH LOG GROUPS
@@ -300,10 +297,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/${ContractStatusChangedHandlerFunction}"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   PropertiesApprovalSyncFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -311,10 +305,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/${PropertiesApprovalSyncFunction}"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   ContractExistsCheckerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -322,10 +313,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/${ContractExistsCheckerFunction}"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   ContentIntegrityValidatorFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -333,10 +321,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/${ContentIntegrityValidatorFunction}"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   WaitForContractApprovalFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -344,10 +329,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/${WaitForContractApprovalFunction}"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   ApprovalStateMachineLogGroup:
     Type: AWS::Logs::LogGroup
@@ -355,10 +337,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/states/${AWS::StackName}-ApprovalStateMachine"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   #### DYNAMODB TABLE
   ContractStatusTable:
@@ -390,10 +369,10 @@ Resources:
   UnicornPropertiesEventBus:
     Type: AWS::Events::EventBus
     Properties:
-      Name: !Sub UnicornContractsBus-${Stage}
+      Name: !Sub UnicornPropertiesBus-${Stage}
 
   # Event bus policy to restrict who can publish events (should only be services from ServiceNamespace)
-  ContractEventsBusPublishPolicy:
+  UnicornPropertiesEventsBusPublishPolicy:
     Type: AWS::Events::EventBusPolicy
     Properties:
       EventBusName: !Ref UnicornPropertiesEventBus
@@ -437,7 +416,7 @@ Resources:
         - "/aws/events/${Stage}/${NS}-catchall"
         - Stage: !Ref Stage
           NS: !FindInMap [Constants, ServiceNamespace, Value]
-      RetentionInDays: 3
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   # Permissions to allow EventBridge to send logs to CloudWatch
   EventBridgeCloudWatchLogGroupPolicy:
@@ -445,35 +424,34 @@ Resources:
     Properties:
       PolicyName: !Sub EvBToCWLogs-${AWS::StackName}
       # Note: PolicyDocument has to be established this way. See https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-resourcepolicy.html#cfn-logs-resourcepolicy-policydocument
-      PolicyDocument: !Sub
-        - |
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Effect": "Allow",
-                "Principal": {
-                  "Service": [
-                    "delivery.logs.amazonaws.com",
-                    "events.amazonaws.com"
-                  ]
-                },
-                "Action": [
-                  "logs:CreateLogStream",
-                  "logs:PutLogEvents"
-                ],
-                "Resource": [
-                  "${logGroup}"
+      PolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "delivery.logs.amazonaws.com",
+                  "events.amazonaws.com"
                 ]
-              }
-            ]
-          }
-        - {
-          logGroup: UnicornPropertiesCatchAllLogGroup.Arn,
+              },
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": [
+                "${UnicornPropertiesCatchAllLogGroup.Arn}"
+              ]
+            }
+          ]
         }
 
 ##### OUTPUTS
 Outputs:
+  UnicornPropertiesEventBusName:
+    Value: !GetAtt UnicornPropertiesEventBus.Name
+
   ContractStatusTableName:
     Value: !Ref ContractStatusTable
 
