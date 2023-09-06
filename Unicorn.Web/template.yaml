@@ -155,7 +155,7 @@ Resources:
         - !Ref Stage
         - Days
 
-  PublicationApprovedFunction:
+  PublicationApprovedEventHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./ApprovalService
@@ -182,12 +182,12 @@ Resources:
             DeadLetterConfig:
               Arn: !GetAtt UnicornWebEventBusDLQ.Arn
 
-  PublicationApprovedFunctionLogGroup:
+  PublicationApprovedEventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      LogGroupName: !Sub "/aws/lambda/${PublicationApprovedFunction}"
+      LogGroupName: !Sub "/aws/lambda/${PublicationApprovedEventHandlerFunction}"
       RetentionInDays: !FindInMap
         - LogsRetentionPeriodMap
         - !Ref Stage
@@ -405,10 +405,7 @@ Resources:
         - "/aws/events/${Stage}/${NS}-catchall"
         - Stage: !Ref Stage
           NS: !FindInMap [Constants, ServiceNamespace, Value]
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   # Permissions to allow EventBridge to send logs to CloudWatch
   EventBridgeCloudWatchLogGroupPolicy:
@@ -478,9 +475,9 @@ Outputs:
   RequestApprovalFunctionArn:
     Description: Approval function ARN
     Value: !GetAtt RequestApprovalFunction.Arn
-  PublicationApprovedFunctionArn:
+  PublicationApprovedEventHandlerFunctionArn:
     Description: Publication evaluation event handler function ARN
-    Value: !GetAtt PublicationApprovedFunction.Arn
+    Value: !GetAtt PublicationApprovedEventHandlerFunction.Arn
 
   IsProd:
     Description: Is Production?
