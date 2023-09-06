@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.SQSEvents;
@@ -16,20 +15,6 @@ using Xunit.Abstractions;
 
 namespace Unicorn.Contracts.ContractService.Tests;
 
-public class ApiGwSqsPayload
-{
-    public string property_id { get; set; }
-    public address address { get; set; }
-    public string seller_name { get; set; }
-}
-
-public class address
-{
-    public int number { get; set; }
-    public string? street { get; set; }
-    public string? city { get; set; }
-    public string country { get; } = "USA";
-}
 
 [Collection("Sequential")]
 public class ContractEventHandlerTest
@@ -117,4 +102,18 @@ public class ContractEventHandlerTest
         // Assert
         await dynamoDbClient.Received(1).UpdateItemAsync(Arg.Any<UpdateItemRequest>());
     }
+}
+public class ApiGwSqsPayload
+{
+    public string property_id { get; set; }
+    public address address { get; set; }
+    public string seller_name { get; set; }
+}
+
+public class address
+{
+    public int number { get; set; }
+    public string? street { get; set; }
+    public string? city { get; set; }
+    public string country { get; } = "USA";
 }

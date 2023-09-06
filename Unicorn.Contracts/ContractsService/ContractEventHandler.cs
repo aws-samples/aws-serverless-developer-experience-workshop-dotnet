@@ -13,7 +13,6 @@ using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
-using Microsoft.VisualBasic.CompilerServices;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -66,7 +65,7 @@ public class ContractEventHandler
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-    public async Task<string> FunctionHandler(SQSEvent sqsEvent, ILambdaContext context)
+    public async Task FunctionHandler(SQSEvent sqsEvent, ILambdaContext context)
     {
         // Multiple records can be delivered in a single event
         Logger.LogInformation($"Beginning to process {sqsEvent.Records.Count} records...");
@@ -91,8 +90,6 @@ public class ContractEventHandler
         }
 
         Logger.LogInformation("Processing complete.");
-
-        return $"Processed {sqsEvent.Records.Count} records.";
     }
 
     /// <summary>
