@@ -128,8 +128,6 @@ Resources:
             EventBusName: !Ref UnicornWebEventBus
         - DynamoDBReadPolicy:
             TableName: !Ref WebTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref WebTable
       Events:
         IngestQueue:
           Type: SQS

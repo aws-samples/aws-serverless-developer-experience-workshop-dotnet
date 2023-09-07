@@ -79,6 +79,7 @@ Globals:
 
 #### RESOURCES
 Resources:
+
   #### SSM PARAMETERS
   # Services own and share their namespace
   UnicornContractsNamespaceParam:
