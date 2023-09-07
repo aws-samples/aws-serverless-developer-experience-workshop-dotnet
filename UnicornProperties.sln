@@ -52,16 +52,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration"
 		Unicorn.Contracts\integration\subscriber-policies.yaml = Unicorn.Contracts\integration\subscriber-policies.yaml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{61CE0C49-7003-4335-99C8-E9DB9CC9A6BC}"
-	ProjectSection(SolutionItems) = preProject
-		Unicorn.Properties\integration\subscriber-policies.yaml = Unicorn.Properties\integration\subscriber-policies.yaml
-		Unicorn.Properties\integration\subscriptions.yaml = Unicorn.Properties\integration\subscriptions.yaml
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{0917028A-88F9-498A-924B-2A81EFCF31C4}"
 	ProjectSection(SolutionItems) = preProject
-		Unicorn.Web\integration\subscriber-policies.yaml = Unicorn.Web\integration\subscriber-policies.yaml
-		Unicorn.Web\integration\subscriptions.yaml = Unicorn.Web\integration\subscriptions.yaml
+		Unicorn.Web\Integration\subscriber-policies.yaml = Unicorn.Web\Integration\subscriber-policies.yaml
+		Unicorn.Web\Integration\subscriptions.yaml = Unicorn.Web\Integration\subscriptions.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{22AE94D7-96AF-42C4-93EB-5D3C4E6C7725}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Properties\Integration\subscriber-policies.yaml = Unicorn.Properties\Integration\subscriber-policies.yaml
+		Unicorn.Properties\Integration\subscriptions.yaml = Unicorn.Properties\Integration\subscriptions.yaml
 	EndProjectSection
 EndProject
 Global
@@ -118,7 +118,7 @@ Global
 		{7FDDB6BF-22EB-445D-A5EA-06613A4F1677} = {7CE383EB-7FD5-44C9-A470-5C603D4E06DC}
 		{1833D4D3-09EB-4599-9E07-CD3D27D3446C} = {7CE383EB-7FD5-44C9-A470-5C603D4E06DC}
 		{053D1FC5-C093-460D-84DA-0598B6A66157} = {18C75C53-AD2C-4EAA-A13F-E5AE7F1C0DA3}
-		{61CE0C49-7003-4335-99C8-E9DB9CC9A6BC} = {F04908B5-232B-4007-A4DA-572106DF05FA}
 		{0917028A-88F9-498A-924B-2A81EFCF31C4} = {7CE383EB-7FD5-44C9-A470-5C603D4E06DC}
+		{22AE94D7-96AF-42C4-93EB-5D3C4E6C7725} = {F04908B5-232B-4007-A4DA-572106DF05FA}
 	EndGlobalSection
 EndGlobal
