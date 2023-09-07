@@ -16,7 +16,7 @@ default:
       capabilities: "CAPABILITY_IAM"
       disable_rollback: true
       parameter_overrides:
-        - "Stage=Local"
+        - "Stage=local"
       image_repositories: []
   validate:
     parameters:

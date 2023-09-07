@@ -8,11 +8,11 @@ Description:
 Parameters:
   Stage:
     Type: String
-    Default: Local
+    Default: local
     AllowedValues:
-      - Local
-      - Dev
-      - Prod
+      - local
+      - dev
+      - prod
 
 Resources:
   # Update this policy as you get new subscribers by adding their namespace to events:source

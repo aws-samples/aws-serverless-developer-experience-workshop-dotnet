@@ -7,7 +7,7 @@ Transform:
 Description: >
   Unicorn Properties Services - web interface. Add, list and get details for Unicorn Properties.
 
-#### METADATA
+# METADATA ################################################################
 Metadata:
   cfn-lint:
     config:
@@ -18,24 +18,24 @@ Metadata:
         - ES6000
         - WS2001
 
-#### PARAMETERS
+# PARAMETERS ###############################################################
 Parameters:
   Stage:
     Type: String
-    Default: Local
+    Default: local
     AllowedValues:
-      - Local
-      - Dev
-      - Prod
+      - local
+      - dev
+      - prod
 
-#### MAPPINGS
+# MAPPINGS #################################################################
 Mappings:
   LogsRetentionPeriodMap:
-    Local:
+    local:
       Days: 3
-    Dev:
+    dev:
       Days: 3
-    Prod:
+    prod:
       Days: 14
   Constants:
     ServiceNamespace:
@@ -43,11 +43,11 @@ Mappings:
     ProjectName:
       Value: "AWS Serverless Developer Experience"
 
-#### CONDITIONS
+#### CONDITIONS ################################################################
 Conditions:
   IsProd: !Equals [!Ref Stage, Prod]
 
-#### GLOBALS
+#### GLOBALS ################################################################
 Globals:
   Api:
     OpenApiVersion: 3.0.1
@@ -75,30 +75,30 @@ Globals:
       project: !FindInMap [Constants, ProjectName, Value]
       namespace: !FindInMap [Constants, ServiceNamespace, Value]
 
-##### RESOURCES
+# RESOURCES ################################################################
+
 Resources:
-  #### SSM PARAMETERS
-  # Services own and share their namespace
+
+  # SSM PARAMETERS ################################################################
   UnicornWebNamespaceParam:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /UniProp/${Stage}/UnicornWebNamespace
+      Name: !Sub /uni-prop/${Stage}/UnicornWebNamespace
       Value: !FindInMap [Constants, ServiceNamespace, Value]
 
-  # Services share their event bus name and arn
   UnicornWebEventBusParam:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /UniProp/${Stage}/UnicornWebEventBus
+      Name: !Sub /uni-prop/${Stage}/UnicornWebEventBus
       Value: !GetAtt UnicornWebEventBus.Name
 
   UnicornWebEventBusArnParam:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /UniProp/${Stage}/UnicornWebEventBusArn
+      Name: !Sub /uni-prop/${Stage}/UnicornWebEventBusArn
       Value: !GetAtt UnicornWebEventBus.Arn
 
   ##### LAMBDA FUNCTIONS

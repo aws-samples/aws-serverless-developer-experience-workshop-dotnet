@@ -18,7 +18,7 @@ default:
       fail_on_empty_changeset: false
       capabilities: CAPABILITY_IAM
       parameter_overrides:
-        - "Stage=Local"
+        - "Stage=local"
   validate:
     parameters:
       lint: true
@@ -46,7 +46,7 @@ subscribers:
       on_failure: ROLLBACK
       capabilities: CAPABILITY_IAM
       parameter_overrides:
-        - "Stage=Local"
+        - "Stage=local"
 
 subscriptions:
   global:
@@ -62,4 +62,4 @@ subscriptions:
       on_failure: ROLLBACK
       capabilities: CAPABILITY_IAM
       parameter_overrides:
-        - "Stage=Local"
+        - "Stage=local"

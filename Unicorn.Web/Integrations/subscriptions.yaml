@@ -6,11 +6,11 @@ Description: Defines the subscriptions for
 Parameters:
   Stage:
     Type: String
-    Default: Local
+    Default: local
     AllowedValues:
-      - Local
-      - Dev
-      - Prod
+      - local
+      - dev
+      - prod
 
 Resources:
   PublicationEvaluationCompletedSubscriptionRule:
