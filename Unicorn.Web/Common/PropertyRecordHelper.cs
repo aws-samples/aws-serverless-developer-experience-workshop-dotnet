@@ -51,7 +51,7 @@ public static class PropertyRecordHelper
     public static string GetPartitionKey(string country, string city)
     {
         var pkDetails = $"{country}#{city}".Replace(' ', '-').ToLower();
-        return $"property#{pkDetails}";
+        return $"PROPERTY#{pkDetails}";
     }
     
     public static string GetSortKey(string street, string propertyNumber)

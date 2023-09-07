@@ -117,10 +117,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/${SearchFunction}"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   RequestApprovalFunction:
     Type: AWS::Serverless::Function
@@ -150,10 +147,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/${RequestApprovalFunction}"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   PublicationApprovedEventHandlerFunction:
     Type: AWS::Serverless::Function
@@ -176,11 +170,6 @@ Resources:
                 - !Ref UnicornWebEventBus
               detail-type:
                 - PublicationEvaluationCompleted
-            RetryPolicy:
-              MaximumRetryAttempts: 5
-              MaximumEventAgeInSeconds: 900
-            DeadLetterConfig:
-              Arn: !GetAtt UnicornWebEventBusDLQ.Arn
 
   PublicationApprovedEventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -188,10 +177,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/${PublicationApprovedEventHandlerFunction}"
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   #### API GATEWAY REST API
   UnicornWebApi:
@@ -283,10 +269,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      RetentionInDays: !FindInMap
-        - LogsRetentionPeriodMap
-        - !Ref Stage
-        - Days
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   #### INGEST QUEUES
   UnicornWebIngestQueue:
@@ -296,6 +279,7 @@ Resources:
     Properties:
       SqsManagedSseEnabled: true
       MessageRetentionPeriod: 1209600 # Maximum value, 1,209,600 (14days)
+      QueueName: !Sub UnicornWebIngestQueue-${Stage}
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt UnicornWebIngestDLQ.Arn
         maxReceiveCount: 1
@@ -315,6 +299,7 @@ Resources:
     Properties:
       SqsManagedSseEnabled: true
       MessageRetentionPeriod: 1209600 # Maximum value, 1,209,600 (14days)
+      QueueName: !Sub UnicornWebIngestDLQ-${Stage}
       Tags:
         - Key: stage
           Value: !Ref Stage
@@ -435,22 +420,6 @@ Resources:
             }
           ]
         }
-
-  ##### DLQs
-  UnicornWebEventBusDLQ:
-    Type: AWS::SQS::Queue
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
-    Properties:
-      SqsManagedSseEnabled: true
-      MessageRetentionPeriod: 1209600 # Maximum value, 1,209,600 (14days)
-      Tags:
-        - Key: project
-          Value: !FindInMap [Constants, ProjectName, Value]
-        - Key: namespace
-          Value: !FindInMap [Constants, ServiceNamespace, Value]
-        - Key: stage
-          Value: !Ref Stage
 
 #### OUTPUTS
 Outputs:

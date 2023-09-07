@@ -133,7 +133,7 @@ public class RequestApprovalFunction
             try
             {
                 var request = JsonSerializer.Deserialize<ApprovePublicationRequest>(record.Body);
-                propertyId = request?.PropertyId ?? "";
+                propertyId = request.PropertyId ?? "";
                 Logger.LogInformation($"Requesting approval for property: {propertyId}");
 
                 // Validate property ID
@@ -146,9 +146,10 @@ public class RequestApprovalFunction
                 // Parse Property Id functions
                 var ddbKeys = PropertyRecordHelper.ParsePropertyId(propertyId);
 
+                Logger.LogInformation($"PK: {ddbKeys["pk"]}, SK: {ddbKeys["sk"]} ");
+                
                 // Query table for property 
                 var properties = await QueryTableAsync(ddbKeys["pk"], ddbKeys["sk"]).ConfigureAwait(false);
-
                 if (!properties.Any())
                 {
                     Logger.LogError("No property found in database with the requested property id");
