@@ -12,6 +12,7 @@ using Amazon.EventBridge;
 using Amazon.EventBridge.Model;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
+using Amazon.Lambda.SQSEvents;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
@@ -42,7 +43,7 @@ public class RequestApprovalFunction
     {
         // Instrument all AWS SDK calls
         AWSSDKHandler.RegisterXRayForAllServices();
-        
+
         // Validate and set environment variables
         SetEnvironmentVariables();
 
@@ -51,7 +52,7 @@ public class RequestApprovalFunction
             new TypeMapping(typeof(PropertyRecord), _dynamodbTable);
         var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
         _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
-        
+
         // Initialise EventBridge client
         _eventBindingClient = new AmazonEventBridgeClient();
     }
@@ -117,84 +118,69 @@ public class RequestApprovalFunction
     /// <summary>
     /// Lambda handler for approving properties.
     /// </summary>
-    /// <param name="apigProxyEvent">API Gateway Lambda Proxy Request that triggers the function.</param>
+    /// <param name="sqsEvent">AWS SQS record. Could contain batch of records.</param>
     /// <param name="context">The context for the Lambda function.</param>
     /// <returns>API Gateway Lambda Proxy Response.</returns>
     [Logging(LogEvent = true, CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
     [Metrics(CaptureColdStart = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent,
-        ILambdaContext context)
+    public async Task FunctionHandler(SQSEvent sqsEvent, ILambdaContext context)
     {
-        string propertyId;
-        
-        try
+        foreach (var record in sqsEvent.Records)
         {
-            var request = JsonSerializer.Deserialize<RequestApprovalRequest>(apigProxyEvent.Body);
-            propertyId = request?.PropertyId ?? "";
-            Logger.LogInformation($"Requesting approval for property: {propertyId}");
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(e);
-            return await ApiResponse("Unable to parse event input as JSON", HttpStatusCode.BadRequest);
-        }
+            string? propertyId = null;
 
-        // Validate property ID
-        if (string.IsNullOrWhiteSpace(propertyId) || !Regex.Match(propertyId, Pattern).Success)
-        {
-            return await ApiResponse($"Input invalid; must conform to regular expression: {Pattern}",
-                HttpStatusCode.BadRequest);
-        }
-
-        var splitString = propertyId.Split('/');
-        var country = splitString[0];
-        var city = splitString[1];
-        var street = splitString[2];
-        var number = splitString[3];
-
-        var pk = PropertyRecordHelper.GetPartitionKey(country, city);
-        var sk = PropertyRecordHelper.GetSortKey(street, number);
-
-        try
-        {
-            var properties = await QueryTableAsync(pk, sk).ConfigureAwait(false);
-            
-            if (!properties.Any())
+            try
             {
-                return await ApiResponse("No property found in database with the requested property id",
-                    HttpStatusCode.InternalServerError);
-            }
+                var request = JsonSerializer.Deserialize<ApprovePublicationRequest>(record.Body);
+                propertyId = request.PropertyId ?? "";
+                Logger.LogInformation($"Requesting approval for property: {propertyId}");
 
-            var property = properties.First();
-            
-            // Do not approve properties in an approved state
-            if (string.Equals(property.Status, PropertyStatus.Approved, StringComparison.CurrentCultureIgnoreCase))
+                // Validate property ID
+                if (string.IsNullOrWhiteSpace(propertyId) || !Regex.Match(propertyId, Pattern).Success)
+                {
+                    Logger.LogCritical($"Input invalid; must conform to regular expression: {Pattern}");
+                    return;
+                }
+
+                // Parse Property Id functions
+                var ddbKeys = PropertyRecordHelper.ParsePropertyId(propertyId);
+
+                Logger.LogInformation($"PK: {ddbKeys["pk"]}, SK: {ddbKeys["sk"]} ");
+                
+                // Query table for property 
+                var properties = await QueryTableAsync(ddbKeys["pk"], ddbKeys["sk"]).ConfigureAwait(false);
+                if (!properties.Any())
+                {
+                    Logger.LogError("No property found in database with the requested property id");
+                    return;
+                }
+
+                var property = properties.First();
+
+                // Do not approve properties in an approved state
+                if (string.Equals(property.Status, PropertyStatus.Approved, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Logger.LogWarning($"Property is already {property.Status}; no action taken");
+                    return;
+                }
+
+                // Publish the event
+                await SendEventAsync(propertyId, property).ConfigureAwait(false);
+
+                // Add custom metric for the number of approval requests
+                Metrics.AddMetric("ApprovalsRequested", 1, MetricUnit.Count);
+                
+                Logger.LogInformation($"Stored item in DynamoDB;");
+            }
+            catch (Exception e)
             {
-                return await ApiResponse($"Property is already {property.Status}; no action taken", HttpStatusCode.InternalServerError);
+                Logger.LogError(e);
             }
-            // Reset status to pending, awaiting the result of the check.
-            property.Status = PropertyStatus.Pending;
-
-            // Publish the event
-            await SendEventAsync(propertyId, property).ConfigureAwait(false);
-            
-            // Add custom metric for the number of approval requests
-            Metrics.AddMetric("ApprovalsRequested", 1, MetricUnit.Count);
-            
-            Logger.LogInformation($"Storing new property in DynamoDB with PK {pk} and SK {sk}");
-            
-            await _dynamoDbContext.SaveAsync(property).ConfigureAwait(false);
-            Logger.LogInformation($"Stored item in DynamoDB;");
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(e);
-            return await ApiResponse(e.Message, HttpStatusCode.InternalServerError);
-        }
-        
-        return await ApiResponse("Approval Requested", HttpStatusCode.OK);
+        } //next Record
     }
+
+
 
     private async Task<List<PropertyRecord>> QueryTableAsync(string partitionKey, string sortKey)
     {
@@ -207,6 +193,19 @@ public class RequestApprovalFunction
             .ConfigureAwait(false);
     }
 
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="propertyId"></param>
+    /// <param name="property"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception> <summary>
+    /// 
+    /// </summary>
+    /// <param name="propertyId"></param>
+    /// <param name="property"></param>
+    /// <returns></returns>
     private async Task SendEventAsync(string propertyId, PropertyRecord property)
     {
         var requestApprovalEvent = new RequestApprovalEvent
@@ -246,6 +245,5 @@ public class RequestApprovalFunction
 
         Logger.LogInformation(
             $"Sent event to EventBridge; {response.FailedEntryCount} records failed; {response.Entries.Count} entries received");
-        
     }
 }
