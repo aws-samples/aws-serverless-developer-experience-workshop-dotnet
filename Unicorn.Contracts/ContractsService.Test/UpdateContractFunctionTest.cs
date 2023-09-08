@@ -1,18 +1,21 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.APIGatewayEvents;
+using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
-using Moq;
-using Unicorn.Contracts.ContractService;
 
-namespace Unicorn.Contracts.Tests;
+namespace Unicorn.Contracts.ContractService.Tests;
 
+[Collection("Sequential")]
 public class UpdateContractFunctionTest
 {
     private readonly ITestOutputHelper _testOutputHelper;
@@ -20,34 +23,46 @@ public class UpdateContractFunctionTest
     public UpdateContractFunctionTest(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
+        
+        // Set env variable for Powertools Metrics 
+        Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "ContractService");
     }
-
+    
     [Fact]
     public async Task UpdateContractPublishesApprovedContractStatusChangedEvent()
     {
-        // Arrange
         var request = TestHelpers.LoadApiGatewayProxyRequest("./events/update_valid_event.json");
-        
-        var mockDynamoDbContext = new Mock<IDynamoDBContext>();
 
-        var mockPublisher = new Mock<IPublisher>();
-        
-        var context = TestHelpers.NewLambdaContext();
+        var mockDynamoDbContext = Substitute.For<IDynamoDBContext>();
+
+        mockDynamoDbContext.LoadAsync<Contract>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new Contract()
+            {
+                PropertyId = "usa/anytown/main-street/123",
+                ContractId = Guid.NewGuid(),
+                Address = new Address()
+                {
+                    City = "anytown",
+                    Number = 123,
+                    Street = "main-street"
+                }
+            });
+
+        var mockPublisher = Substitute.For<IPublisher>();
+
+        var context = TestHelpers.NewLambdaContext();   
 
         var expectedResponse = new APIGatewayProxyResponse
         {
             StatusCode = (int)HttpStatusCode.OK,
             Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
         };
-        
-        var function =
-            new CreateContractFunction(mockDynamoDbContext.Object, mockPublisher.Object);
 
+        var function = new UpdateContractFunction(mockDynamoDbContext, mockPublisher);
         var response = await function.FunctionHandler(request, context);
-        
-        mockPublisher.Verify(
-            client => client.PublishEvent(It.IsAny<Contract>()), Times.Once); //TODO: Verify with contract status = DRAFT
-        
+
+        await mockPublisher.Received(1).PublishEvent(Arg.Any<Contract>());
+
         _testOutputHelper.WriteLine("Lambda Response: \n" + response.Body);
         _testOutputHelper.WriteLine("Expected Response: \n" + expectedResponse.Body);
 

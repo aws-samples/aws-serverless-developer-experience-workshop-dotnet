@@ -54,12 +54,12 @@ public class CreateContractFunction
     /// <summary>
     /// Testing constructor for CreateContractFunction
     /// </summary>
-    /// <param name="dynamoDbContext"></param>
-    /// <param name="publisher"></param>
+    /// <param name="dynamoDbContext">Instance of IDynamoDbContext</param>
+    /// <param name="publisher">Instance of IPublisher</param>
     public CreateContractFunction(IDynamoDBContext dynamoDbContext, IPublisher publisher)
     {
-        _publisher = publisher;
         _dynamoDbContext = dynamoDbContext;
+        _publisher = publisher;
     }
 
     /// <summary>
@@ -106,16 +106,16 @@ public class CreateContractFunction
             Address = contractRequest.Address,
             SellerName = contractRequest.SellerName
         };
-        
+
         Logger.AppendKey("Contract", contract);
         Logger.LogInformation("Creating new contract");
 
         // Create entry in DDB for new contract
         await CreateContract(contract).ConfigureAwait(false);
-        
+
         // Publish ContractStatusChanged event
         await _publisher.PublishEvent(contract).ConfigureAwait(false);
-        
+
         // return generated contract ID back to user:
         return new APIGatewayProxyResponse
         {
@@ -133,14 +133,14 @@ public class CreateContractFunction
     private CreateContractRequest ValidateRequestBody(APIGatewayProxyRequest apigProxyEvent)
     {
         Logger.LogInformation("Parsing API Gateway request body to CreateContractRequest type.");
-        
-        CreateContractRequest? request; 
-        
-        try 
+
+        CreateContractRequest? request;
+
+        try
         {
             if (apigProxyEvent.Body == null)
                 throw new EventValidationException("API Gateway.");
-            
+
             request = JsonSerializer.Deserialize<CreateContractRequest>(apigProxyEvent.Body, new JsonSerializerOptions()
             {
                 PropertyNameCaseInsensitive = true
@@ -196,6 +196,9 @@ public class CreateContractFunction
         {
             Logger.LogInformation($"Saving contract for Property ID: {contract.PropertyId}");
             await _dynamoDbContext.SaveAsync(contract);
+            
+            // Add custom metric for "New Contracts"
+            Metrics.AddMetric("NewContracts", 1, MetricUnit.Count, MetricResolution.Standard);
         }
         catch (Exception e)
         {

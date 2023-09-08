@@ -8,29 +8,31 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.EventBridge;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Util;
+using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-// [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
 namespace Unicorn.Contracts.ContractService
 {
     public class UpdateContractFunction
     {
         private readonly IDynamoDBContext _dynamoDbContext;
+        private readonly IPublisher _publisher;
 
         /// <summary>
         /// Default constructor for CreateContractFunction
         /// </summary>
         public UpdateContractFunction()
         {
+            AWSSDKHandler.RegisterXRayForAllServices();
+
+            _publisher = new Publisher();
+            
             var dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE");
             if (string.IsNullOrEmpty(dynamodbTable))
             {
@@ -45,15 +47,14 @@ namespace Unicorn.Contracts.ContractService
         }
 
         /// <summary>
-        /// 
+        /// Testing constructor for UpdateContractFunction
         /// </summary>
-        /// <param name="dynamoDbContext"></param>
-        /// <param name="eventBridgeClient"></param>
-        /// <param name="serviceNamespace"></param>
-        public UpdateContractFunction(IDynamoDBContext dynamoDbContext, AmazonEventBridgeClient eventBridgeClient,
-            string serviceNamespace)
+        /// <param name="dynamoDbContext">Instance of IDynamoDbContext</param>
+        /// <param name="publisher">Instance of IPublisher</param>
+        public UpdateContractFunction(IDynamoDBContext dynamoDbContext, IPublisher publisher)
         {
             _dynamoDbContext = dynamoDbContext;
+            _publisher = publisher;
         }
 
         /// <summary>
@@ -62,9 +63,9 @@ namespace Unicorn.Contracts.ContractService
         /// <param name="apigProxyEvent">API Gateway Lambda Proxy Request that triggers the function.</param>
         /// <param name="context">The context for the Lambda function.</param>
         /// <returns>API Gateway Lambda Proxy Response.</returns>
-        [Tracing]
+        [Logging(LogEvent = true)]
         [Metrics(CaptureColdStart = true)]
-        [Logging(LogEvent = true, CorrelationIdPath = CorrelationIdPaths.ApiGatewayRest)]
+        [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
         public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent,
             ILambdaContext context)
         {
@@ -82,10 +83,9 @@ namespace Unicorn.Contracts.ContractService
 
             // Create entry in DDB for new contract
             await UpdateContract(existingContract).ConfigureAwait(false);
-
+            
             // Publish ContractStatusChanged event
-            var publisher = new Publisher();
-            await publisher.PublishEvent(existingContract);
+            await _publisher.PublishEvent(existingContract).ConfigureAwait(false);
 
             // return generated contract ID back to user:
             return new APIGatewayProxyResponse
@@ -134,14 +134,14 @@ namespace Unicorn.Contracts.ContractService
         {
             try
             {
-                Console.WriteLine($"Getting contract {propertyId}");
+                Logger.LogInformation($"Getting contract {propertyId}");
                 var contract = await _dynamoDbContext.LoadAsync<Contract>(propertyId).ConfigureAwait(false);
-                Console.WriteLine($"Found contact: {contract != null}");
+                Logger.LogInformation($"Found contact: {contract != null}");
                 return contract;
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error loading contract {propertyId}: {e.Message}");
+                Logger.LogError($"Error loading contract {propertyId}: {e.Message}");
                 return null;
             }
         }
@@ -156,12 +156,12 @@ namespace Unicorn.Contracts.ContractService
         {
             try
             {
-                Console.WriteLine($"Saving contract with id {contract.PropertyId}");
+                Logger.LogInformation($"Saving contract with id {contract.PropertyId}");
                 await _dynamoDbContext.SaveAsync(contract).ConfigureAwait(false);
             }
             catch (AmazonDynamoDBException e)
             {
-                Console.WriteLine(e);
+                Logger.LogError(e);
                 throw;
             }
         }

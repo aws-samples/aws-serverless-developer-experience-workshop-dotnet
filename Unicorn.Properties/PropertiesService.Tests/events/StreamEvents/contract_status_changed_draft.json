@@ -9,21 +9,21 @@
       "dynamodb": {
         "ApproximateCreationDateTime": 1661269906.0,
         "Keys": {
-          "property_id": {
+          "PropertyId": {
             "S": "usa/anytown/main-street/999"
           }
         },
         "NewImage": {
-          "contract_last_modified_on": {
+          "ContractLastModifiedOn": {
             "S": "23/08/2022 15:51:44"
           },
-          "contract_id": {
+          "ContractId": {
             "S": "b9c03b51-5b8c-47c8-9d76-223679cde774"
           },
-          "contract_status": {
+          "ContractStatus": {
             "S": "DRAFT"
           },
-          "property_id": {
+          "PropertyId": {
             "S": "usa/anytown/main-street/999"
           }
         },
