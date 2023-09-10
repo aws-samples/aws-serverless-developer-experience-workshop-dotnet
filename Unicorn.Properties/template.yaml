@@ -272,7 +272,7 @@ Resources:
         PubApproReqEvent:
           Type: EventBridgeRule
           Properties:
-            RuleName: properties.pubapprovalwf-web.pubapprovalrequested
+            RuleName: unicorn.properties-PublicationApprovalRequested
             EventBusName: !GetAtt UnicornPropertiesEventBus.Name
             Pattern:
               source:
