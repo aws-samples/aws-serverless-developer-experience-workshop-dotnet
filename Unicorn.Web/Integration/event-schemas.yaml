@@ -1,10 +1,10 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: MIT-0
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Event Schemas for use by the Web Service'
+Description: 'Event Schemas for use by the Web Service'sdf
 
 #### PARAMETERS
-Parameters:
+Parameters:fasdfasdfasdf
   Stage:
     Type: String
     Default: local
