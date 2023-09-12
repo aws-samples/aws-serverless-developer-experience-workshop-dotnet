@@ -11,10 +11,11 @@ Metadata:
   cfn-lint:
     config:
       ignore_checks:
-        - ES4000      # Rule disabled because the CatchAll Rule doesn't need a DLQ
-        - ES6000      # Rule disabled because SQS DLOs don't need a RedrivePolicy
-        - WS2001      # Rule disabled because check does not support !ToJsonString transform
-        - ES1001      # Rule disabled because our Lambda functions don't need DestinationConfig.OnFailure
+        - ES4000 # Rule disabled because the CatchAll Rule doesn't need a DLQ
+        - ES6000 # Rule disabled because SQS DLOs don't need a RedrivePolicy
+        - WS2001 # Rule disabled because check does not support !ToJsonString transform
+        - ES1001 # Rule disabled because our Lambda functions don't need DestinationConfig.OnFailure
+        - W3002
 
 Parameters:
   Stage:
@@ -82,7 +83,6 @@ Resources:
       Type: String
       Name: !Sub /uni-prop/${Stage}/UnicornContractsEventBusArn
       Value: !GetAtt UnicornContractsEventBus.Arn
-
 
   #### LAMBDA FUNCTIONS
   # Processes customer API requests from SQS queue UnicornContractsIngestQueue
@@ -409,6 +409,22 @@ Resources:
                   - events:PutEvents
                 Resource: !GetAtt UnicornContractsEventBus.Arn
 
+  #### CLOUDFORMATION NESTED STACKS
+  EventSchemasStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: "integration/event-schemas.yaml"
+      Parameters:
+        Stage: !Ref Stage
+  SubscriberPoliciesStack:
+    Type: AWS::Serverless::Application
+    DependsOn:
+      - UnicornContractsEventBusNameParam
+    Properties:
+      Location: "integration/subscriber-policies.yaml"
+      Parameters:
+        Stage: !Ref Stage
+
 Outputs:
   #### API GATEWAY OUTPUTS
   BaseUrl:
@@ -436,6 +452,11 @@ Outputs:
     Description: ContractEventHandler function ARN
     Value: !GetAtt ContractEventHandlerFunction.Arn
 
+  #### EVENT BRIDGE OUTPUTS
+  UnicornContractsEventBusName:
+    Value: !GetAtt UnicornContractsEventBus.Name
+
   #### CLOUDWATCH LOGS OUTPUTS
   UnicornContractsCatchAllLogGroupArn:
+    Description: Log all events on the service's EventBridge Bus
     Value: !GetAtt UnicornContractsCatchAllLogGroup.Arn
