@@ -13,6 +13,7 @@ Parameters:
       - prod
 
 Resources:
+  #### UNICORN PROPERTIES EVENT SUBSCRIPTIONS
   PublicationEvaluationCompletedSubscriptionRule:
     Type: AWS::Events::Rule
     Properties:
