@@ -259,7 +259,6 @@ Resources:
         - Key: namespace
           Value: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsNamespace}}"
 
-
   #### EVENT BUS
   # Event bus for Unicorn Contract Service used to publish and consume events
   UnicornContractsEventBus:
