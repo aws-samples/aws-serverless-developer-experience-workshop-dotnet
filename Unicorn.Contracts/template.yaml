@@ -331,36 +331,28 @@ Resources:
           ]
         }
 
-  #### EVENT BRIDGE PIPES
+  ### EVENT BRIDGE PIPES
   # Pipe changed on DynamoDB Table to UnicornContractsEventBus
-  DdbStreamToEventPipe:
-    Type: AWS::Pipes::Pipe
-    Properties:
-      RoleArn: !GetAtt DdbStreamToEventPipeRole.Arn
-      Source: !GetAtt ContractsTable.StreamArn
-      SourceParameters:
-        DynamoDBStreamParameters:
-          StartingPosition: LATEST
-          OnPartialBatchItemFailure: AUTOMATIC_BISECT
-          BatchSize: 1
-        FilterCriteria:
-          Filters:
-            - Pattern: !ToJsonString
-                eventName: [INSERT, MODIFY]
-                dynamodb:
-                  NewImage:
-                    ContractStatus:
-                      S: [DRAFT, APPROVED]
-      Target: !GetAtt UnicornContractsEventBus.Arn
-      TargetParameters:
-        EventBridgeEventBusParameters:
-          Source: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsNamespace}}"
-          DetailType: ContractStatusChanged
-        InputTemplate: !ToJsonString
-          PropertyId: "<$.dynamodb.NewImage.PropertyId.S>"
-          ContractId: "<$.dynamodb.NewImage.ContractId.S>"
-          ContractStatus: "<$.dynamodb.NewImage.ContractStatus.S>"
-          ContractLastModifiedOn: "<$.dynamodb.NewImage.ContractLastModifiedOn.S>"
+  # DdbStreamToEventPipe:
+  #   Type: AWS::Pipes::Pipe
+  #   Properties:
+  #     RoleArn: !GetAtt DdbStreamToEventPipeRole.Arn
+  #     Source: !GetAtt ContractsTable.StreamArn
+  #     SourceParameters:
+  #       DynamoDBStreamParameters:
+  #         StartingPosition: LATEST
+  #         OnPartialBatchItemFailure: AUTOMATIC_BISECT
+  #         BatchSize: 1
+  #       # FilterCriteria:
+  #       #   Filters:
+  #       #     - Pattern: !ToJsonString
+            
+  #     Target: !GetAtt UnicornContractsEventBus.Arn
+  #     TargetParameters:
+  #       EventBridgeEventBusParameters:
+  #         Source: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsNamespace}}"
+  #         DetailType: ContractStatusChanged
+  #       # InputTemplate: !ToJsonString
 
   # IAM Role for Event Bridge Pipe
   DdbStreamToEventPipeRole:
