@@ -155,8 +155,6 @@ public class RequestApprovalFunction
         } //next Record
     }
 
-
-
     private async Task<List<PropertyRecord>> QueryTableAsync(string partitionKey, string sortKey)
     {
         var filter = new QueryFilter(PropertyNames.PrimaryKey, QueryOperator.Equal, partitionKey);
@@ -167,7 +165,6 @@ public class RequestApprovalFunction
             .GetRemainingAsync()
             .ConfigureAwait(false);
     }
-
 
     /// <summary>
     /// 

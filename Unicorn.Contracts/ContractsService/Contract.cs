@@ -65,7 +65,6 @@ public class CreateContractRequest
     [JsonPropertyName("property_id")] public string? PropertyId { get; set; }  
     [JsonPropertyName("address")] public Address? Address { get; set; }
     [JsonPropertyName("seller_name")] public string? SellerName { get; set; }
-    
 }
 
 /// <summary>
