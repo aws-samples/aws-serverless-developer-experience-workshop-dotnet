@@ -50,18 +50,21 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{053D1FC5-C093-460D-84DA-0598B6A66157}"
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Contracts\integration\subscriber-policies.yaml = Unicorn.Contracts\integration\subscriber-policies.yaml
+		Unicorn.Contracts\Integration\event-schemas.yaml = Unicorn.Contracts\Integration\event-schemas.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{0917028A-88F9-498A-924B-2A81EFCF31C4}"
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Web\Integration\subscriber-policies.yaml = Unicorn.Web\Integration\subscriber-policies.yaml
 		Unicorn.Web\Integration\subscriptions.yaml = Unicorn.Web\Integration\subscriptions.yaml
+		Unicorn.Web\Integration\event-schemas.yaml = Unicorn.Web\Integration\event-schemas.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{22AE94D7-96AF-42C4-93EB-5D3C4E6C7725}"
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Properties\Integration\subscriber-policies.yaml = Unicorn.Properties\Integration\subscriber-policies.yaml
 		Unicorn.Properties\Integration\subscriptions.yaml = Unicorn.Properties\Integration\subscriptions.yaml
+		Unicorn.Properties\Integration\event-schemas.yaml = Unicorn.Properties\Integration\event-schemas.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Shared", "Unicorn.Shared", "{CED6BEE6-D654-4263-AF91-307193203FC2}"
