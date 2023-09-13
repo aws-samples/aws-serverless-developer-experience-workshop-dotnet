@@ -91,31 +91,6 @@ public class RequestApprovalFunction
     }
 
     /// <summary>
-    /// Helper method to generate APIGatewayProxyResponse
-    /// </summary>
-    /// <param name="message">The message to include in the payload.</param>
-    /// <param name="statusCode">the HTTP status code</param>
-    /// <returns>APIGatewayProxyResponse</returns>
-    private static Task<APIGatewayProxyResponse> ApiResponse(string message, HttpStatusCode statusCode)
-    {
-        var body = new Dictionary<string, string>
-        {
-            { "message", message }
-        };
-
-        return Task.FromResult(new APIGatewayProxyResponse
-        {
-            Body = JsonSerializer.Serialize(body),
-            StatusCode = (int)statusCode,
-            Headers = new Dictionary<string, string>
-            {
-                { "Content-Type", "application/json" },
-                { "X-Custom-Header", "application/json" }
-            }
-        });
-    }
-
-    /// <summary>
     /// Lambda handler for approving properties.
     /// </summary>
     /// <param name="sqsEvent">AWS SQS record. Could contain batch of records.</param>
