@@ -44,9 +44,8 @@ Conditions:
 Globals:
   Function:
     Runtime: dotnet6
-    MemorySize: 512
+    MemorySize: 128
     Timeout: 15
-    Tracing: Active
     Architectures:
       - x86_64
     Environment:
@@ -54,13 +53,6 @@ Globals:
         CONTRACT_STATUS_TABLE: !Ref ContractStatusTable
         EVENT_BUS: !Ref UnicornPropertiesEventBus
         SERVICE_NAMESPACE: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesNamespace}}"
-        POWERTOOLS_LOGGER_CASE: PascalCase
-        POWERTOOLS_SERVICE_NAME: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesNamespace}}"
-        POWERTOOLS_TRACE_DISABLED: "false" # Explicitly disables tracing, default
-        POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"] # Logs incoming event, default
-        POWERTOOLS_LOGGER_SAMPLE_RATE: !If [IsProd, "0.1", "0"] # Debug log sampling percentage, default
-        POWERTOOLS_METRICS_NAMESPACE: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesNamespace}}"
-        POWERTOOLS_LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
         LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
     Tags:
       stage: !Ref Stage
@@ -92,10 +84,7 @@ Resources:
       CodeUri: ./PropertiesService
       Handler: Unicorn.Properties.PropertiesService::Unicorn.Properties.PropertiesService.ContractStatusChangedEventHandler::FunctionHandler
       Policies:
-        - DynamoDBWritePolicy:
-            TableName: !Ref ContractStatusTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ContractStatusTable
+        # IAM Policies go here
       Events:
         StatusChangedEvent:
           Type: EventBridgeRule
@@ -103,10 +92,7 @@ Resources:
             RuleName: unicorn.properties-ContractStatusChanged
             EventBusName: !GetAtt UnicornPropertiesEventBus.Name
             Pattern:
-              source:
-                - !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsNamespace}}"
-              detail-type:
-                - ContractStatusChanged
+              # EventBridge Rule patterns go here
             RetryPolicy:
               MaximumRetryAttempts: 5
               MaximumEventAgeInSeconds: 900
@@ -269,30 +255,6 @@ Resources:
               LogGroupArn: !GetAtt ApprovalStateMachineLogGroup.Arn
         Level: ALL
         IncludeExecutionData: true
-      Events:
-        PubApproReqEvent:
-          Type: EventBridgeRule
-          Properties:
-            RuleName: unicorn.properties-PublicationApprovalRequested
-            EventBusName: !GetAtt UnicornPropertiesEventBus.Name
-            Pattern:
-              source:
-                - !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornWebNamespace}}"
-              detail-type:
-                - PublicationApprovalRequested
-            RetryPolicy:
-              MaximumRetryAttempts: 5
-              MaximumEventAgeInSeconds: 900
-            DeadLetterConfig:
-              Type: SQS
-              Destination: !GetAtt PropertiesServiceDLQ.Arn
-      DefinitionSubstitutions:
-        ContractExistsChecker: !GetAtt ContractExistsCheckerFunction.Arn
-        WaitForContractApproval: !GetAtt WaitForContractApprovalFunction.Arn
-        ContentIntegrityValidator: !GetAtt ContentIntegrityValidatorFunction.Arn
-        ImageUploadBucketName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ImagesBucket}}"
-        EventBusName: !GetAtt UnicornPropertiesEventBus.Name
-        ServiceName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesNamespace}}"
 
   # Store ApprovalStateMachineLogGroup workflow execution logs
   ApprovalStateMachineLogGroup:
