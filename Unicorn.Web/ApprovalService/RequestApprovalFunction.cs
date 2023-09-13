@@ -218,7 +218,8 @@ public class RequestApprovalFunction
             {
                 Country = property.Country,
                 City = property.City,
-                Number = property.PropertyNumber
+                Number = property.PropertyNumber,
+                Street = property.Street,
             }
         };
 
