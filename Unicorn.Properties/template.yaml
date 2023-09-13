@@ -14,6 +14,8 @@ Metadata:
         - ES4000 # Rule disabled because the CatchAll Rule doesn't need a DLQ
         - ES6000 # Rule disabled because SQS DLOs don't need a RedrivePolicy
         - E0001 # Rule disabled because cfn-lint cannot parse SAM Policy templates without arguments (ComprehendBasicAccessPolicy, RekognitionDetectOnlyPolicy)
+        - WS2001 # Rule disabled because check does not support !ToJsonString transform
+        - ES1001 # Rule disabled because our Lambda functions don't need DestinationConfig.OnFailure
 
 Parameters:
   Stage:
@@ -58,6 +60,7 @@ Globals:
         POWERTOOLS_LOGGER_LOG_EVENT: !If [IsProd, "false", "true"] # Logs incoming event, default
         POWERTOOLS_LOGGER_SAMPLE_RATE: !If [IsProd, "0.1", "0"] # Debug log sampling percentage, default
         POWERTOOLS_METRICS_NAMESPACE: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesNamespace}}"
+        POWERTOOLS_LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
         LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
     Tags:
       stage: !Ref Stage
@@ -73,7 +76,7 @@ Resources:
       Type: String
       Name: !Sub /uni-prop/${Stage}/UnicornPropertiesEventBus
       Value: !GetAtt UnicornPropertiesEventBus.Name
-      
+
   UnicornPropertiesEventBusArnParam:
     Type: AWS::SSM::Parameter
     Properties:
@@ -181,7 +184,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref ContractStatusTable
 
-  # Log group for the ContractExistsCheckerFunction       
+  # Log group for the ContractExistsCheckerFunction
   ContractExistsCheckerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Delete
@@ -235,6 +238,8 @@ Resources:
         Enabled: true
       Policies:
         - AWSXRayDaemonWriteAccess
+        - ComprehendBasicAccessPolicy: {}
+        - RekognitionDetectOnlyPolicy: {}
         - LambdaInvokePolicy:
             FunctionName: !Ref WaitForContractApprovalFunction
         - LambdaInvokePolicy:
@@ -243,8 +248,6 @@ Resources:
             FunctionName: !Ref ContractExistsCheckerFunction
         - S3ReadPolicy:
             BucketName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ImagesBucket}}"
-        - ComprehendBasicAccessPolicy: {}
-        - RekognitionDetectOnlyPolicy: {}
         - EventBridgePutEventsPolicy:
             EventBusName: !GetAtt UnicornPropertiesEventBus.Name
         - Statement:
@@ -356,7 +359,6 @@ Resources:
         - Key: stage
           Value: !Ref Stage
 
-
   #### EVENT BUS
   # Event bus for Unicorn Properties Service, used to publish and consume events
   UnicornPropertiesEventBus:
@@ -443,12 +445,15 @@ Resources:
         }
 
   #### CLOUDFORMATION NESTED STACKS
+  # CloudFormation Stack with the Properties Service Event Registry and Schemas
   EventSchemasStack:
     Type: AWS::Serverless::Application
     Properties:
       Location: "integration/event-schemas.yaml"
       Parameters:
         Stage: !Ref Stage
+
+  # CloudFormation Stack with the Cross-service EventBus policy for Properties Service
   SubscriberPoliciesStack:
     Type: AWS::Serverless::Application
     DependsOn:
@@ -457,6 +462,8 @@ Resources:
       Location: "integration/subscriber-policies.yaml"
       Parameters:
         Stage: !Ref Stage
+
+  # CloudFormation Stack with the Cross-service EventBus Rules for Properties Service
   SubscriptionsStack:
     Type: AWS::Serverless::Application
     DependsOn:
