@@ -10,9 +10,6 @@ using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Tracing;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -62,18 +59,15 @@ public class ContractEventHandler
     /// <param name="sqsEvent">AWS SQS record. Could contain batch of records.</param>
     /// <param name="context">The context for the Lambda function.</param>
     /// <returns>API Gateway Lambda Proxy Response.</returns>
-    [Logging(LogEvent = true)]
-    [Metrics(CaptureColdStart = true)]
-    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public async Task FunctionHandler(SQSEvent sqsEvent, ILambdaContext context)
     {
         // Multiple records can be delivered in a single event
-        Logger.LogInformation($"Beginning to process {sqsEvent.Records.Count} records...");
+        Console.WriteLine($"Beginning to process {sqsEvent.Records.Count} records...");
 
         foreach (var record in sqsEvent.Records)
         {
             var method = record.MessageAttributes["HttpMethod"].StringValue; //?? "No attribute with HttpMethod";
-            Logger.LogInformation($"Identified HTTP Method : {method}");
+            Console.WriteLine($"Identified HTTP Method : {method}");
 
             switch (method)
             {
@@ -84,12 +78,12 @@ public class ContractEventHandler
                     await UpdateContractAsync(record);
                     break;
                 default:
-                    Logger.LogInformation("Nothing to process.");
+                    Console.WriteLine("Nothing to process.");
                     break;
             }
         }
 
-        Logger.LogInformation("Processing complete.");
+        Console.WriteLine("Processing complete.");
     }
 
     /// <summary>
@@ -102,11 +96,10 @@ public class ContractEventHandler
     ///  log exception message
     /// </summary>
     /// <param name="sqsMessage"></param>
-    [Tracing(SegmentName = "Create Contract")]
     private async Task CreateContractAsync(SQSEvent.SQSMessage sqsMessage)
     {
-        Logger.LogInformation("Converting SQSMessage body to CreateContractRequest object.");
-        Logger.LogInformation(sqsMessage.Body);
+        Console.WriteLine("Converting SQSMessage body to CreateContractRequest object.");
+        Console.WriteLine(sqsMessage.Body);
         var createContractRequest = JsonSerializer.Deserialize<CreateContractRequest>(sqsMessage.Body,
             new JsonSerializerOptions()
             {
@@ -124,7 +117,7 @@ public class ContractEventHandler
 
         try
         {
-            Logger.LogInformation(
+            Console.WriteLine(
                 $"Creating new contract for Property ID: {contract.PropertyId} in table '{_dynamodbTable}' ");
 
             var request = new PutItemRequest()
@@ -158,27 +151,26 @@ public class ContractEventHandler
                 }
             };
 
-            Logger.LogInformation(JsonSerializer.Serialize(request));
+            Console.WriteLine(JsonSerializer.Serialize(request));
 
             var response = await _dynamoDbClient.PutItemAsync(request).ConfigureAwait(false);
 
-            Logger.LogInformation(response);
+            Console.WriteLine(response);
 
-            // Add custom metric for "New Contracts"
-            Metrics.AddMetric("NewContracts", 1, MetricUnit.Count, MetricResolution.Standard);
+            // Add custom metric for "New Contracts"....
+
         }
         catch (ConditionalCheckFailedException e)
         {
-            Logger.LogError($"Unable to create new contract, because `{e.Message}`. Perhaps you are trying to add a contract that already has an active status?");
+            Console.WriteLine($"Unable to create new contract, because `{e.Message}`. Perhaps you are trying to add a contract that already has an active status?");
         }
         catch (Exception e)
         {
-            Logger.LogError(e.Message);
+            Console.WriteLine(e.Message);
             throw;
         }
     }
-
-    [Tracing(SegmentName = "Update Contract")]
+    
     private async Task UpdateContractAsync(SQSEvent.SQSMessage sqsMessage)
     {
         var updateContractRequest = JsonSerializer.Deserialize<UpdateContractRequest>(sqsMessage.Body,
@@ -187,12 +179,12 @@ public class ContractEventHandler
                 PropertyNameCaseInsensitive = true
             });
 
-        Logger.LogInformation("Creating new contract");
+        Console.WriteLine("Creating new contract");
 
 
         if (updateContractRequest == null)
         {
-            Logger.LogError("Unable to Update contract. UpdateContractRequest is null.");
+            Console.WriteLine("Unable to Update contract. UpdateContractRequest is null.");
             return;
         }
 
@@ -221,11 +213,11 @@ public class ContractEventHandler
 
             var response = await _dynamoDbClient.UpdateItemAsync(request);
         
-            Logger.LogInformation(response);
+            Console.WriteLine(response);
         }
         catch (Exception e)
         {
-            Logger.LogError(e.Message);
+            Console.WriteLine(e.Message);
             throw;
         }
         

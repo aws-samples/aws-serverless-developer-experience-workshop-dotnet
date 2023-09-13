@@ -5,8 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.Lambda.Core;
 // using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Metrics;
+
 // using AWS.Lambda.Powertools.Tracing;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -35,9 +34,6 @@ public class ContentIntegrityValidatorFunction
     /// </summary>
     /// <param name="input">The input payload</param>
     /// <param name="context">Lambda Context runtime methods and attributes</param>
-    [Logging(LogEvent = true)]
-    [Metrics(CaptureColdStart = true)]
-    // [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public object FunctionHandler(object input, ILambdaContext context)
     {
         var status = "PASS";

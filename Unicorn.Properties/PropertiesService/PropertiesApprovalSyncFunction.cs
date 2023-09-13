@@ -11,9 +11,6 @@ using Amazon.StepFunctions;
 using Amazon.StepFunctions.Model;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 namespace Unicorn.Properties.PropertiesService;
@@ -69,9 +66,7 @@ public class PropertiesApprovalSyncFunction
     /// </summary>
     /// <param name="dynamoEvent">Instance of <see cref="DynamoDBEvent"/></param>
     /// <param name="context">Lambda Context runtime methods and attributes</param>
-    [Logging(LogEvent = true)]
-    [Metrics(CaptureColdStart = true)]
-    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+
     public async Task FunctionHandler(DynamoDBEvent? dynamoEvent, ILambdaContext context)
     {
         // process DDB
@@ -82,13 +77,13 @@ public class PropertiesApprovalSyncFunction
             
             if (string.IsNullOrEmpty(item.SfnWaitApprovedTaskToken))
             {
-                Logger.LogInformation("Contract status has no approval token, nothing to sync");
+                Console.WriteLine("Contract status has no approval token, nothing to sync");
                 return;
             }
 
             if (item.ContractStatus != "APPROVED")
             {
-                Logger.LogInformation("Contract status for property is not APPROVED, cannot sync.");
+                Console.WriteLine("Contract status for property is not APPROVED, cannot sync.");
                 return;
             }
 
@@ -106,18 +101,18 @@ public class PropertiesApprovalSyncFunction
                 }
                 catch (Exception e)
                 {
-                    Logger.LogError(e);
+                    Console.WriteLine(e);
                     throw;
                 }
             }
             else
             {
-                Logger.LogInformation("Contract status for property is not APPROVED, cannot sync.");
+                Console.WriteLine("Contract status for property is not APPROVED, cannot sync.");
                 return;
             }
         }
 
-        Logger.LogInformation("Property approval sync complete.");
+        Console.WriteLine("Property approval sync complete.");
     }
 
     /// <summary>
@@ -126,19 +121,18 @@ public class PropertiesApprovalSyncFunction
     /// <param name="propertyId">Property ID</param>
     /// <returns>Instance of <see cref="ContractStatusItem"/></returns>
     /// <exception cref="ContractStatusNotFoundException"></exception>
-    [Tracing(SegmentName = "Get Contract Status")]
     private async Task<ContractStatusItem> GetContractStatusItem(string propertyId)
     {
         ContractStatusItem? item;
         try
         {
-            Logger.LogInformation($"Getting Contract Status for {propertyId}");
+            Console.WriteLine($"Getting Contract Status for {propertyId}");
             item = await _dynamoDbContext.LoadAsync<ContractStatusItem>(propertyId).ConfigureAwait(false);
-            Logger.LogInformation($"Found contact: {item != null}");
+            Console.WriteLine($"Found contact: {item != null}");
         }
         catch (Exception e)
         {
-            Logger.LogInformation($"Error loading contract status {propertyId}: {e.Message}");
+            Console.WriteLine($"Error loading contract status {propertyId}: {e.Message}");
             item = null;
         }
        

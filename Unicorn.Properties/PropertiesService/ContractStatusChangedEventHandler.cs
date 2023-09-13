@@ -9,8 +9,6 @@ using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -50,28 +48,25 @@ public class ContractStatusChangedEventHandler
     /// </summary>
     /// <param name="contractStatusChangedEvent">EventBridge event that triggers this function</param>
     /// <param name="context">Lambda Context runtime methods and attributes</param>
-    [Logging(LogEvent = true)]
-    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public async Task FunctionHandler(CloudWatchEvent<ContractStatusChangedEvent> contractStatusChangedEvent,
         ILambdaContext context)
     {
-        Logger.LogInformation(JsonSerializer.Serialize(contractStatusChangedEvent));
+        Console.WriteLine(JsonSerializer.Serialize(contractStatusChangedEvent));
         try
         {
             await SaveContractStatus(contractStatusChangedEvent.Detail).ConfigureAwait(false);
         }
         catch (Exception e)
         {
-            Logger.LogError(e.Message);
+            Console.WriteLine(e.Message);
             throw new ContractStatusChangedEventHandlerException(e.Message);
         }
     }
 
-    [Tracing(SegmentName = "Save Contract Status")]
     private async Task SaveContractStatus(ContractStatusChangedEvent contractStatus)
     {
-        Logger.LogInformation($"Updating contract status for Property ID: {contractStatus.PropertyId}");
+        Console.WriteLine($"Updating contract status for Property ID: {contractStatus.PropertyId}");
         await _dynamoDbContext.SaveAsync(contractStatus).ConfigureAwait(false);
-        Logger.LogInformation($"Contract status updated for Property ID: {contractStatus.PropertyId}");
+        Console.WriteLine($"Contract status updated for Property ID: {contractStatus.PropertyId}");
     }
 }

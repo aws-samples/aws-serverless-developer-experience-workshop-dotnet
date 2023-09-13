@@ -11,9 +11,6 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Tracing;
 using Unicorn.Web.Common;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
@@ -61,9 +58,7 @@ public class PropertySearchFunction
     /// <param name="apigProxyEvent">API Gateway Lambda Proxy Request that triggers the function.</param>
     /// <param name="context">The context for the Lambda function.</param>
     /// <returns>API Gateway Lambda Proxy Response.</returns>
-    [Logging(LogEvent = true)]
-    [Metrics(CaptureColdStart = true)]
-    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+
     public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
     {
         var response = new APIGatewayProxyResponse
@@ -124,8 +119,8 @@ public class PropertySearchFunction
                     break;
             }
 
-            Logger.LogInformation($"Path is: {requestPath}");
-            Logger.LogInformation($"PartitionKey is: {partitionKey} and SortKey is: {sortKey}");
+            Console.WriteLine($"Path is: {requestPath}");
+            Console.WriteLine($"PartitionKey is: {partitionKey} and SortKey is: {sortKey}");
 
             if (string.IsNullOrEmpty(partitionKey))
             {
@@ -144,7 +139,7 @@ public class PropertySearchFunction
         }
         catch (Exception e)
         {
-            Logger.LogError(e);
+            Console.WriteLine(e);
             var body = new Dictionary<string, string>
             {
                 { "message", "ErrorInRequest" },

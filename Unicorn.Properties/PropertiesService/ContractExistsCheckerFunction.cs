@@ -8,9 +8,6 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -55,9 +52,6 @@ public class ContractExistsCheckerFunction
     /// <param name="input">The input payload</param>
     /// <param name="context">Lambda Context runtime methods and attributes</param>
     /// <exception cref="ContractStatusNotFoundException"></exception>
-    [Logging(LogEvent = true)]
-    [Metrics(CaptureColdStart = true)]
-    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public async Task FunctionHandler(object input, ILambdaContext context)
     {
         var document = JsonSerializer.SerializeToDocument(input);
@@ -75,19 +69,18 @@ public class ContractExistsCheckerFunction
     /// </summary>
     /// <param name="propertyId">Property ID</param>
     /// <returns>Instance of <see cref="ContractStatusItem"/></returns>
-    [Tracing]
     private async Task<ContractStatusItem?> GetContractStatus(string propertyId)
     {
         try
         {
-            Logger.LogInformation($"Getting Contract Status for {propertyId}");
+            Console.WriteLine($"Getting Contract Status for {propertyId}");
             var item = await _dynamoDbContext.LoadAsync<ContractStatusItem>(propertyId).ConfigureAwait(false);
-            Logger.LogInformation($"Found contact: {item != null}");
+            Console.WriteLine($"Found contact: {item != null}");
             return item;
         }
         catch (Exception e)
         {
-            Logger.LogInformation($"Error loading contract {propertyId}: {e.Message}");
+            Console.WriteLine($"Error loading contract {propertyId}: {e.Message}");
             return null;
         }
     }

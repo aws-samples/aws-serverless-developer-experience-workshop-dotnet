@@ -8,9 +8,6 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using AWS.Lambda.Powertools.Logging;
-using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Tracing;
 using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 // Assembly attribute already set
@@ -54,17 +51,14 @@ public class WaitForContractApprovalFunction
     /// </summary>
     /// <param name="input">The input payload</param>
     /// <param name="context">Lambda Context runtime methods and attributes</param>
-    [Logging(LogEvent = true)]
-    [Metrics(CaptureColdStart = true)]
-    [Tracing]
     public async Task FunctionHandler(object input, ILambdaContext context)
     {
         var document = JsonSerializer.SerializeToDocument(input);
         var propertyId = document.RootElement.GetProperty("Input").GetProperty("PropertyId").GetString() ?? "";
         var taskToken = document.RootElement.GetProperty("TaskToken").GetString();
        
-        Logger.LogInformation($"Property Id : {propertyId}");
-        Logger.LogInformation($"Task Token : {taskToken}");
+        Console.WriteLine($"Property Id : {propertyId}");
+        Console.WriteLine($"Task Token : {taskToken}");
 
         var contractStatus = await GetContractStatus(propertyId).ConfigureAwait(false);
         if (contractStatus == null)
@@ -80,35 +74,33 @@ public class WaitForContractApprovalFunction
     /// </summary>
     /// <param name="propertyId">Property ID</param>
     /// <returns>Instance of <see cref="ContractStatusItem"/></returns>
-    [Tracing(SegmentName = "Get Contract Status")]
     private async Task<ContractStatusItem?> GetContractStatus(string propertyId)
     {
         ContractStatusItem? item;
         try
         {
-            Logger.LogInformation($"Getting Contract Status for {propertyId}");
+            Console.WriteLine($"Getting Contract Status for {propertyId}");
             item = await _dynamoDbContext.LoadAsync<ContractStatusItem>(propertyId).ConfigureAwait(false);
         }
         catch (Exception e)
         {
-            Logger.LogInformation($"Error loading contract {propertyId}: {e.Message}");
+            Console.WriteLine($"Error loading contract {propertyId}: {e.Message}");
             item = null;
         }
-        Logger.LogInformation($"Found contact: {item != null}");
+        Console.WriteLine($"Found contact: {item != null}");
         return item;
     }
-
-    [Tracing(SegmentName = "Save Contract Status")]
+    
     private async Task SaveContractStatus(ContractStatusItem contractStatus)
     {
         try
         {
-            Logger.LogInformation($"Saving contract for Property ID: {contractStatus.PropertyId}");
+            Console.WriteLine($"Saving contract for Property ID: {contractStatus.PropertyId}");
             await _dynamoDbContext.SaveAsync(contractStatus);
         }
         catch (Exception e)
         {
-            Logger.LogError(e.Message);
+            Console.WriteLine(e.Message);
             throw;
         }
     }
