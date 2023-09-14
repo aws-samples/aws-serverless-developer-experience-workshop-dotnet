@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: MIT-0
 
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.Model;
 
 namespace Unicorn.Contracts.ContractService;
 
@@ -13,19 +14,18 @@ namespace Unicorn.Contracts.ContractService;
 [Serializable]
 public class Contract
 {
-    [DynamoDBHashKey]
-    public string? PropertyId { get; init; }
-    
+    public string? PropertyId { get; set; }
+
     public Guid ContractId { get; init; }
-    
+
     public string ContractStatus { get; set; } = Unicorn.Contracts.ContractService.ContractStatus.Draft;
-    
+
     public DateTime ContractCreated { get; } = DateTime.Now;
-    
+
     public DateTime ContractLastModifiedOn { get; set; } = DateTime.Now;
-    
+
     public Address? Address { get; set; }
-    
+
     public string? SellerName { get; set; }
 }
 
@@ -43,6 +43,18 @@ public class Address
     [JsonPropertyName("street")] public string? Street { get; set; }
     [JsonPropertyName("city")] public string? City { get; set; }
     [JsonPropertyName("country")] public string Country { get; } = "USA";
+    
+    public Dictionary<string, AttributeValue> ToMap()
+    {
+        
+        return new Dictionary<string, AttributeValue>(){
+            { "Number", new AttributeValue { N = this.Number.ToString() } },
+            { "Street", new AttributeValue { S = this.Street } },
+            { "City", new AttributeValue { S = this.City } },
+            { "Country", new AttributeValue { S = this.Country } },
+        };
+    }
+    
 }
 
 /// <summary>

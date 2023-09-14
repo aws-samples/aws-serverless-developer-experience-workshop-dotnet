@@ -1,0 +1,30 @@
+{
+  "Records": [
+    {
+      "MessageId": "44d10dcd-a95c-4f5e-ae1c-1ed8eb57d5d9",
+      "ReceiptHandle": "AQEBa6L4iYnFwdWMN1hX53Z/M4DUPIzthQm5zAl3QmXPG3ULYDQmguq4QnCTHS6+bmBqyW0y1rtwYAdAKOMavaTm3KlgPZ3oE5gB96h+7IuZ7TpFmdXII/2/RPt0tdNEqEpzQvOtwAal6oc8ku++LrD4E1rQS6rHq0gP0EVTNvHrWvKWRH6YjdKCDk7V6Lz7cEa/3C0A2W6FVY59qCPNm2i2hHJ1LfdCq1OvFtYvdYNNCt8AnwtO1TbIxHD619/w4J3Bplh4dtlCCl3V8gU2RQDC5dTV+w18p1lCAGxPvOtg3AHGjuIO7bcP3sTypx+Zk0St7f9uAb9GjYOq6IWJn1f2NW1YNvRL4Q9dViYTh2edosheXgf0inJcVhmCAhRws68nLwo3z9GMWQ3Dnmy63oUpcLdIeAKFmL1TpXDX+MkzpF8=",
+      "Body": "{\n\"address\": {\n\"country\": \"USA\",\n\"city\": \"Anytown\",\n\"street\": \"Main Street\",\n\"number\": 222\n},\n\"seller_name\": \"John Doe\",\n\"property_id\": \"usa/anytown/main-street/222\"\n}",
+      "Md5OfBody": "14f0625a4851cfef106e357a8c1d35d5",
+      "Md5OfMessageAttributes": "b51fb21666798a04bb45833ff6dc08ad",
+      "EventSourceArn": "arn:aws:sqs:ap-southeast-2:538510314095:UnicornContractsIngestQueue-Local",
+      "EventSource": "aws:sqs",
+      "AwsRegion": "ap-southeast-2",
+      "Attributes": {
+        "ApproximateReceiveCount": "1",
+        "AWSTraceHeader": "Root=1-64ecd84d-4a2da7f65382e046529ea845;Parent=6b5b612e4092a87f;Sampled=1",
+        "SentTimestamp": "1693243469540",
+        "SenderId": "AROAX2YNXJJX23OWVT6JY:BackplaneAssumeRoleSession",
+        "ApproximateFirstReceiveTimestamp": "1693243469542"
+      },
+      "MessageAttributes": {
+        "HttpMethod": {
+          "StringValue": "POST",
+          "BinaryValue": null,
+          "StringListValues": [],
+          "BinaryListValues": [],
+          "DataType": "String"
+        }
+      }
+    }
+  ]
+}
