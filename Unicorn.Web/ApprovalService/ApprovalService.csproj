@@ -13,12 +13,11 @@
         <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="4.3.0" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.1" />
-        <PackageReference Include="AWS.Lambda.Powertools.Common" Version="1.1.2" />
-        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.2.0" />
-        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.3.3" />
-        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.1.2" />
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.201.6" />
-        <PackageReference Include="AWSSDK.EventBridge" Version="3.7.201.2" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.3.0" />
+        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.4.0" />
+        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.3.0" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.201.12" />
+        <PackageReference Include="AWSSDK.EventBridge" Version="3.7.202.4" />
         <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.12.0" />
     </ItemGroup>
 
