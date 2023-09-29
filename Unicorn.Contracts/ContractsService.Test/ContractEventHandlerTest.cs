@@ -3,18 +3,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.SQSEvents;
+using AWS.Lambda.Powertools.Metrics;
 using FizzWare.NBuilder;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Unicorn.Contracts.ContractService.Tests;
-
 
 [Collection("Sequential")]
 public class ContractEventHandlerTest
@@ -26,7 +28,7 @@ public class ContractEventHandlerTest
         _testOutputHelper = testOutputHelper;
 
         // Set env variable for Powertools Metrics 
-        Environment.SetEnvironmentVariable("DYNAMODB_TABLE", "uni-prop-local-contract-ContractsTable-1HWB3CU0SJBTQ");
+        Environment.SetEnvironmentVariable("DYNAMODB_TABLE", "uni-prop-local-contract-ContractsTable");
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "ContractService");
     }
 
@@ -55,15 +57,18 @@ public class ContractEventHandlerTest
             }
         };
 
-        var dynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
+        var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
+        mockDynamoDbClient.PutItemAsync(Arg.Any<PutItemRequest>())
+            .Returns(new PutItemResponse());
+        
         var context = TestHelpers.NewLambdaContext();
 
         // Act
-        var function = new ContractEventHandler(dynamoDbClient);
+        var function = new ContractEventHandler(mockDynamoDbClient);
         await function.FunctionHandler(sqsEvent, context);
 
         // Assert
-        await dynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
+        await mockDynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
         
     }
 
@@ -92,15 +97,19 @@ public class ContractEventHandlerTest
             }
         };
 
-        var dynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
+        var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
+        mockDynamoDbClient.UpdateItemAsync(Arg.Any<UpdateItemRequest>())
+            .Returns(new UpdateItemResponse());
+        
         var context = TestHelpers.NewLambdaContext();
 
         // Arrange
-        var function = new ContractEventHandler(dynamoDbClient);
+        var function = new ContractEventHandler(mockDynamoDbClient);
         await function.FunctionHandler(sqsEvent, context);
 
         // Assert
-        await dynamoDbClient.Received(1).UpdateItemAsync(Arg.Any<UpdateItemRequest>());
+        await mockDynamoDbClient.Received(1)
+            .UpdateItemAsync(Arg.Any<UpdateItemRequest>());
     }
 }
 public class ApiGwSqsPayload

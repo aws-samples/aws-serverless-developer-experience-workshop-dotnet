@@ -18,7 +18,7 @@
       },
       "MessageAttributes": {
         "HttpMethod": {
-          "StringValue": "POST",
+          "StringValue": "PUT",
           "BinaryValue": null,
           "StringListValues": [],
           "BinaryListValues": [],
