@@ -70,7 +70,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Shared", "Unicorn.Shared", "{CED6BEE6-D654-4263-AF91-307193203FC2}"
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Shared\samconfig.yaml = Unicorn.Shared\samconfig.yaml
-		Unicorn.Shared\uni-prop-shared.yaml = Unicorn.Shared\uni-prop-shared.yaml
+		Unicorn.Shared\template.yaml = Unicorn.Shared\template.yaml
 	EndProjectSection
 EndProject
 Global

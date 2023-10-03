@@ -3,14 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.SQSEvents;
-using AWS.Lambda.Powertools.Metrics;
 using FizzWare.NBuilder;
 using NSubstitute;
 using Xunit;
