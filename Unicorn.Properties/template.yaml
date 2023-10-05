@@ -61,7 +61,7 @@ Globals:
         POWERTOOLS_LOGGER_SAMPLE_RATE: !If [IsProd, "0.1", "0"] # Debug log sampling percentage, default
         POWERTOOLS_METRICS_NAMESPACE: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesNamespace}}"
         POWERTOOLS_LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
-        LOG_LEVEL: INFO # Log level for Logger (INFO, DEBUG, etc.), default
+        LOG_LEVEL: INFO # Log level for Logger
     Tags:
       stage: !Ref Stage
       project: !FindInMap [Constants, ProjectName, Value]
@@ -449,7 +449,7 @@ Resources:
   EventSchemasStack:
     Type: AWS::Serverless::Application
     Properties:
-      Location: "integration/event-schemas.yaml"
+      Location: "Integration/event-schemas.yaml"
       Parameters:
         Stage: !Ref Stage
 
@@ -459,7 +459,7 @@ Resources:
     DependsOn:
       - UnicornPropertiesEventBusNameParam
     Properties:
-      Location: "integration/subscriber-policies.yaml"
+      Location: "Integration/subscriber-policies.yaml"
       Parameters:
         Stage: !Ref Stage
 
@@ -469,7 +469,7 @@ Resources:
     DependsOn:
       - UnicornPropertiesEventBusArnParam
     Properties:
-      Location: "integration/subscriptions.yaml"
+      Location: "Integration/subscriptions.yaml"
       Parameters:
         Stage: !Ref Stage
 
