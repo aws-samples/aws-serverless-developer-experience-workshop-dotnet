@@ -7,6 +7,7 @@
         <AssemblyName>Unicorn.Contracts.ContractService</AssemblyName>
         <RootNamespace>Unicorn.Contracts.ContractService</RootNamespace>
         <Nullable>enable</Nullable>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

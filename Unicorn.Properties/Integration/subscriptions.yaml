@@ -32,7 +32,9 @@ Resources:
           Arn:
             Fn::Sub: "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesEventBusArn}}"
           RoleArn:
-            Fn::GetAtt: UnicornPropertiesSubscriptionRole.Arn
+            Fn::GetAtt: 
+              - UnicornPropertiesSubscriptionRole
+              - Arn
 
   #### UNICORN WEB EVENT SUBSCRIPTIONS
   PublicationApprovalRequestedSubscriptionRule:
@@ -53,7 +55,9 @@ Resources:
           Arn:
             Fn::Sub: "{{resolve:ssm:/uni-prop/${Stage}/UnicornPropertiesEventBusArn}}"
           RoleArn:
-            Fn::GetAtt: UnicornPropertiesSubscriptionRole.Arn
+            Fn::GetAtt: 
+              - UnicornPropertiesSubscriptionRole
+              - Arn
 
 
   # This IAM role allows EventBridge to assume the permissions necessary to send events 
@@ -81,9 +85,13 @@ Outputs:
   ContractStatusChangedSubscription:
     Description: Rule ARN for Contract service event subscription
     Value:
-      Fn::GetAtt: ContractStatusChangedSubscriptionRule.Arn
+      Fn::GetAtt: 
+        - ContractStatusChangedSubscriptionRule
+        - Arn
 
   PublicationApprovalRequestedSubscription:
     Description: Rule ARN for Web service event subscription
     Value:
-      Fn::GetAtt: PublicationApprovalRequestedSubscriptionRule.Arn
+      Fn::GetAtt: 
+        - PublicationApprovalRequestedSubscriptionRule
+        - Arn

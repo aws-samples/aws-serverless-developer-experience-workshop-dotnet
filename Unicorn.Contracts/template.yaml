@@ -70,10 +70,19 @@ Globals:
 
 Resources:
   #### SSM PARAMETERS
+  
+  # Service Namespaces
+  UnicornContractsNamespaceParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: /uni-prop/UnicornContractsNamespace
+      Value: "unicorn.contracts"
+      
   # Services share their event bus name and arn
   UnicornContractsEventBusNameParam:
     Type: AWS::SSM::Parameter
-    Properties:
+    Properties: 
       Type: String
       Name: !Sub /uni-prop/${Stage}/UnicornContractsEventBus
       Value: !GetAtt UnicornContractsEventBus.Name

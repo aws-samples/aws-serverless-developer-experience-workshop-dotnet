@@ -5,6 +5,7 @@
         <AssemblyName>Unicorn.Contracts.ContractService.Tests</AssemblyName>
         <RootNamespace>Unicorn.Contracts.ContractService.Tests</RootNamespace>
         <Nullable>enable</Nullable>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

@@ -73,6 +73,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Shared", "Unicorn.S
 		Unicorn.Shared\template.yaml = Unicorn.Shared\template.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractService.Cdk", "Unicorn.Contracts\ContractsService.Cdk\src\Cdk\ContractService.Cdk.csproj", "{C1732B92-EC89-4EFC-A343-C9660C282467}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +117,10 @@ Global
 		{1833D4D3-09EB-4599-9E07-CD3D27D3446C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1833D4D3-09EB-4599-9E07-CD3D27D3446C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1833D4D3-09EB-4599-9E07-CD3D27D3446C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1732B92-EC89-4EFC-A343-C9660C282467}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1732B92-EC89-4EFC-A343-C9660C282467}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1732B92-EC89-4EFC-A343-C9660C282467}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1732B92-EC89-4EFC-A343-C9660C282467}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{8FBB3C26-DD69-4D71-8988-F3BA79BF55BB} = {18C75C53-AD2C-4EAA-A13F-E5AE7F1C0DA3}
@@ -129,5 +135,6 @@ Global
 		{053D1FC5-C093-460D-84DA-0598B6A66157} = {18C75C53-AD2C-4EAA-A13F-E5AE7F1C0DA3}
 		{0917028A-88F9-498A-924B-2A81EFCF31C4} = {7CE383EB-7FD5-44C9-A470-5C603D4E06DC}
 		{22AE94D7-96AF-42C4-93EB-5D3C4E6C7725} = {F04908B5-232B-4007-A4DA-572106DF05FA}
+		{C1732B92-EC89-4EFC-A343-C9660C282467} = {18C75C53-AD2C-4EAA-A13F-E5AE7F1C0DA3}
 	EndGlobalSection
 EndGlobal
