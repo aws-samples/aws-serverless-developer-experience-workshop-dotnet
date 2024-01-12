@@ -272,6 +272,7 @@ Resources:
         IncludeExecutionData: true
       Events:
         PublicationApprovalRequestedEvent:
+        PublicationApprovalRequestedEvent:
           Type: EventBridgeRule
           Properties:
             RuleName: unicorn.properties-PublicationApprovalRequested
@@ -451,6 +452,8 @@ Resources:
     Type: AWS::Serverless::Application
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
     Properties:
       Location: "Integration/event-schemas.yaml"
       Parameters:
@@ -461,6 +464,8 @@ Resources:
     Type: AWS::Serverless::Application
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
     DependsOn:
       - UnicornPropertiesEventBusNameParam
     Properties:
@@ -469,16 +474,16 @@ Resources:
         Stage: !Ref Stage
 
   # CloudFormation Stack with the Cross-service EventBus Rules for Properties Service
-  # SubscriptionsStack:
-  #   Type: AWS::Serverless::Application
-  #   UpdateReplacePolicy: Delete
-  #   DeletionPolicy: Delete
-  #   DependsOn:
-  #     - UnicornPropertiesEventBusArnParam
-  #   Properties:
-  #     Location: "Integration/subscriptions.yaml"
-  #     Parameters:
-  #       Stage: !Ref Stage
+  SubscriptionsStack:
+    Type: AWS::Serverless::Application
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    DependsOn:
+      - UnicornPropertiesEventBusArnParam
+    Properties:
+      Location: "Integration/subscriptions.yaml"
+      Parameters:
+        Stage: !Ref Stage
 
 Outputs:
   #### DYNAMODB OUTPUTS
