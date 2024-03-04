@@ -22,7 +22,7 @@ States:
     Comment: >-
       ContractExistsChecker checks to see if a contract for a specified
       property exists.
-  
+
   NotFound:
     Type: Fail
 
@@ -46,9 +46,9 @@ States:
     Comment: >-
       Loop through all the images for the property and ensure they don't have
       unsafe content.
-    ItemsPath: "$.detail.Images"
+    ItemsPath: "$.detail.images"
     ResultPath: "$.ImageModerations"
-  
+
   CheckDescriptionSentiment:
     Type: Task
     Parameters:
@@ -62,7 +62,7 @@ States:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
     ResultPath: "$.ValidationCheck"
-    ResultSelector :
+    ResultSelector:
       ValidationResult.$: "$.Payload.ValidationResult"
     Parameters:
       Payload.$: $
@@ -80,9 +80,9 @@ States:
   IsContentSafe:
     Type: Choice
     Choices:
-    - Variable: $.ValidationCheck.ValidationResult
-      StringEquals: PASS
-      Next: WaitForContractApproval
+      - Variable: $.ValidationCheck.ValidationResult
+        StringEquals: PASS
+        Next: WaitForContractApproval
     Default: PublicationEvaluationCompletedDeclined
 
   PublicationEvaluationCompletedDeclined:
@@ -99,7 +99,7 @@ States:
     Next: Declined
   Declined:
     Type: Succeed
-  
+
   WaitForContractApproval:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke.waitForTaskToken
