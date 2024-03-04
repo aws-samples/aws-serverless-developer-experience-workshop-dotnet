@@ -4,12 +4,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Contracts", "Unicor
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Contracts\README.md = Unicorn.Contracts\README.md
 		Unicorn.Contracts\template.yaml = Unicorn.Contracts\template.yaml
+		Unicorn.Contracts\api.yaml = Unicorn.Contracts\api.yaml
+		Unicorn.Contracts\samconfig.yaml = Unicorn.Contracts\samconfig.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Web", "Unicorn.Web", "{7CE383EB-7FD5-44C9-A470-5C603D4E06DC}"
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Web\README.md = Unicorn.Web\README.md
 		Unicorn.Web\template.yaml = Unicorn.Web\template.yaml
+		Unicorn.Web\api.yaml = Unicorn.Web\api.yaml
+		Unicorn.Web\samconfig.yaml = Unicorn.Web\samconfig.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Properties", "Unicorn.Properties", "{F04908B5-232B-4007-A4DA-572106DF05FA}"
@@ -17,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Properties", "Unico
 		Unicorn.Properties\StateMachine\PropertyApproval.asl.yaml = Unicorn.Properties\StateMachine\PropertyApproval.asl.yaml
 		Unicorn.Properties\README.md = Unicorn.Properties\README.md
 		Unicorn.Properties\template.yaml = Unicorn.Properties\template.yaml
+		Unicorn.Properties\samconfig.yaml = Unicorn.Properties\samconfig.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{374823C4-DF51-4304-8ECE-C5BBA4F2CEE6}"
@@ -41,6 +46,32 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApprovalService.Tests", "Unicorn.Web\ApprovalService.Tests\ApprovalService.Tests.csproj", "{7FDDB6BF-22EB-445D-A5EA-06613A4F1677}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Unicorn.Web\Common\Common.csproj", "{1833D4D3-09EB-4599-9E07-CD3D27D3446C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{053D1FC5-C093-460D-84DA-0598B6A66157}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Contracts\integration\subscriber-policies.yaml = Unicorn.Contracts\integration\subscriber-policies.yaml
+		Unicorn.Contracts\Integration\event-schemas.yaml = Unicorn.Contracts\Integration\event-schemas.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{0917028A-88F9-498A-924B-2A81EFCF31C4}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Web\Integration\subscriber-policies.yaml = Unicorn.Web\Integration\subscriber-policies.yaml
+		Unicorn.Web\Integration\subscriptions.yaml = Unicorn.Web\Integration\subscriptions.yaml
+		Unicorn.Web\Integration\event-schemas.yaml = Unicorn.Web\Integration\event-schemas.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{22AE94D7-96AF-42C4-93EB-5D3C4E6C7725}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Properties\Integration\subscriber-policies.yaml = Unicorn.Properties\Integration\subscriber-policies.yaml
+		Unicorn.Properties\Integration\subscriptions.yaml = Unicorn.Properties\Integration\subscriptions.yaml
+		Unicorn.Properties\Integration\event-schemas.yaml = Unicorn.Properties\Integration\event-schemas.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Shared", "Unicorn.Shared", "{CED6BEE6-D654-4263-AF91-307193203FC2}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Shared\samconfig.yaml = Unicorn.Shared\samconfig.yaml
+		Unicorn.Shared\template.yaml = Unicorn.Shared\template.yaml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -95,5 +126,8 @@ Global
 		{C4C0D661-D96B-496B-994B-DCB106EAB660} = {7CE383EB-7FD5-44C9-A470-5C603D4E06DC}
 		{7FDDB6BF-22EB-445D-A5EA-06613A4F1677} = {7CE383EB-7FD5-44C9-A470-5C603D4E06DC}
 		{1833D4D3-09EB-4599-9E07-CD3D27D3446C} = {7CE383EB-7FD5-44C9-A470-5C603D4E06DC}
+		{053D1FC5-C093-460D-84DA-0598B6A66157} = {18C75C53-AD2C-4EAA-A13F-E5AE7F1C0DA3}
+		{0917028A-88F9-498A-924B-2A81EFCF31C4} = {7CE383EB-7FD5-44C9-A470-5C603D4E06DC}
+		{22AE94D7-96AF-42C4-93EB-5D3C4E6C7725} = {F04908B5-232B-4007-A4DA-572106DF05FA}
 	EndGlobalSection
 EndGlobal

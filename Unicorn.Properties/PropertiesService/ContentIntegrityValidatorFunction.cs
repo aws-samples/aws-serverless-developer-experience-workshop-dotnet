@@ -4,10 +4,10 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Amazon.Lambda.Core;
-using Amazon.XRay.Recorder.Handlers.AwsSdk;
+// using Amazon.XRay.Recorder.Handlers.AwsSdk;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
-using AWS.Lambda.Powertools.Tracing;
+// using AWS.Lambda.Powertools.Tracing;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -26,7 +26,7 @@ public class ContentIntegrityValidatorFunction
     public ContentIntegrityValidatorFunction()
     {
         // Instrument all AWS SDK calls
-        AWSSDKHandler.RegisterXRayForAllServices();
+        // AWSSDKHandler.RegisterXRayForAllServices();
     }
 
 
@@ -37,7 +37,7 @@ public class ContentIntegrityValidatorFunction
     /// <param name="context">Lambda Context runtime methods and attributes</param>
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true)]
-    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+    // [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public object FunctionHandler(object input, ILambdaContext context)
     {
         var status = "PASS";

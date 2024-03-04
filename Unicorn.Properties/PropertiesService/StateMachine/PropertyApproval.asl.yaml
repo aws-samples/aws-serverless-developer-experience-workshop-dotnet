@@ -9,7 +9,7 @@ States:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
     InputPath: $.detail
-    ResultPath: $.contract_exists_check
+    ResultPath: $.ContractExistsCheck
     Parameters:
       Payload:
         Input.$: $
@@ -46,24 +46,24 @@ States:
     Comment: >-
       Loop through all the images for the property and ensure they don't have
       unsafe content.
-    ItemsPath: "$.detail.images"
-    ResultPath: "$.imageModerations"
+    ItemsPath: "$.detail.Images"
+    ResultPath: "$.ImageModerations"
   
   CheckDescriptionSentiment:
     Type: Task
     Parameters:
       LanguageCode: en
-      Text.$: $.detail.description
+      Text.$: $.detail.Description
     Resource: arn:aws:states:::aws-sdk:comprehend:detectSentiment
     Next: ValidateContentIntegrity
-    ResultPath: "$.contentSentiment"
+    ResultPath: "$.ContentSentiment"
 
   ValidateContentIntegrity:
     Type: Task
     Resource: arn:aws:states:::lambda:invoke
-    ResultPath: "$.validation_check"
-    ResultSelector :
-      validation_result.$: "$.Payload.validation_result"
+    ResultPath: "$.ValidationCheck"
+    ResultSelector:
+      ValidationResult.$: "$.Payload.ValidationResult"
     Parameters:
       Payload.$: $
       FunctionName: ${ContentIntegrityValidator}
@@ -80,10 +80,10 @@ States:
   IsContentSafe:
     Type: Choice
     Choices:
-      - Variable: $.validation_check.validation_result
+      - Variable: $.ValidationCheck.ValidationResult
         StringEquals: FAIL
         Next: PublishPropertyPublicationRejected
-      - Variable: $.validation_check.validation_result
+      - Variable: $.ValidationCheck.ValidationResult
         StringEquals: PASS
         Next: WaitForContractApproval
     Default: WaitForContractApproval
@@ -94,8 +94,8 @@ States:
     Parameters:
       Entries:
         - Detail:
-            property_id.$: "$.detail.property_id"
-            evaluation_result: "DECLINED"
+            PropertyId.$: "$.detail.PropertyId"
+            EvaluationResult: "DECLINED"
           DetailType: PublicationEvaluationCompleted
           EventBusName: ${EventBusName}
           Source: ${ServiceName}
@@ -130,8 +130,8 @@ States:
     Parameters:
       Entries:
         - Detail:
-            property_id.$: "$.detail.property_id"
-            evaluation_result: "APPROVED"
+            PropertyId.$: "$.detail.PropertyId"
+            EvaluationResult: "APPROVED"
           DetailType: PublicationEvaluationCompleted
           EventBusName: ${EventBusName}
           Source: ${ServiceName}

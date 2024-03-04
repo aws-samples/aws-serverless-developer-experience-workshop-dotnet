@@ -2,9 +2,9 @@ name: Build .NET
 
 on:
   push:
-    branches: [develop, main]
+    branches: [ develop, main ]
   pull_request:
-    branches: [develop, main]
+    branches: [ develop, main ]
 
 defaults:
   run:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET 6.0
         uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
         with:
-          dotnet-version: 6.0.405
+          dotnet-version: 6.0.414
       - name: Install solution dependencies
         run: dotnet restore
       - name: Build
