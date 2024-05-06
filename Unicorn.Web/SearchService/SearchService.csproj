@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyName>Unicorn.Web.SearchService</AssemblyName>
@@ -11,11 +11,11 @@
     <ItemGroup>
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.0" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
-        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.0" />
-        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.4.4" />
-        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.5.3" />
-        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.3.2" />
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.300.7" />
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.3" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="1.5.1" />
+        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.6.1" />
+        <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.4.2" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.303.1" />
     </ItemGroup>
 
     <ItemGroup>
