@@ -6,3 +6,4 @@
 UnicornProperties.sln.DotSettings.user
 **/cdk.out/
 **/obj/**
+**/cdk.context.json
