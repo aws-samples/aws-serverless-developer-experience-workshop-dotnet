@@ -155,12 +155,12 @@ public class ContractEventHandler
                         "ContractLastModifiedOn",
                         new AttributeValue { S = contract.ContractLastModifiedOn.ToString("O") }
                     }
-                }
+                } 
             };
 
             Logger.LogInformation(JsonSerializer.Serialize(request));
 
-            var response = await _dynamoDbClient.PutItemAsync(request).ConfigureAwait(false);
+            var response = await _dynamoDbClient.PutItemAsync(request);
 
             Logger.LogInformation(response);
 
