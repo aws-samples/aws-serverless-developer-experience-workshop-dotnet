@@ -45,9 +45,9 @@ Globals:
   Api:
     OpenApiVersion: 3.0.1
   Function:
-    Runtime: dotnet6
+    Runtime: dotnet8
     MemorySize: 512
-    Timeout: 15
+    Timeout: 10
     Tracing: Active
     Architectures:
       - x86_64

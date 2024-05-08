@@ -37,7 +37,7 @@ public class ContentIntegrityValidatorFunction
     /// <param name="context">Lambda Context runtime methods and attributes</param>
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true)]
-    // [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
+    [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
     public object FunctionHandler(object input, ILambdaContext context)
     {
         var status = "PASS";
