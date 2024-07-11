@@ -109,6 +109,7 @@ public class ContractEventHandlerTest
             .UpdateItemAsync(Arg.Any<UpdateItemRequest>());
     }
 }
+
 public class ApiGwSqsPayload
 {
     public string property_id { get; set; }

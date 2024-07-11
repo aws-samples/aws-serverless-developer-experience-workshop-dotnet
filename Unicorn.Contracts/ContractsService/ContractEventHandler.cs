@@ -68,12 +68,12 @@ public class ContractEventHandler
     public async Task FunctionHandler(SQSEvent sqsEvent, ILambdaContext context)
     {
         // Multiple records can be delivered in a single event
-        Logger.LogInformation($"Beginning to process {sqsEvent.Records.Count} records...");
+        Logger.LogInformation("Beginning to process {sqsEvent.Records.Count} records...", sqsEvent.Records.Count);
 
-        foreach (var record in sqsEvent.Records)
+        foreach (SQSEvent.SQSMessage? record in sqsEvent.Records)
         {
-            var method = record.MessageAttributes["HttpMethod"].StringValue; //?? "No attribute with HttpMethod";
-            Logger.LogInformation($"Identified HTTP Method : {method}");
+            var method = record.MessageAttributes["HttpMethod"].StringValue;
+            Logger.LogInformation("Identified HTTP Method : {method}", method);
 
             switch (method)
             {
@@ -124,8 +124,7 @@ public class ContractEventHandler
 
         try
         {
-            Logger.LogInformation(
-                $"Creating new contract for Property ID: {contract.PropertyId} in table '{_dynamodbTable}' ");
+            Logger.LogInformation("Creating new contract for Property ID: {contract.PropertyId} in table '{_dynamodbTable}' ", contract.PropertyId, _dynamodbTable);
 
             var request = new PutItemRequest()
             {
@@ -169,7 +168,7 @@ public class ContractEventHandler
         }
         catch (ConditionalCheckFailedException e)
         {
-            Logger.LogError($"Unable to create new contract, because `{e.Message}`. Perhaps you are trying to add a contract that already has an active status?");
+            Logger.LogError("Unable to create new contract, because `{e.Message}`. Perhaps you are trying to add a contract that already has an active status?", e.Message);
         }
         catch (Exception e)
         {
