@@ -9,6 +9,4 @@ updates:
     directory: "/" # Location of the packages
     schedule:
       interval: "weekly"
-        # Set the solution file path
-    solution_path: "UnicornProperties.sln"
   
