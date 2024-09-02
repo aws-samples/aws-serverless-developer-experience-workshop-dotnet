@@ -6,9 +6,9 @@
 version: 2
 updates:
   - package-ecosystem: "nuget" # See documentation for possible values
-    directories: 
-      - "Unicorn.Contracts" # Location of package manifests
-      - "Unicorn.Properties"
-      - "Unicorn.Web"
+    directory: "/" # Location of the packages
     schedule:
       interval: "weekly"
+        # Set the solution file path
+    solution_path: "UnicornProperties.sln"
+  
