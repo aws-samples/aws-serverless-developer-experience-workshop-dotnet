@@ -14,7 +14,7 @@
       <PackageReference Include="Amazon.Lambda.Core" Version="2.2.0" />
       <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.400.13" />
       <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.13.0" />
-      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     </ItemGroup>
 
 </Project>
