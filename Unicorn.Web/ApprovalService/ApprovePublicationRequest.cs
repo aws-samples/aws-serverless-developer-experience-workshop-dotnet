@@ -10,8 +10,7 @@ namespace Unicorn.Web.ApprovalService;
 /// </summary>
 [Serializable]
 public class ApprovePublicationRequest
-{
-    [JsonPropertyName("property_id")]
+{ 
     public string PropertyId { get; set; } = null!;
 }
 
