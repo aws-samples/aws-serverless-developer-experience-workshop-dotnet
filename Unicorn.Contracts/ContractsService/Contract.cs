@@ -39,10 +39,10 @@ public class Address
     {
     }
 
-    [JsonPropertyName("number")] public int Number { get; set; }
-    [JsonPropertyName("street")] public string? Street { get; set; }
-    [JsonPropertyName("city")] public string? City { get; set; }
-    [JsonPropertyName("country")] public string Country { get; } = "USA";
+    public int Number { get; set; }
+    public string? Street { get; set; }
+    public string? City { get; set; }
+    public string Country { get; } = "USA";
     
     public Dictionary<string, AttributeValue> ToMap()
     {
@@ -62,9 +62,9 @@ public class Address
 /// </summary>
 public class CreateContractRequest
 {
-    [JsonPropertyName("property_id")] public string? PropertyId { get; set; }  
-    [JsonPropertyName("address")] public Address? Address { get; set; }
-    [JsonPropertyName("seller_name")] public string? SellerName { get; set; }
+    public string? PropertyId { get; set; }  
+    public Address? Address { get; set; }
+    public string? SellerName { get; set; }
 }
 
 /// <summary>
@@ -72,5 +72,5 @@ public class CreateContractRequest
 /// </summary>
 public class UpdateContractRequest
 {
-    [JsonPropertyName("property_id")] public string? PropertyId { get; set; }
+    public string? PropertyId { get; set; }
 }
