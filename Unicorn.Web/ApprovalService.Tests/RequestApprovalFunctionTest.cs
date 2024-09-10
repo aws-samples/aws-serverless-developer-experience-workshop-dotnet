@@ -28,7 +28,7 @@ public class RequestApprovalFunctionTest
     {
         // Arrange
         var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
-            .With(x => x.property_id = "usa/anytown/main-street/777")
+            .With(x => x.PropertyId = "usa/anytown/main-street/777")
             .Build();
         
         var context = TestHelpers.NewLambdaContext();
@@ -97,7 +97,7 @@ public class RequestApprovalFunctionTest
     {
         // Arrange
         var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
-            .With(x => x.property_id = "usa/anytown/main-street/777")
+            .With(x => x.PropertyId = "usa/anytown/main-street/777")
             .Build();
         var context = TestHelpers.NewLambdaContext();
 
@@ -154,5 +154,5 @@ public class RequestApprovalFunctionTest
 
 public class ApiGwSqsPayload
 {
-    public string property_id { get; set; }
+    public string PropertyId { get; set; }
 }
