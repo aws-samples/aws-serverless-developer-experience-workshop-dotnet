@@ -17,7 +17,7 @@
         <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="1.7.1" />
         <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.5.1" />
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.401" />
-        <PackageReference Include="AWSSDK.EventBridge" Version="3.7.401.20" />
+        <PackageReference Include="AWSSDK.EventBridge" Version="3.7.401.28" />
         <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.13.0" />
     </ItemGroup>
 
