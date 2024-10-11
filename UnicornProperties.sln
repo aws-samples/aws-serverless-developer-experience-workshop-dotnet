@@ -1,0 +1,133 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{4219A468-BE27-B74A-4BC3-D32363417C0F}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Contracts", "Unicorn.Contracts", "{A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Contracts\README.md = Unicorn.Contracts\README.md
+		Unicorn.Contracts\template.yaml = Unicorn.Contracts\template.yaml
+		Unicorn.Contracts\api.yaml = Unicorn.Contracts\api.yaml
+		Unicorn.Contracts\samconfig.yaml = Unicorn.Contracts\samconfig.yaml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractsService.Tests", "Unicorn.Contracts\ContractsService.Test\ContractsService.Tests.csproj", "{C67A91F9-E6D3-E9E3-C174-950C91FEE787}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractsService", "Unicorn.Contracts\ContractsService\ContractsService.csproj", "{229865D9-AF08-8458-DBC5-5734617581EF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{6B2C0C58-6A97-8455-2979-78ECCD445A37}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Contracts\integration\subscriber-policies.yaml = Unicorn.Contracts\integration\subscriber-policies.yaml
+		Unicorn.Contracts\Integration\event-schemas.yaml = Unicorn.Contracts\Integration\event-schemas.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Properties", "Unicorn.Properties", "{13D467F8-5C33-10CC-F5DE-6C587575CA81}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Properties\StateMachine\PropertyApproval.asl.yaml = Unicorn.Properties\StateMachine\PropertyApproval.asl.yaml
+		Unicorn.Properties\README.md = Unicorn.Properties\README.md
+		Unicorn.Properties\template.yaml = Unicorn.Properties\template.yaml
+		Unicorn.Properties\samconfig.yaml = Unicorn.Properties\samconfig.yaml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PropertiesService.Tests", "Unicorn.Properties\PropertiesService.Tests\PropertiesService.Tests.csproj", "{E7580EF7-F0F4-2152-AD18-A2C3ED393070}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PropertiesService", "Unicorn.Properties\PropertiesService\PropertiesService.csproj", "{D8F9BDE9-8AE9-3A70-73AC-387EF64E6485}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{67C593A9-4383-09CA-793B-68C224D8D620}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Properties\Integration\subscriber-policies.yaml = Unicorn.Properties\Integration\subscriber-policies.yaml
+		Unicorn.Properties\Integration\subscriptions.yaml = Unicorn.Properties\Integration\subscriptions.yaml
+		Unicorn.Properties\Integration\event-schemas.yaml = Unicorn.Properties\Integration\event-schemas.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Shared", "Unicorn.Shared", "{D6A55B46-1454-E4C6-8276-8D2F4A200548}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Shared\samconfig.yaml = Unicorn.Shared\samconfig.yaml
+		Unicorn.Shared\template.yaml = Unicorn.Shared\template.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Web", "Unicorn.Web", "{E4577E5B-D414-4FCF-A607-571017FA058A}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Web\README.md = Unicorn.Web\README.md
+		Unicorn.Web\template.yaml = Unicorn.Web\template.yaml
+		Unicorn.Web\api.yaml = Unicorn.Web\api.yaml
+		Unicorn.Web\samconfig.yaml = Unicorn.Web\samconfig.yaml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApprovalService.Tests", "Unicorn.Web\ApprovalService.Tests\ApprovalService.Tests.csproj", "{0A0053A9-9804-96BC-B32D-A8FA70B86240}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApprovalService", "Unicorn.Web\ApprovalService\ApprovalService.csproj", "{EBD43E94-06C4-19C7-848C-252F6C59EB60}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Unicorn.Web\Common\Common.csproj", "{3190BFCE-D798-AC40-2350-C05B9AE9A375}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SearchService.Tests", "Unicorn.Web\SearchService.Tests\SearchService.Tests.csproj", "{791CF16E-500F-4551-DDA4-12D2903CB735}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SearchService", "Unicorn.Web\SearchService\SearchService.csproj", "{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{08489194-1198-279C-32FE-0A55A615881C}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Web\Integration\subscriber-policies.yaml = Unicorn.Web\Integration\subscriber-policies.yaml
+		Unicorn.Web\Integration\subscriptions.yaml = Unicorn.Web\Integration\subscriptions.yaml
+		Unicorn.Web\Integration\event-schemas.yaml = Unicorn.Web\Integration\event-schemas.yaml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C67A91F9-E6D3-E9E3-C174-950C91FEE787}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C67A91F9-E6D3-E9E3-C174-950C91FEE787}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C67A91F9-E6D3-E9E3-C174-950C91FEE787}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C67A91F9-E6D3-E9E3-C174-950C91FEE787}.Release|Any CPU.Build.0 = Release|Any CPU
+		{229865D9-AF08-8458-DBC5-5734617581EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{229865D9-AF08-8458-DBC5-5734617581EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{229865D9-AF08-8458-DBC5-5734617581EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{229865D9-AF08-8458-DBC5-5734617581EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7580EF7-F0F4-2152-AD18-A2C3ED393070}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7580EF7-F0F4-2152-AD18-A2C3ED393070}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7580EF7-F0F4-2152-AD18-A2C3ED393070}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7580EF7-F0F4-2152-AD18-A2C3ED393070}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8F9BDE9-8AE9-3A70-73AC-387EF64E6485}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8F9BDE9-8AE9-3A70-73AC-387EF64E6485}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8F9BDE9-8AE9-3A70-73AC-387EF64E6485}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8F9BDE9-8AE9-3A70-73AC-387EF64E6485}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A0053A9-9804-96BC-B32D-A8FA70B86240}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A0053A9-9804-96BC-B32D-A8FA70B86240}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A0053A9-9804-96BC-B32D-A8FA70B86240}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A0053A9-9804-96BC-B32D-A8FA70B86240}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBD43E94-06C4-19C7-848C-252F6C59EB60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBD43E94-06C4-19C7-848C-252F6C59EB60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBD43E94-06C4-19C7-848C-252F6C59EB60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBD43E94-06C4-19C7-848C-252F6C59EB60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3190BFCE-D798-AC40-2350-C05B9AE9A375}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3190BFCE-D798-AC40-2350-C05B9AE9A375}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3190BFCE-D798-AC40-2350-C05B9AE9A375}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3190BFCE-D798-AC40-2350-C05B9AE9A375}.Release|Any CPU.Build.0 = Release|Any CPU
+		{791CF16E-500F-4551-DDA4-12D2903CB735}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{791CF16E-500F-4551-DDA4-12D2903CB735}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{791CF16E-500F-4551-DDA4-12D2903CB735}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{791CF16E-500F-4551-DDA4-12D2903CB735}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C67A91F9-E6D3-E9E3-C174-950C91FEE787} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
+		{229865D9-AF08-8458-DBC5-5734617581EF} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
+		{6B2C0C58-6A97-8455-2979-78ECCD445A37} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
+		{E7580EF7-F0F4-2152-AD18-A2C3ED393070} = {13D467F8-5C33-10CC-F5DE-6C587575CA81}
+		{D8F9BDE9-8AE9-3A70-73AC-387EF64E6485} = {13D467F8-5C33-10CC-F5DE-6C587575CA81}
+		{67C593A9-4383-09CA-793B-68C224D8D620} = {13D467F8-5C33-10CC-F5DE-6C587575CA81}
+		{0A0053A9-9804-96BC-B32D-A8FA70B86240} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+		{EBD43E94-06C4-19C7-848C-252F6C59EB60} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+		{3190BFCE-D798-AC40-2350-C05B9AE9A375} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+		{791CF16E-500F-4551-DDA4-12D2903CB735} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+		{08489194-1198-279C-32FE-0A55A615881C} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+	EndGlobalSection
+EndGlobal
