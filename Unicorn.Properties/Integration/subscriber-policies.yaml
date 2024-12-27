@@ -29,13 +29,8 @@ Resources:
           AWS:
             Fn::Sub: "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
         Action:
-          - events:PutRule
-          - events:DeleteRule
-          - events:DescribeRule
-          - events:DisableRule
-          - events:EnableRule
-          - events:PutTargets
-          - events:RemoveTargets
+          - events:*Rule
+          - events:*Targets
         Resource:
           - Fn::Sub:
               - arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${eventBusName}/*
