@@ -73,6 +73,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration"
 		Unicorn.Web\Integration\event-schemas.yaml = Unicorn.Web\Integration\event-schemas.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractService.Cdk", "Unicorn.Contracts\ContractsService.Cdk\src\ContractService.Cdk.csproj", "{AF49EB32-CC97-440F-B501-E22C762580A7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedService.Cdk", "Unicorn.Shared\SharedService.Cdk\src\SharedService.Cdk.csproj", "{CD640D1F-A49D-48F8-8EAB-2193584A7154}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +119,14 @@ Global
 		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF49EB32-CC97-440F-B501-E22C762580A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF49EB32-CC97-440F-B501-E22C762580A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF49EB32-CC97-440F-B501-E22C762580A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF49EB32-CC97-440F-B501-E22C762580A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD640D1F-A49D-48F8-8EAB-2193584A7154}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD640D1F-A49D-48F8-8EAB-2193584A7154}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD640D1F-A49D-48F8-8EAB-2193584A7154}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD640D1F-A49D-48F8-8EAB-2193584A7154}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C67A91F9-E6D3-E9E3-C174-950C91FEE787} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
@@ -129,5 +141,7 @@ Global
 		{791CF16E-500F-4551-DDA4-12D2903CB735} = {E4577E5B-D414-4FCF-A607-571017FA058A}
 		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD} = {E4577E5B-D414-4FCF-A607-571017FA058A}
 		{08489194-1198-279C-32FE-0A55A615881C} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+		{AF49EB32-CC97-440F-B501-E22C762580A7} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
+		{CD640D1F-A49D-48F8-8EAB-2193584A7154} = {D6A55B46-1454-E4C6-8276-8D2F4A200548}
 	EndGlobalSection
 EndGlobal
