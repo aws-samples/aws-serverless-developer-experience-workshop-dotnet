@@ -73,8 +73,8 @@ namespace ContractService.Cdk
                 }).ToStatementJson()
             });
 
-            var cloudWatchLogGroupName = $"/aws/events/${stage}/${ns}-catchall";
-            var cloudWatchLogGroup = new LogGroup(this, "UnicornContractsEventBusLogGroup", new LogGroupProps
+            var catchAllLogGroupName = $"/aws/events/${stage}/${ns}-catchall";
+            var catchAllLogGroup = new LogGroup(this, "UnicornContractsCatchAllLogGroup", new LogGroupProps
             {
                 Retention = SetRetentionForStage(stage),
                 RemovalPolicy = RemovalPolicy.DESTROY
@@ -92,7 +92,7 @@ namespace ContractService.Cdk
                 },
                 Targets =
                 [
-                    new CloudWatchLogGroup(cloudWatchLogGroup)
+                    new CloudWatchLogGroup(catchAllLogGroup)
                 ]
             });
 
@@ -154,26 +154,14 @@ namespace ContractService.Cdk
             {
                 PartitionKey = new Attribute { Name = "PropertyId", Type = AttributeType.STRING },
                 BillingMode = BillingMode.PAY_PER_REQUEST,
-                Stream = StreamViewType.NEW_AND_OLD_IMAGES,
                 RemovalPolicy = RemovalPolicy.DESTROY, // Be careful with this in production
+                Stream = StreamViewType.NEW_AND_OLD_IMAGES,
             });
 
             #endregion
 
             #region Lambda functions
 
-            // <summary>
-            // Contract event handler Lambda function.
-            // Processes messages from the ingestion queue and:
-            // - Stores contract data in DynamoDB
-            // - Publishes events to EventBridge
-            // - Implements proper error handling and logging
-            // 
-            // Environment variables configure:
-            // - AWS Lambda Powertools for .NET
-            // - Service namespace
-            // - Logging levels and sampling
-            // </summary>
             // Bundling options for Lambda function
             var buildOptions = new BundlingOptions
             {
@@ -190,6 +178,7 @@ namespace ContractService.Cdk
                 }
             };
 
+            // Contract event handler Lambda function.
             var contractFunction = new Function(this, "ContractEventHandlerFunction", new FunctionProps
             {
                 Runtime = Runtime.DOTNET_8,
@@ -231,22 +220,10 @@ namespace ContractService.Cdk
 
             var apiLogGroup = new LogGroup(this, "UnicornContractsApiLogGroup", new LogGroupProps
             {
-                Retention = SetRetentionForStage(
-                    stage) // RetentionDays.THREE_DAYS // todo: need to change this so it is dependent on a environment.
+                Retention = SetRetentionForStage(stage)
             });
 
-
-            // <summary>
             // REST API Gateway for the Contracts Service.
-            // Features:
-            // - Regional endpoint
-            // - Request validation
-            // - Access logging to CloudWatch
-            // - Request throttling (10 RPS, burst 100)
-            // - X-Ray tracing enabled
-            // - Metrics enabled
-            // </summary>
-            //Proxy all request from the root path "/" to Lambda Function One
             var restApi = new RestApi(this, "ContractsServiceApi", new RestApiProps
             {
                 Description = "Unicorn Properties Contract Service API",
@@ -413,7 +390,7 @@ namespace ContractService.Cdk
             #region EventBridge Pipe
 
             // Create DLQ for the pipe
-            var dlq = new Queue(this, "ContractsTableStreamToEventPipeDLQ", new QueueProps
+            var contractsPipeDLQ = new Queue(this, "ContractsTableStreamToEventPipeDLQ", new QueueProps
             {
                 QueueName = $"ContractsTableStreamToEventPipeDLQ-{stage}",
                 Encryption = QueueEncryption.SQS_MANAGED,
@@ -445,12 +422,45 @@ namespace ContractService.Cdk
                 Resources = ["*"]
             }));
 
+            pipeRole.AddToPolicy(new PolicyStatement(new PolicyStatementProps
+            {
+                Effect = Effect.ALLOW,
+                Actions =
+                [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:ListStreams"
+                ],
+                Resources = [
+                    contractsTable.TableStreamArn,
+                    $"{contractsTable.TableArn}/stream/*"
+                ]
+            }));
+
+            pipeRole.AddToPolicy(new PolicyStatement(new PolicyStatementProps
+            {
+                Effect = Effect.ALLOW,
+                Actions = new[] {
+                    "events:PutEvents"
+                },
+                Resources = new[] { unicornContractsEventBus.EventBusArn }
+            }));
+
+            pipeRole.AddToPolicy(new PolicyStatement(new PolicyStatementProps
+            {
+                Effect = Effect.ALLOW,
+                Actions = new[] {
+                    "sqs:SendMessage"
+                },
+                Resources = new[] { contractsPipeDLQ.QueueArn }
+            }));
+
             // Create the Pipe
             new CfnPipe(this, "ContractsTableStreamToEventPipe", new CfnPipeProps
             {
                 RoleArn = pipeRole.RoleArn,
-                Source = contractsTable.TableStreamArn ??
-                         throw new InvalidOperationException("Table Stream Arn is not defined."),
+                Source = contractsTable.TableStreamArn,
                 Target = unicornContractsEventBus.EventBusArn,
                 SourceParameters = new CfnPipe.PipeSourceParametersProperty
                 {
@@ -461,7 +471,7 @@ namespace ContractService.Cdk
                         MaximumRetryAttempts = 3,
                         DeadLetterConfig = new CfnPipe.DeadLetterConfigProperty
                         {
-                            Arn = dlq.QueueArn
+                            Arn = contractsPipeDLQ.QueueArn
                         }
                     },
                     FilterCriteria = new CfnPipe.FilterCriteriaProperty
@@ -486,10 +496,12 @@ namespace ContractService.Cdk
                         Source = ns
                     },
                     InputTemplate =
-                        "{\n  \"PropertyId\": \"<$.dynamodb.Keys.PropertyId.S>\",\n  " +
-                        "\"ContractId\": \"<$.dynamodb.NewImage.ContractId.S>\",\n  " +
-                        "\"ContractStatus\": \"<$.dynamodb.NewImage.ContractStatus.S>\",\n  " +
-                        "\"ContractLastModifiedOn\": \"<$.dynamodb.NewImage.ContractLastModifiedOn.S>\"\n}"
+                        "{\n" +
+                        "  \"PropertyId\": \"<$.dynamodb.Keys.PropertyId.S>\",\n" +
+                        "  \"ContractId\": \"<$.dynamodb.NewImage.ContractId.S>\",\n" +
+                        "  \"ContractStatus\": \"<$.dynamodb.NewImage.ContractStatus.S>\",\n" +
+                        "  \"ContractLastModifiedOn\": \"<$.dynamodb.NewImage.ContractLastModifiedOn.S>\",\n" +
+                        "}"
                 }
             });
 
@@ -532,11 +544,11 @@ namespace ContractService.Cdk
             });
 
             // CLOUDWATCH LOGS OUTPUTS
-            // new CfnOutput(this, "UnicornContractsCatchAllLogGroupArn", new CfnOutputProps()
-            // {
-            //     Description = "Log all events on the service's EventBridge Bus",
-            //     Value = unicornContractsCatchAll.LogGroupArn
-            // });
+            new CfnOutput(this, "UnicornContractsCatchAllLogGroupArn", new CfnOutputProps()
+            {
+                Description = "Log all events on the service's EventBridge Bus",
+                Value = catchAllLogGroup.LogGroupArn
+            });
 
             #endregion
         }
