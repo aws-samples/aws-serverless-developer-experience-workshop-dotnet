@@ -8,6 +8,8 @@
     <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <AssemblyName>Unicorn.Contracts.ContractService.Cdk</AssemblyName>
+    <RootNamespace>Unicorn.Contracts.ContractService.Cdk</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
