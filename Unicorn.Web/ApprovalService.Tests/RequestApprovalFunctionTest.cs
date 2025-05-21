@@ -32,7 +32,6 @@ public class RequestApprovalFunctionTest
             .Build();
         
         var context = TestHelpers.NewLambdaContext();
-
         var dynamoDbContext = Substitute.For<IDynamoDBContext>();
         var eventBindingClient = Substitute.For<IAmazonEventBridge>();
 
@@ -72,7 +71,7 @@ public class RequestApprovalFunctionTest
         };
 
         dynamoDbContext
-            .FromQueryAsync<PropertyRecord>(Arg.Any<QueryOperationConfig>(), Arg.Any<DynamoDBOperationConfig>())
+            .FromQueryAsync<PropertyRecord>(Arg.Any<Amazon.DynamoDBv2.DocumentModel.QueryOperationConfig>())
             .Returns(TestHelpers.NewDynamoDBSearchResult(searchResult));
 
         eventBindingClient.PutEventsAsync(Arg.Any<PutEventsRequest>(), Arg.Any<CancellationToken>())
@@ -84,7 +83,7 @@ public class RequestApprovalFunctionTest
 
         // Assert
         dynamoDbContext.Received(1)
-            .FromQueryAsync<PropertyRecord>(Arg.Any<QueryOperationConfig>(), Arg.Any<DynamoDBOperationConfig>());
+            .FromQueryAsync<PropertyRecord>(Arg.Any<Amazon.DynamoDBv2.DocumentModel.QueryOperationConfig>());
 
         await eventBindingClient.Received(1)
             .PutEventsAsync(
@@ -136,11 +135,11 @@ public class RequestApprovalFunctionTest
         // Assert
         
         dynamoDbContext
-            .FromQueryAsync<PropertyRecord>(Arg.Any<QueryOperationConfig>(), Arg.Any<DynamoDBOperationConfig>())
+            .FromQueryAsync<PropertyRecord>(Arg.Any<Amazon.DynamoDBv2.DocumentModel.QueryOperationConfig>())
             .Returns(TestHelpers.NewDynamoDBSearchResult(searchResult));
         
         dynamoDbContext.Received(1)
-            .FromQueryAsync<PropertyRecord>(Arg.Any<QueryOperationConfig>(), Arg.Any<DynamoDBOperationConfig>());
+            .FromQueryAsync<PropertyRecord>(Arg.Any<Amazon.DynamoDBv2.DocumentModel.QueryOperationConfig>());
         
         eventBindingClient.PutEventsAsync(Arg.Any<PutEventsRequest>(), Arg.Any<CancellationToken>())
             .Returns(new PutEventsResponse { FailedEntryCount = 0 });

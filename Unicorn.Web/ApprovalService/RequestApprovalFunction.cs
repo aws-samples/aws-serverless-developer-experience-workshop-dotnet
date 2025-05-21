@@ -48,8 +48,10 @@ public class RequestApprovalFunction
         // Initialise DDB client
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(PropertyRecord)] =
             new TypeMapping(typeof(PropertyRecord), _dynamodbTable);
-        var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
-        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
+        
+        _dynamoDbContext = new DynamoDBContextBuilder()
+            .ConfigureContext(c => c.Conversion=DynamoDBEntryConversion.V2)
+            .Build();
 
         // Initialise EventBridge client
         _eventBindingClient = new AmazonEventBridgeClient();
