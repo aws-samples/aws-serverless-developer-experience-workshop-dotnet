@@ -142,7 +142,7 @@ Resources:
       CodeUri: ./ApprovalService
       Handler: Unicorn.Web.ApprovalService::Unicorn.Web.ApprovalService.PublicationApprovedEventHandler::FunctionHandler
       Policies:
-        - DynamoDBWritePolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref WebTable
       EventInvokeConfig:
         DestinationConfig:
@@ -190,17 +190,16 @@ Resources:
           ThrottlingRateLimit: 100
       AccessLogSetting:
         DestinationArn: !GetAtt UnicornWebApiLogGroup.Arn
-        Format: |
-          {
-            "requestId": "$context.requestId",
-            "integration-error": "$context.integration.error",
-            "integration-status": "$context.integration.status", 
-            "integration-latency": "$context.integration.latency",
-            "integration-requestId": "$context.integration.requestId",
-            "integration-integrationStatus": "$context.integration.integrationStatus",
-            "response-latency": "$context.responseLatency",
-            "status": "$context.status"
-          }
+        Format: !Join
+          - ""
+          - - '{"requestId":"$context.requestId",'
+            - '"integration-error":"$context.integration.error",'
+            - '"integration-status":"$context.integration.status",'
+            - '"integration-latency":"$context.integration.latency",'
+            - '"integration-requestId":"$context.integration.requestId",'
+            - '"integration-integrationStatus":"$context.integration.integrationStatus",'
+            - '"response-latency":"$context.responseLatency",'
+            - '"status":"$context.status"}'
       DefinitionBody: !Transform
         Name: "AWS::Include"
         Parameters:
@@ -461,7 +460,7 @@ Outputs:
   BaseUrl:
     Description: Web service API endpoint
     Value: !Sub "https://${UnicornWebApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}"
-  ApiUrl:
+  UnicornWebRestApiUrl:
     Description: Web service API endpoint
     Value: !Sub "https://${UnicornWebApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Stage}/"
 
@@ -485,7 +484,7 @@ Outputs:
     Value: !GetAtt UnicornWebIngestQueue.QueueUrl
 
   #### DYNAMODB OUTPUTS
-  WebTableName:
+  UnicornWebTableName:
     Description: Name of the DynamoDB Table for Unicorn Web
     Value: !Ref WebTable
 

@@ -16,6 +16,7 @@
         <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="2.0.0" />
         <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.6.1" />
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.1" />
+        <PackageReference Include="AWSSDK.Core" Version="4.0.0.5" />
     </ItemGroup>
 
     <ItemGroup>
