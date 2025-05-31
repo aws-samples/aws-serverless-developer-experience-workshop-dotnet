@@ -10,7 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Contracts", "Unicor
 		Unicorn.Contracts\README.md = Unicorn.Contracts\README.md
 		Unicorn.Contracts\template.yaml = Unicorn.Contracts\template.yaml
 		Unicorn.Contracts\api.yaml = Unicorn.Contracts\api.yaml
-		Unicorn.Contracts\samconfig.yaml = Unicorn.Contracts\samconfig.yaml
+		Unicorn.Contracts\samconfig.toml = Unicorn.Contracts\samconfig.toml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractsService.Tests", "Unicorn.Contracts\ContractsService.Test\ContractsService.Tests.csproj", "{C67A91F9-E6D3-E9E3-C174-950C91FEE787}"

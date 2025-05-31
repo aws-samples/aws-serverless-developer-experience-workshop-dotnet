@@ -48,7 +48,7 @@ Globals:
   Function:
     Runtime: dotnet8
     MemorySize: 512
-    Timeout: 10
+    Timeout: 15
     Tracing: Active
     Architectures:
       - x86_64
@@ -134,16 +134,8 @@ Resources:
           ThrottlingRateLimit: 100
       AccessLogSetting:
         DestinationArn: !GetAtt UnicornContractsApiLogGroup.Arn
-        Format: !Join
-          - ""
-          - - '{"requestId":"$context.requestId",'
-            - '"integration-error":"$context.integration.error",'
-            - '"integration-status":"$context.integration.status",'
-            - '"integration-latency":"$context.integration.latency",'
-            - '"integration-requestId":"$context.integration.requestId",'
-            - '"integration-integrationStatus":"$context.integration.integrationStatus",'
-            - '"response-latency":"$context.responseLatency",'
-            - '"status":"$context.status"}'
+        Format: >
+          {"requestId": $context.requestId, "integration-error": $context.integration.error, "integration-status": $context.integration.status, "integration-latency": $context.integration.latency, "integration-requestId": $context.integration.requestId, "integration-integrationStatus": $context.integration.integrationStatus, "response-latency": $context.responseLatency, "status": $context.status}
       DefinitionBody: !Transform
         Name: "AWS::Include"
         Parameters:
@@ -369,7 +361,7 @@ Resources:
         FilterCriteria:
           Filters:
             - Pattern: >-
-                {"eventName":["INSERT","MODIFY"],"dynamodb":{"NewImage":{"ContractStatus":{"S":["DRAFT","APPROVED"]}}}}
+                {"eventName":["INSERT","MODIFY"],"dynamodb":{"NewImage":{"contract_status":{"S":["DRAFT","APPROVED"]}}}}
       LogConfiguration:
         CloudwatchLogsLogDestination:
           LogGroupArn: !GetAtt ContractsTableStreamToEventPipeLogGroup.Arn
@@ -455,7 +447,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      Location: "Integration/event-schemas.yaml"
+      Location: "integration/event-schemas.yaml"
       Parameters:
         Stage: !Ref Stage
 
@@ -467,7 +459,7 @@ Resources:
     DependsOn:
       - UnicornContractsEventBusNameParam
     Properties:
-      Location: "Integration/subscriber-policies.yaml"
+      Location: "integration/subscriber-policies.yaml"
       Parameters:
         Stage: !Ref Stage
 

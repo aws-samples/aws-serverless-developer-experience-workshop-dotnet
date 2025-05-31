@@ -40,8 +40,9 @@ public class ContractStatusChangedEventHandler
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(ContractStatusChangedEvent)] =
             new TypeMapping(typeof(ContractStatusChangedEvent), dynamodbTable);
 
-        var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
-        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
+        _dynamoDbContext = new DynamoDBContextBuilder()
+            .ConfigureContext(c => c.Conversion=DynamoDBEntryConversion.V2)
+            .Build();
     }
 
 
