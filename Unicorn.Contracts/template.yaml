@@ -447,7 +447,7 @@ Resources:
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
     Properties:
-      Location: "integration/event-schemas.yaml"
+      Location: "Integration/event-schemas.yaml"
       Parameters:
         Stage: !Ref Stage
 
@@ -459,7 +459,7 @@ Resources:
     DependsOn:
       - UnicornContractsEventBusNameParam
     Properties:
-      Location: "integration/subscriber-policies.yaml"
+      Location: "Integration/subscriber-policies.yaml"
       Parameters:
         Stage: !Ref Stage
 

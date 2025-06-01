@@ -11,10 +11,10 @@ using Amazon.StepFunctions;
 using Amazon.StepFunctions.Model;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
+using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
-using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 namespace Unicorn.Properties.PropertiesService;
 
@@ -45,9 +45,8 @@ public class PropertiesApprovalSyncFunction
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(ContractStatusItem)] =
             new TypeMapping(typeof(ContractStatusItem), dynamodbTable);
 
-        _dynamoDbContext = new DynamoDBContextBuilder()
-            .ConfigureContext(c => c.Conversion=DynamoDBEntryConversion.V2)
-            .Build();
+        var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
+        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
 
         // Initialise Step Functions client
         _amazonStepFunctionsClient = new AmazonStepFunctionsClient();

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using Amazon.DynamoDBv2.Model;
 
 namespace Unicorn.Contracts.ContractService;

@@ -8,10 +8,10 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
+using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
-using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
@@ -43,9 +43,8 @@ public class WaitForContractApprovalFunction
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(ContractStatusItem)] =
             new TypeMapping(typeof(ContractStatusItem), dynamodbTable);
 
-        _dynamoDbContext = new DynamoDBContextBuilder()
-            .ConfigureContext(c => c.Conversion=DynamoDBEntryConversion.V2)
-            .Build();
+        var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
+        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
     }
 
 

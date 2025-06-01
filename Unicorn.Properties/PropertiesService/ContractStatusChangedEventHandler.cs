@@ -9,9 +9,9 @@ using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
+using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Tracing;
-using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 // [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -40,9 +40,8 @@ public class ContractStatusChangedEventHandler
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(ContractStatusChangedEvent)] =
             new TypeMapping(typeof(ContractStatusChangedEvent), dynamodbTable);
 
-        _dynamoDbContext = new DynamoDBContextBuilder()
-            .ConfigureContext(c => c.Conversion=DynamoDBEntryConversion.V2)
-            .Build();
+        var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
+        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
     }
 
 

@@ -3,7 +3,6 @@
 
 using System.Text.Json;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.EventBridge;
 using Amazon.EventBridge.Model;
 using Amazon.Lambda.SQSEvents;

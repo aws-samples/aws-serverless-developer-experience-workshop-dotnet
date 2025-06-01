@@ -24,10 +24,10 @@ export API=`aws cloudformation describe-stacks --stack-name uni-prop-local-web -
 
 curl --location --request POST "${API}request_approval" \
 --header 'Content-Type: application/json' \
---data-raw '{"property_id": "usa/anytown/main-street/111"}'
+--data-raw '{"PropertyId": "usa/anytown/main-street/111"}'
 
 
 curl -X POST ${API_URL}request_approval \
     -H 'Content-Type: application/json' \
-    -d '{"property_id":"usa/anytown/main-street/111"}' | jq
+    -d '{"PropertyId":"usa/anytown/main-street/111"}' | jq
 ```
