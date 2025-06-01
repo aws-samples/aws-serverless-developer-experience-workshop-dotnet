@@ -73,6 +73,8 @@ Resources:
   # Services share their event bus name and arn
   UnicornPropertiesEventBusNameParam:
     Type: AWS::SSM::Parameter
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Type: String
       Name: !Sub /uni-prop/${Stage}/UnicornPropertiesEventBus
@@ -80,6 +82,8 @@ Resources:
 
   UnicornPropertiesEventBusArnParam:
     Type: AWS::SSM::Parameter
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Type: String
       Name: !Sub /uni-prop/${Stage}/UnicornPropertiesEventBusArn
@@ -197,6 +201,8 @@ Resources:
   #### STATE MACHINE
   ApprovalStateMachine:
     Type: AWS::Serverless::StateMachine
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Name: !Sub "${AWS::StackName}-ApprovalStateMachine"
       DefinitionUri: ./StateMachine/PropertyApproval.asl.yaml
@@ -326,12 +332,16 @@ Resources:
   # Event bus for Unicorn Properties Service, used to publish and consume events
   UnicornPropertiesEventBus:
     Type: AWS::Events::EventBus
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Name: !Sub UnicornPropertiesBus-${Stage}
 
   # Event bus policy to restrict who can publish events (should only be services from UnicornPropertiesNamespace)
   UnicornPropertiesEventsBusPublishPolicy:
     Type: AWS::Events::EventBusPolicy
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       EventBusName: !Ref UnicornPropertiesEventBus
       StatementId: !Sub OnlyPropertiesServiceCanPublishToEventBus-${Stage}
@@ -350,6 +360,8 @@ Resources:
   # Catchall rule used for development purposes. Logs all events matching any of the services to CloudWatch Logs
   UnicornPropertiesCatchAllRule:
     Type: AWS::Events::Rule
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       Name: properties.catchall
       Description: Catchall rule used for development purposes.
