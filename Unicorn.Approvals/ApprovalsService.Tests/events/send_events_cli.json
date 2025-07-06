@@ -1,0 +1,8 @@
+[
+    {
+        "EventBusName": "UnicornPropertiesBus",
+        "Source": "unicorn.web",
+        "DetailType": "PublicationApprovalRequested",
+        "Detail": "{\"PropertyId\": \"usa/anytown/main-street/123\",\"Country\": \"USA\",\"City\": \"Anytown\",\"Street\": \"Main Street\",\"Number\": 123,\"Description\": \"This classic Anytown estate comes with a covetable lake view. The romantic and comfortable backyard is the perfect setting for unicorn get-togethers. The open concept Main Stable is fully equipped with all the desired amenities. Second floor features 6 straw bales including large Rainbow Suite with private training pool terrace and Jr Sparkles Suite.\",\"Contract\": \"sale\",\"ListPrice\": 200,\"Currency\": \"SPL\",\"images\": [    \"usa/anytown/main-street-123-0d61b4e3\"]}"
+    }
+]
