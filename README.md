@@ -1,8 +1,8 @@
-[![Build & Test Workflow](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-dotnet/actions/workflows/build_test.yml/badge.svg)](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-dotnet/actions/workflows/build_test.yml)
-
-< img src="./docs/workshop_logo.png" alt="AWS Serverless Developer Experience Workshop Reference Architecture" width="80%" />
+[![Build & Test Workflow](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-dotnet/actions/workflows/build.yml/badge.svg)](https://github.com/aws-samples/aws-serverless-developer-experience-workshop-dotnet/actions/workflows/build.yml)
 
 # AWS Serverless Developer Experience workshop reference architecture (.NET)
+
+<img src="./docs/workshop_logo.png" alt="AWS Serverless Developer Experience Workshop Reference Architecture" width="80%" />
 
 This repository contains the .NET reference architecture for the AWS Serverless Developer Experience workshop.
 
