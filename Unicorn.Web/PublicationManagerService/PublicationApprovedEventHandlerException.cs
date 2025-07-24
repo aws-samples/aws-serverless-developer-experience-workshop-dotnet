@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-namespace Unicorn.Web.ApprovalService;
+namespace Unicorn.Web.PublicationManagerService;
 
 /// <summary>
 /// Represents the exception that is thrown when a Publication Approved event handler cannot process the event.

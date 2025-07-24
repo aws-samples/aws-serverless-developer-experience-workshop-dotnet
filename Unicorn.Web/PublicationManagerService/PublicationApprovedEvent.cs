@@ -4,7 +4,7 @@
 using System.Text.Json.Serialization;
 using Unicorn.Web.Common;
 
-namespace Unicorn.Web.ApprovalService;
+namespace Unicorn.Web.PublicationManagerService;
 
 /// <summary>
 /// Represents an event when the publication is approved.

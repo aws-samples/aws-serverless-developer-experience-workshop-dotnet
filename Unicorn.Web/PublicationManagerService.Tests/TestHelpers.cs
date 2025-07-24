@@ -8,7 +8,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.TestUtilities;
 
-namespace Unicorn.Web.ApprovalService.Tests;
+namespace Unicorn.Web.PublicationManagerService.Tests;
 
 public class TestAsyncSearch<T> : AsyncSearch<T>
 {

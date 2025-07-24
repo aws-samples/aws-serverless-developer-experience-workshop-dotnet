@@ -4,8 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>Unicorn.Web.ApprovalService</AssemblyName>
-        <RootNamespace>Unicorn.Web.ApprovalService</RootNamespace>
+        <AssemblyName>Unicorn.Web.PublicationManagerService</AssemblyName>
+        <RootNamespace>Unicorn.Web.PublicationManagerService</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

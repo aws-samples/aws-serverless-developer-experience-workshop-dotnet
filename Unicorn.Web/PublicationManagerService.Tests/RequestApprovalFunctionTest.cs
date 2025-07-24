@@ -11,7 +11,7 @@ using NSubstitute;
 using Unicorn.Web.Common;
 using Xunit;
 
-namespace Unicorn.Web.ApprovalService.Tests;
+namespace Unicorn.Web.PublicationManagerService.Tests;
 
 public class RequestApprovalFunctionTest
 {

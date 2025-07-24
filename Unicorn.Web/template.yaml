@@ -110,8 +110,8 @@ Resources:
   RequestApprovalFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./ApprovalService
-      Handler: Unicorn.Web.ApprovalService::Unicorn.Web.ApprovalService.RequestApprovalFunction::FunctionHandler
+      CodeUri: ./PublicationManagerService
+      Handler: Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.RequestApprovalFunction::FunctionHandler
       Policies:
         - EventBridgePutEventsPolicy:
             EventBusName: !Ref UnicornWebEventBus
@@ -140,8 +140,8 @@ Resources:
   PublicationApprovedEventHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./ApprovalService
-      Handler: Unicorn.Web.ApprovalService::Unicorn.Web.ApprovalService.PublicationApprovedEventHandler::FunctionHandler
+      CodeUri: ./PublicationManagerService
+      Handler: Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.PublicationApprovedEventHandler::FunctionHandler
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref WebTable

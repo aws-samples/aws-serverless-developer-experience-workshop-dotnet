@@ -37,9 +37,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Web", "Unicorn.Web"
 		Unicorn.Web\samconfig.yaml = Unicorn.Web\samconfig.yaml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApprovalService.Tests", "Unicorn.Web\ApprovalService.Tests\ApprovalService.Tests.csproj", "{0A0053A9-9804-96BC-B32D-A8FA70B86240}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PublicationManagerService.Tests", "Unicorn.Web\PublicationManagerService.Tests\PublicationManagerService.Tests.csproj", "{0A0053A9-9804-96BC-B32D-A8FA70B86240}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApprovalService", "Unicorn.Web\ApprovalService\ApprovalService.csproj", "{EBD43E94-06C4-19C7-848C-252F6C59EB60}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PublicationManagerService", "Unicorn.Web\PublicationManagerService\PublicationManagerService.csproj", "{EBD43E94-06C4-19C7-848C-252F6C59EB60}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Unicorn.Web\Common\Common.csproj", "{3190BFCE-D798-AC40-2350-C05B9AE9A375}"
 EndProject

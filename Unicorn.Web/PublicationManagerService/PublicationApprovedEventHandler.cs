@@ -8,13 +8,13 @@ using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.Core;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using Unicorn.Web.Common;
+using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
-namespace Unicorn.Web.ApprovalService;
+namespace Unicorn.Web.PublicationManagerService;
 
 public class PublicationApprovedEventHandler
 {
