@@ -52,8 +52,8 @@ Resources:
       RegistryName:
         Fn::GetAtt: EventRegistry.RegistryName
       SchemaName:
-        Fn::Sub: '{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}@PublicationEvaluationCompleted'
-      Description: 'The schema for when a property evaluation is completed'
+        Fn::Sub: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}@PublicationEvaluationCompleted"
+      Description: "The schema for when a property evaluation is completed"
       Content:
         Fn::Sub: |
           {

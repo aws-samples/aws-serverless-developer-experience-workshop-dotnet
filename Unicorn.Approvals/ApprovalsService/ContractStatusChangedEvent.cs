@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 namespace Unicorn.Approvals.ApprovalsService;
+
 /// <summary>
 /// Represents an event when the status of the contract has changed.
 /// </summary>

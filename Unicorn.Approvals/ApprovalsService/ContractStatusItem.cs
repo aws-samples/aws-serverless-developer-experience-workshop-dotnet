@@ -4,6 +4,7 @@
 using Amazon.DynamoDBv2.DataModel;
 
 namespace Unicorn.Approvals.ApprovalsService;
+
 /// <summary>
 /// Represents the model for the items in the contract status DynamoDb table.
 /// </summary>

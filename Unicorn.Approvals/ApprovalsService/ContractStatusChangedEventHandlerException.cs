@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 namespace Unicorn.Approvals.ApprovalsService;
+
 /// <summary>
 /// Represents the exception that is thrown when a Contract Status Changed event handler cannot process the event.
 /// </summary>
