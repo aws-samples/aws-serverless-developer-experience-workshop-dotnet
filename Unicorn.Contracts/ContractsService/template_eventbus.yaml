@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform:
+  - AWS::Serverless-2016-10-31
+Description: >
+  EventBridge Event Bus for Unicorn Contracts Service
+
+Parameters:
+  Stage:
+    Type: String
+    Default: local
+    AllowedValues:
+      - local
+      - dev
+      - prod
+
+Resources:
+  UnicornContractsEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub unicorn.contracts-eventbus-${Stage}
+      # LogConfig:
+      #   IncludeDetail: True
+      #   Level: INFO # INFO | ERROR | TRACE | OFF
+
+
+Outputs:
+  UnicornContractsEventBusName:
+    Description: "Name of the Unicorn Contracts Event Bus"
+    Value: !Ref UnicornContractsEventBus
+  UnicornContractsEventBusArn:
+    Description: "ARN of the Unicorn Contracts Event Bus"
+    Value: !GetAtt UnicornContractsEventBus.Arn
