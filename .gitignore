@@ -6,3 +6,4 @@
 UnicornApprovals.sln.DotSettings.user
 **/cdk.out/
 **/obj/**
+.kiro
