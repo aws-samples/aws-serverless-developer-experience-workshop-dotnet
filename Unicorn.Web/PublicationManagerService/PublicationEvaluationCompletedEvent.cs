@@ -10,7 +10,7 @@ namespace Unicorn.Web.PublicationManagerService;
 /// Represents an event when the publication is approved.
 /// </summary>
 [Serializable]
-public class PublicationApprovedEvent
+public class PublicationEvaluationCompletedEvent
 {
     [JsonPropertyName(PropertyNames.PropertyId)]
     public string PropertyId { get; set; }  = null!;

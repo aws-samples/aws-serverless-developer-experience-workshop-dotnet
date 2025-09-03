@@ -16,7 +16,7 @@ using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 namespace Unicorn.Web.PublicationManagerService;
 
-public class PublicationApprovedEventHandler
+public class PublicationEvaluationResultEventHandler
 {
     private readonly IDynamoDBContext _dynamoDbContext;
     
@@ -24,7 +24,7 @@ public class PublicationApprovedEventHandler
     /// Default constructor. Initialises global variables for function.
     /// </summary>
     /// <exception cref="Exception">Init exception</exception>
-    public PublicationApprovedEventHandler()
+    public PublicationEvaluationResultEventHandler()
     {
         // Instrument all AWS SDK calls
         AWSSDKHandler.RegisterXRayForAllServices();
@@ -49,7 +49,7 @@ public class PublicationApprovedEventHandler
     [Logging(LogEvent = true)]
     [Metrics(CaptureColdStart = true)]
     [Tracing(CaptureMode = TracingCaptureMode.ResponseAndError)]
-    public async Task FunctionHandler(CloudWatchEvent<PublicationApprovedEvent> publicationApprovedEvent, ILambdaContext context)
+    public async Task FunctionHandler(CloudWatchEvent<PublicationEvaluationCompletedEvent> publicationApprovedEvent, ILambdaContext context)
     {
         try
         {
@@ -63,11 +63,11 @@ public class PublicationApprovedEventHandler
     }
 
     [Tracing(SegmentName = "Publication Approved")]
-    private async Task PublicationApproved(PublicationApprovedEvent publicationApproved)
+    private async Task PublicationApproved(PublicationEvaluationCompletedEvent publicationEvaluationCompleted)
     {
-        Logger.LogInformation($"Updating publication status for Property ID: {publicationApproved.PropertyId}");
+        Logger.LogInformation($"Updating publication status for Property ID: {publicationEvaluationCompleted.PropertyId}");
 
-        var splitString = publicationApproved.PropertyId.Split('/');
+        var splitString = publicationEvaluationCompleted.PropertyId.Split('/');
         var country = splitString[0];
         var city = splitString[1];
         var street = splitString[2];
@@ -79,17 +79,17 @@ public class PublicationApprovedEventHandler
         Logger.LogInformation($"Loading the property from DynamoDB with PK {pk} and SK {sk}");
         var existingProperty = await _dynamoDbContext.LoadAsync<PropertyRecord>(pk, sk);
 
-        if (string.Equals(publicationApproved.EvaluationResult, PropertyStatus.Approved, StringComparison.CurrentCultureIgnoreCase))
+        if (string.Equals(publicationEvaluationCompleted.EvaluationResult, PropertyStatus.Approved, StringComparison.CurrentCultureIgnoreCase))
         {
             existingProperty.Status = PropertyStatus.Approved;
         }
-        else if (string.Equals(publicationApproved.EvaluationResult, PropertyStatus.Declined, StringComparison.CurrentCultureIgnoreCase))
+        else if (string.Equals(publicationEvaluationCompleted.EvaluationResult, PropertyStatus.Declined, StringComparison.CurrentCultureIgnoreCase))
         {
             existingProperty.Status = PropertyStatus.Declined;
         }
         else
         {
-            Logger.LogInformation($"evaluation_result: {publicationApproved.EvaluationResult} is not valid");
+            Logger.LogInformation($"evaluation_result: {publicationEvaluationCompleted.EvaluationResult} is not valid");
             return;
         }
 
