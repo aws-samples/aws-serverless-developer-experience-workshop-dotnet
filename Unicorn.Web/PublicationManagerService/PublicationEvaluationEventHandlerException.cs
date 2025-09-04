@@ -7,13 +7,13 @@ namespace Unicorn.Web.PublicationManagerService;
 /// Represents the exception that is thrown when a Publication Approved event handler cannot process the event.
 /// </summary>
 [Serializable]
-public class PublicationApprovedEventHandlerException : Exception
+public class PublicationEvaluationEventHandlerException : Exception
 {
-    public PublicationApprovedEventHandlerException(string message) : base(message)
+    public PublicationEvaluationEventHandlerException(string message) : base(message)
     {
     }
 
-    public PublicationApprovedEventHandlerException(string message, Exception innerException) : base(message,
+    public PublicationEvaluationEventHandlerException(string message, Exception innerException) : base(message,
         innerException)
     {
     }

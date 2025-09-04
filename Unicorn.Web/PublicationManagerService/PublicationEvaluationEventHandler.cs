@@ -16,7 +16,7 @@ using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 namespace Unicorn.Web.PublicationManagerService;
 
-public class PublicationEvaluationResultEventHandler
+public class PublicationEvaluationEventHandler
 {
     private readonly IDynamoDBContext _dynamoDbContext;
     
@@ -24,7 +24,7 @@ public class PublicationEvaluationResultEventHandler
     /// Default constructor. Initialises global variables for function.
     /// </summary>
     /// <exception cref="Exception">Init exception</exception>
-    public PublicationEvaluationResultEventHandler()
+    public PublicationEvaluationEventHandler()
     {
         // Instrument all AWS SDK calls
         AWSSDKHandler.RegisterXRayForAllServices();
@@ -58,7 +58,7 @@ public class PublicationEvaluationResultEventHandler
         catch (Exception e)
         {
             Logger.LogError(e);
-            throw new PublicationApprovedEventHandlerException(e.Message);
+            throw new PublicationEvaluationEventHandlerException(e.Message);
         }
     }
 
