@@ -63,11 +63,11 @@ public class PublicationEvaluationEventHandler
     }
 
     [Tracing(SegmentName = "Publication Approved")]
-    private async Task PublicationApproved(PublicationEvaluationCompletedEvent publicationEvaluationCompleted)
+    private async Task PublicationApproved(PublicationEvaluationCompletedEvent publicationEvaluationCompletedEvent)
     {
-        Logger.LogInformation($"Updating publication status for Property ID: {publicationEvaluationCompleted.PropertyId}");
+        Logger.LogInformation($"Updating publication status for Property ID: {publicationEvaluationCompletedEvent.PropertyId}");
 
-        var splitString = publicationEvaluationCompleted.PropertyId.Split('/');
+        var splitString = publicationEvaluationCompletedEvent.PropertyId.Split('/');
         var country = splitString[0];
         var city = splitString[1];
         var street = splitString[2];
@@ -79,17 +79,17 @@ public class PublicationEvaluationEventHandler
         Logger.LogInformation($"Loading the property from DynamoDB with PK {pk} and SK {sk}");
         var existingProperty = await _dynamoDbContext.LoadAsync<PropertyRecord>(pk, sk);
 
-        if (string.Equals(publicationEvaluationCompleted.EvaluationResult, PropertyStatus.Approved, StringComparison.CurrentCultureIgnoreCase))
+        if (string.Equals(publicationEvaluationCompletedEvent.EvaluationResult, PropertyStatus.Approved, StringComparison.CurrentCultureIgnoreCase))
         {
             existingProperty.Status = PropertyStatus.Approved;
         }
-        else if (string.Equals(publicationEvaluationCompleted.EvaluationResult, PropertyStatus.Declined, StringComparison.CurrentCultureIgnoreCase))
+        else if (string.Equals(publicationEvaluationCompletedEvent.EvaluationResult, PropertyStatus.Declined, StringComparison.CurrentCultureIgnoreCase))
         {
             existingProperty.Status = PropertyStatus.Declined;
         }
         else
         {
-            Logger.LogInformation($"evaluation_result: {publicationEvaluationCompleted.EvaluationResult} is not valid");
+            Logger.LogInformation($"evaluation_result: {publicationEvaluationCompletedEvent.EvaluationResult} is not valid");
             return;
         }
 
