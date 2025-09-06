@@ -52,7 +52,7 @@ Globals:
       - x86_64
     Environment:
       Variables:
-        DYNAMODB_TABLE: !Ref WebTable
+        DYNAMODB_TABLE: !Ref PropertiesTable
         EVENT_BUS: !Ref UnicornWebEventBus
         SERVICE_NAMESPACE: "{{resolve:ssm:/uni-prop/UnicornWebNamespace}}"
         POWERTOOLS_LOGGER_CASE: PascalCase
@@ -94,7 +94,7 @@ Resources:
       Handler: Unicorn.Web.SearchService::Unicorn.Web.SearchService.PropertySearchFunction::FunctionHandler
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref WebTable
+            TableName: !Ref PropertiesTable
 
   # Log group for the SearchFunction
   SearchFunctionLogGroup:
@@ -115,7 +115,7 @@ Resources:
         - EventBridgePutEventsPolicy:
             EventBusName: !Ref UnicornWebEventBus
         - DynamoDBReadPolicy:
-            TableName: !Ref WebTable
+            TableName: !Ref PropertiesTable
       Events:
         IngestQueue:
           Type: SQS
@@ -143,7 +143,7 @@ Resources:
       Handler: Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.PublicationEvaluationEventHandler::FunctionHandler
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref WebTable
+            TableName: !Ref PropertiesTable
       EventInvokeConfig:
         DestinationConfig:
           OnFailure:
@@ -295,7 +295,7 @@ Resources:
 
   ##### DYNAMODB
   # Persists Property details in DynamoDB
-  WebTable:
+  PropertiesTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -473,9 +473,9 @@ Outputs:
     Value: !GetAtt UnicornWebIngestQueue.QueueUrl
 
   #### DYNAMODB OUTPUTS
-  UnicornWebTableName:
+  PropertiesTableName:
     Description: Name of the DynamoDB Table for Unicorn Web
-    Value: !Ref WebTable
+    Value: !Ref PropertiesTable
 
   #### LAMBDA FUNCTIONS OUTPUTS
   SearchFunctionArn:
