@@ -12,21 +12,21 @@ Resources:
     Properties:
       Type: String
       Name: !Sub /uni-prop/UnicornContractsNamespace
-      Value: "unicorn.contracts"
+      Value: "unicorn-contracts"
 
   UnicornApprovalsNamespaceParam: 
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
       Name: !Sub /uni-prop/UnicornApprovalsNamespace
-      Value: "unicorn.approvals"
+      Value: "unicorn-approvals"
 
   UnicornWebNamespaceParam: 
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
       Name: !Sub /uni-prop/UnicornWebNamespace
-      Value: "unicorn.web"
+      Value: "unicorn-web"
 
   
 Outputs:
