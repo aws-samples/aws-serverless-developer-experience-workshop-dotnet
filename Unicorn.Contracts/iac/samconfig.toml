@@ -14,8 +14,10 @@ parallel = true
 disable_rollback = true
 confirm_changeset = false
 fail_on_empty_changeset = false
-capabilities = ["CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND"]
-parameter_overrides = ["Stage=local"]
+capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+parameter_overrides = "Stage=\"local\""
+region = "ap-southeast-2"
+image_repositories = []
 
 [default.validate.parameters]
 lint = true
