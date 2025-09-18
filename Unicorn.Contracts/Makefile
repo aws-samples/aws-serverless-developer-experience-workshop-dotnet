@@ -37,7 +37,7 @@ deploy-schema: ## Deploy event schema
 	@echo "Deploying event schema..."
 	@sam deploy \
 		--template-file iac/schema-registry/ContractStatusChanged-schema.yaml \
-		--stack-name $(STACK_PREFIX)-contracts-contract-status-changed-schema \
+		--stack-name $(STACK_PREFIX)-contracts-schema-ContractStatusChanged \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM \
 		--region $(REGION) \
@@ -71,5 +71,5 @@ clean: ## Clean build artifacts
 delete: ## Delete all stacks
 	@echo "Deleting stacks in reverse order..."
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-contracts-contracts-service --region $(REGION) || true
-	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-contracts-contract-status-changed-schema --region $(REGION) || true
+	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-contracts-schema-ContractStatusChanged --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-contracts-domain --region $(REGION) || true

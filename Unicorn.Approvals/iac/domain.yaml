@@ -39,20 +39,20 @@ Resources:
   #################################################################################################
 
   # Export the event bus name
-  UnicornApprovalsEventBusName:
+  ApprovalsEventBusName:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /uni-prop/${Stage}/UnicornApprovalsEventBus
-      Value: !GetAtt UnicornApprovalsEventBus.Name
+      Name: !Sub /uni-prop/${Stage}/ApprovalsEventBus
+      Value: !GetAtt ApprovalsEventBus.Name
 
   # Export the event bus ARN
-  UnicornApprovalsEventBusArn:
+  ApprovalsEventBusArn:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /uni-prop/${Stage}/UnicornApprovalsEventBusArn
-      Value: !GetAtt UnicornApprovalsEventBus.Arn
+      Name: !Sub /uni-prop/${Stage}/ApprovalsEventBusArn
+      Value: !GetAtt ApprovalsEventBus.Arn
 
   # Export the Schema registry name
   UnicornApprovalsSchemaRegistryName:
@@ -66,10 +66,10 @@ Resources:
   #### EVENT BUS
   #################################################################################################
 
-  UnicornApprovalsEventBus:
+  ApprovalsEventBus:
     Type: AWS::Events::EventBus
     Properties:
-      Name: !Sub unicorn-contracts-eventbus-${Stage}
+      Name: !Sub unicorn-approvals-eventbus-${Stage}
       LogConfig:
         IncludeDetail: FULL # [FULL or NONE]
         Level: !If [IsProd, ERROR, INFO] # INFO | ERROR | TRACE | OFF
@@ -79,10 +79,10 @@ Resources:
   #################################################################################################
 
   # Event bus policy to restrict who can publish events (should only be services from UnicornApprovalsNamespace)
-  UnicornApprovalsEventBusPublishPolicy:
+  ApprovalsEventBusPublishPolicy:
     Type: AWS::Events::EventBusPolicy
     Properties:
-      EventBusName: !Ref UnicornApprovalsEventBus
+      EventBusName: !Ref ApprovalsEventBus
       StatementId: !Sub OnlyApprovalsServiceCanPublishToEventBus-${Stage}
       Statement:
         Effect: Allow
@@ -90,7 +90,7 @@ Resources:
           AWS:
             - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
         Action: events:PutEvents
-        Resource: !GetAtt UnicornApprovalsEventBus.Arn
+        Resource: !GetAtt ApprovalsEventBus.Arn
         Condition:
           StringEquals:
             events:source:
@@ -102,7 +102,7 @@ Resources:
   RuleManagementPolicy:
     Type: AWS::Events::EventBusPolicy
     Properties:
-      EventBusName: !Ref UnicornApprovalsEventBus
+      EventBusName: !Ref ApprovalsEventBus
       StatementId: !Sub "OnlyRulesForApprovalsServiceEvents-${Stage}"
       Statement:
         Effect: Allow
@@ -116,7 +116,7 @@ Resources:
           - events:EnableRule
           - events:PutTargets
           - events:RemoveTargets
-        Resource: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${UnicornApprovalsEventBus}/*
+        Resource: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${ApprovalsEventBus}/*
         Condition:
           StringEqualsIfExists:
             "events:creatorAccount": "${aws:PrincipalAccount}"
@@ -138,57 +138,59 @@ Resources:
             Principal:
               Service: events.amazonaws.com
       Policies:
-        - PolicyName: PutEventsOnUnicornApprovalsEventBus
+        - PolicyName: PutEventsOnApprovalsEventBus
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action: events:PutEvents
-                Resource: !GetAtt UnicornApprovalsEventBus.Arn
+                Resource: !GetAtt ApprovalsEventBus.Arn
 
   ########################################################################################################
   #### EVENT BUS LOGGING
   #### See (https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus-logs.html)
   ########################################################################################################
 
-  UnicornApprovalsEventBusErrorDeliverySource:
+  EventBusErrorDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
-      Name: !Sub "${UnicornApprovalsEventBus.Name}-ERROR-LOGS-${Stage}"
+      Name: !Sub "${ApprovalsEventBus.Name}-ERROR-LOGS-${Stage}"
       LogType: ERROR_LOGS
-      ResourceArn: !GetAtt UnicornApprovalsEventBus.Arn
+      ResourceArn: !GetAtt ApprovalsEventBus.Arn
 
-  UnicornApprovalsEventBusInfoDeliverySource:
+  EventBusInfoDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
-      Name: !Sub "${UnicornApprovalsEventBus.Name}-INFO-LOGS-${Stage}"
+      Name: !Sub "${ApprovalsEventBus.Name}-INFO-LOGS-${Stage}"
       LogType: INFO_LOGS
-      ResourceArn: !GetAtt UnicornApprovalsEventBus.Arn
+      ResourceArn: !GetAtt ApprovalsEventBus.Arn
 
-  UnicornApprovalsEventBusDeliveryDestination:
+  EventBusDeliveryDestination:
     Type: AWS::Logs::DeliveryDestination
     Properties:
-      Name: !Sub "${UnicornApprovalsEventBus.Name}-DeliveryDestination-${Stage}"
-      DestinationResourceArn: !GetAtt ApprovalsEventHandlerFunctionLogGroup.Arn
+      Name: !Sub "${ApprovalsEventBus.Name}-DeliveryDestination-${Stage}"
+      DestinationResourceArn: !GetAtt EventBusLogGroup.Arn
 
-  UnicornApprovalsEventBusErrorLoggingDelivery:
+  EventBusErrorLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: UnicornApprovalsEventBusErrorDeliverySource
-      DeliveryDestinationArn: !GetAtt UnicornApprovalsEventBusDeliveryDestination.Arn
+        Ref: EventBusErrorDeliverySource
+      DeliveryDestinationArn: !GetAtt EventBusDeliveryDestination.Arn
 
-  UnicornApprovalsEventBusInfoLoggingDelivery:
+  EventBusInfoLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: UnicornApprovalsEventBusInfoDeliverySource
-      DeliveryDestinationArn: !GetAtt UnicornApprovalsEventBusDeliveryDestination.Arn
+        Ref: EventBusInfoDeliverySource
+      DeliveryDestinationArn: !GetAtt EventBusDeliveryDestination.Arn
 
-  ApprovalsEventHandlerFunctionLogGroup:
+  EventBusLogGroup:
     Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
     Properties:
-      LogGroupName: !Sub "/aws/vendedlogs/events/event-bus/${UnicornApprovalsEventBus.Name}-${Stage}"
+      LogGroupName: !Sub "/aws/vendedlogs/events/event-bus/${ApprovalsEventBus.Name}-${Stage}"
       RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   #################################################################################################
@@ -224,20 +226,20 @@ Resources:
               - !Sub "arn:${AWS::Partition}:schemas:${AWS::Region}:${AWS::AccountId}:schema/${UnicornApprovalsSchemaRegistry.RegistryName}*"
 
 Outputs:
-  UnicornApprovalsEventBusName:
+  ApprovalsEventBusName:
     Description: "Name of the Unicorn Approvals Event Bus"
-    Value: !Ref UnicornApprovalsEventBus
-  UnicornApprovalsEventBusArn:
+    Value: !Ref ApprovalsEventBus
+  ApprovalsEventBusArn:
     Description: "ARN of the Unicorn Approvals Event Bus"
-    Value: !GetAtt UnicornApprovalsEventBus.Arn
+    Value: !GetAtt ApprovalsEventBus.Arn
 
   # CloudWatch Log Group Outputs
   ApprovalsEventHandlerFunctionLogGroupName:
     Description: "Name of the Approvals Event Handler Function Log Group"
-    Value: !Ref ApprovalsEventHandlerFunctionLogGroup
+    Value: !Ref EventBusLogGroup
   ApprovalsEventHandlerFunctionLogGroupArn:
     Description: "ARN of the Approvals Event Handler Function Log Group"
-    Value: !GetAtt ApprovalsEventHandlerFunctionLogGroup.Arn
+    Value: !GetAtt EventBusLogGroup.Arn
 
   # Schema Registry Outputs
   UnicornApprovalsSchemaRegistryName:
