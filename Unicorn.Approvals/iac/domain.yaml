@@ -1,0 +1,257 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+AWSTemplateFormatVersion: "2010-09-09"
+Transform:
+  - AWS::Serverless-2016-10-31
+Description: >
+  This template sets up the core infrastructure for Unicorn Approvals, 
+  including event-driven communication, schema management, and Amazon EventBridge. 
+  It also provides comprehensive logging and monitoring through CloudWatch, 
+  an EventBridge Schema Registry for event schema governance, and cross-service 
+  event bus policies for rule creation. Additionally, it supports resource sharing 
+  across services using SSM parameters and multi-stage deployments with environment-specific 
+  log retention and logging levels.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: local
+    AllowedValues:
+      - local
+      - dev
+      - prod
+
+Mappings:
+  LogsRetentionPeriodMap:
+    local:
+      Days: 3
+    dev:
+      Days: 3
+    prod:
+      Days: 14
+
+Conditions:
+  IsProd: !Equals [!Ref Stage, prod]
+
+Resources:
+  #################################################################################################
+  #### SSM PARAMETERS (global variables)
+  #################################################################################################
+
+  # Export the event bus name
+  UnicornApprovalsEventBusName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub /uni-prop/${Stage}/UnicornApprovalsEventBus
+      Value: !GetAtt UnicornApprovalsEventBus.Name
+
+  # Export the event bus ARN
+  UnicornApprovalsEventBusArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub /uni-prop/${Stage}/UnicornApprovalsEventBusArn
+      Value: !GetAtt UnicornApprovalsEventBus.Arn
+
+  # Export the Schema registry name
+  UnicornApprovalsSchemaRegistryName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub /uni-prop/${Stage}/UnicornApprovalsSchemaRegistryName
+      Value: !GetAtt UnicornApprovalsSchemaRegistry.RegistryName
+
+  #################################################################################################
+  #### EVENT BUS
+  #################################################################################################
+
+  UnicornApprovalsEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub unicorn-contracts-eventbus-${Stage}
+      LogConfig:
+        IncludeDetail: FULL # [FULL or NONE]
+        Level: !If [IsProd, ERROR, INFO] # INFO | ERROR | TRACE | OFF
+
+  #################################################################################################
+  #### EVENT BUS POLICIES
+  #################################################################################################
+
+  # Event bus policy to restrict who can publish events (should only be services from UnicornApprovalsNamespace)
+  UnicornApprovalsEventBusPublishPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      EventBusName: !Ref UnicornApprovalsEventBus
+      StatementId: !Sub OnlyApprovalsServiceCanPublishToEventBus-${Stage}
+      Statement:
+        Effect: Allow
+        Principal:
+          AWS:
+            - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+        Action: events:PutEvents
+        Resource: !GetAtt UnicornApprovalsEventBus.Arn
+        Condition:
+          StringEquals:
+            events:source:
+              - "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
+
+  # This policy defines who can create rules on the event bus. Only principals subscribing to
+  # Approvals Service events can create rule on the bus. No rules without a defined source.
+  # In a multi-account environment, add multiple AWS accounts as Principal
+  RuleManagementPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      EventBusName: !Ref UnicornApprovalsEventBus
+      StatementId: !Sub "OnlyRulesForApprovalsServiceEvents-${Stage}"
+      Statement:
+        Effect: Allow
+        Principal:
+          AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+        Action:
+          - events:PutRule
+          - events:DeleteRule
+          - events:DescribeRule
+          - events:DisableRule
+          - events:EnableRule
+          - events:PutTargets
+          - events:RemoveTargets
+        Resource: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${UnicornApprovalsEventBus}/*
+        Condition:
+          StringEqualsIfExists:
+            "events:creatorAccount": "${aws:PrincipalAccount}"
+          StringEquals:
+            "events:source":
+              - "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
+          "Null":
+            "events:source": "false"
+
+  # This IAM role allows EventBridge to assume the permissions necessary to send events
+  # to the UnicornApprovals event bus
+  UnicornApprovalsEventBridgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: events.amazonaws.com
+      Policies:
+        - PolicyName: PutEventsOnUnicornApprovalsEventBus
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: events:PutEvents
+                Resource: !GetAtt UnicornApprovalsEventBus.Arn
+
+  ########################################################################################################
+  #### EVENT BUS LOGGING
+  #### See (https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus-logs.html)
+  ########################################################################################################
+
+  UnicornApprovalsEventBusErrorDeliverySource:
+    Type: AWS::Logs::DeliverySource
+    Properties:
+      Name: !Sub "${UnicornApprovalsEventBus.Name}-ERROR-LOGS-${Stage}"
+      LogType: ERROR_LOGS
+      ResourceArn: !GetAtt UnicornApprovalsEventBus.Arn
+
+  UnicornApprovalsEventBusInfoDeliverySource:
+    Type: AWS::Logs::DeliverySource
+    Properties:
+      Name: !Sub "${UnicornApprovalsEventBus.Name}-INFO-LOGS-${Stage}"
+      LogType: INFO_LOGS
+      ResourceArn: !GetAtt UnicornApprovalsEventBus.Arn
+
+  UnicornApprovalsEventBusDeliveryDestination:
+    Type: AWS::Logs::DeliveryDestination
+    Properties:
+      Name: !Sub "${UnicornApprovalsEventBus.Name}-DeliveryDestination-${Stage}"
+      DestinationResourceArn: !GetAtt ApprovalsEventHandlerFunctionLogGroup.Arn
+
+  UnicornApprovalsEventBusErrorLoggingDelivery:
+    Type: AWS::Logs::Delivery
+    Properties:
+      DeliverySourceName:
+        Ref: UnicornApprovalsEventBusErrorDeliverySource
+      DeliveryDestinationArn: !GetAtt UnicornApprovalsEventBusDeliveryDestination.Arn
+
+  UnicornApprovalsEventBusInfoLoggingDelivery:
+    Type: AWS::Logs::Delivery
+    Properties:
+      DeliverySourceName:
+        Ref: UnicornApprovalsEventBusInfoDeliverySource
+      DeliveryDestinationArn: !GetAtt UnicornApprovalsEventBusDeliveryDestination.Arn
+
+  ApprovalsEventHandlerFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/events/event-bus/${UnicornApprovalsEventBus.Name}-${Stage}"
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
+
+  #################################################################################################
+  #### SCHEMA REGISTRY
+  #################################################################################################
+  UnicornApprovalsSchemaRegistry:
+    Type: AWS::EventSchemas::Registry
+    Properties:
+      Description: "Event schemas for Unicorn Approvals"
+      RegistryName: !Sub "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}-${Stage}"
+
+  EventRegistryPolicy:
+    Type: AWS::EventSchemas::RegistryPolicy
+    Properties:
+      RegistryName: !GetAtt UnicornApprovalsSchemaRegistry.RegistryName
+      Policy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowExternalServices
+            Effect: Allow
+            Principal:
+              AWS: !Ref AWS::AccountId
+            Action:
+              - schemas:DescribeCodeBinding
+              - schemas:DescribeRegistry
+              - schemas:DescribeSchema
+              - schemas:GetCodeBindingSource
+              - schemas:ListSchemas
+              - schemas:ListSchemaVersions
+              - schemas:SearchSchemas
+            Resource:
+              - !GetAtt UnicornApprovalsSchemaRegistry.RegistryArn
+              - !Sub "arn:${AWS::Partition}:schemas:${AWS::Region}:${AWS::AccountId}:schema/${UnicornApprovalsSchemaRegistry.RegistryName}*"
+
+Outputs:
+  UnicornApprovalsEventBusName:
+    Description: "Name of the Unicorn Approvals Event Bus"
+    Value: !Ref UnicornApprovalsEventBus
+  UnicornApprovalsEventBusArn:
+    Description: "ARN of the Unicorn Approvals Event Bus"
+    Value: !GetAtt UnicornApprovalsEventBus.Arn
+
+  # CloudWatch Log Group Outputs
+  ApprovalsEventHandlerFunctionLogGroupName:
+    Description: "Name of the Approvals Event Handler Function Log Group"
+    Value: !Ref ApprovalsEventHandlerFunctionLogGroup
+  ApprovalsEventHandlerFunctionLogGroupArn:
+    Description: "ARN of the Approvals Event Handler Function Log Group"
+    Value: !GetAtt ApprovalsEventHandlerFunctionLogGroup.Arn
+
+  # Schema Registry Outputs
+  UnicornApprovalsSchemaRegistryName:
+    Description: "Name of the Unicorn Approvals Schema Registry"
+    Value: !Ref UnicornApprovalsSchemaRegistry
+
+  UnicornApprovalsSchemaRegistryArn:
+    Description: "ARN of the Unicorn Approvals Schema Registry"
+    Value: !GetAtt UnicornApprovalsSchemaRegistry.RegistryArn
+
+  # Exporting this role so it can be referenced across Approval subscriptions
+  # This is not a global variable, so not sharing as a SSM parameter.
+  UnicornApprovalsEventBridgeRoleArn:
+    Description: "ARN of the Unicorn Approvals EventBridge Role"
+    Value: !GetAtt UnicornApprovalsEventBridgeRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-UnicornApprovalsEventBridgeRoleArn"
