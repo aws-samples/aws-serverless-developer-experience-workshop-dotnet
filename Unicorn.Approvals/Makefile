@@ -49,7 +49,7 @@ deploy-schema: ## Deploy event schema
 	@echo "Deploying event schema..."
 	@sam deploy \
 		--template-file iac/schema-registry/PublicationEvaluationCompleted-schema.yaml \
-		--stack-name $(STACK_PREFIX)-approvals-publication-evaluation-completed-schema \
+		--stack-name $(STACK_PREFIX)-approvals-schema-PublicationEvaluationCompleted \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM \
 		--region $(REGION) \
@@ -94,6 +94,6 @@ delete: ## Delete all stacks
 	@echo "Deleting stacks in reverse order..."
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-approvals-web-subscriptions --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-approvals-contracts-subscriptions --region $(REGION) || true
-	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-approvals-publication-evaluation-completed-schema --region $(REGION) || true
+	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-approvals-schema-PublicationEvaluationCompleted --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-approvals-service --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-approvals-domain --region $(REGION) || true
