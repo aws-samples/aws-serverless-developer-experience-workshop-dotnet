@@ -70,9 +70,11 @@ Globals:
 Resources:
   #################################################################################################
   #### LAMBDA FUNCTIONS
+  #### Core business logic for contract management and processing
   #################################################################################################
 
-  # Processes customer API requests from SQS queue UnicornContractsIngestQueue
+  # Event-driven function that processes contract operations from API Gateway via SQS
+  # Handles CRUD operations on contracts and publishes domain events for downstream services
   ContractEventHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -93,6 +95,7 @@ Resources:
             ScalingConfig:
               MaximumConcurrency: 5
 
+  # CloudWatch log group for contract event handler with environment-specific retention
   ContractEventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Delete
@@ -103,8 +106,11 @@ Resources:
 
   #################################################################################################
   #### API GATEWAY REST API
+  #### RESTful interface for contract management with async processing via SQS integration
   #################################################################################################
 
+  # Main REST API for contract operations with SQS integration for reliable async processing
+  # Provides endpoints for creating, updating, and retrieving contract information
   UnicornContractsApi:
     Type: AWS::Serverless::Api
     DependsOn: ContractsApiGwAccountConfig
@@ -133,7 +139,7 @@ Resources:
         project: !FindInMap [Constants, ProjectName, Value]
         namespace: "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
 
-  # API GW Cloudwatch Log Group
+  # CloudWatch log group for API Gateway access logs and performance metrics
   UnicornContractsApiLogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Delete
@@ -141,13 +147,13 @@ Resources:
     Properties:
       RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
-  # API Gateway Account Configuration, to enable Logs to be sent to CloudWatch
+  # Global API Gateway account configuration required for CloudWatch logging
   ContractsApiGwAccountConfig:
     Type: AWS::ApiGateway::Account
     Properties:
       CloudWatchRoleArn: !GetAtt UnicornContractsApiGwAccountConfigRole.Arn
 
-  # API GW IAM roles
+  # IAM role that allows API Gateway to write logs to CloudWatch
   UnicornContractsApiGwAccountConfigRole:
     Type: AWS::IAM::Role
     Properties:
@@ -160,6 +166,8 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
 
+  # IAM role that enables API Gateway to send messages directly to SQS
+  # Implements async processing pattern for reliable request handling
   UnicornContractsApiIntegrationRole:
     Type: AWS::IAM::Role
     Properties:
@@ -182,9 +190,11 @@ Resources:
 
   #################################################################################################
   #### MESSAGING & INTEGRATION
+  #### SQS queues and EventBridge components for reliable async processing and event publishing
   #################################################################################################
 
-  # Queue API Gateway requests to be processed by ContractEventHandlerFunction
+  # Primary ingestion queue that decouples API Gateway from Lambda processing
+  # Enables reliable async processing with built-in retry and DLQ capabilities
   UnicornContractsIngestQueue:
     Type: AWS::SQS::Queue
     UpdateReplacePolicy: Delete
@@ -205,7 +215,8 @@ Resources:
         - Key: namespace
           Value: "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
 
-  # DeadLetterQueue for UnicornContractsIngestQueue. Contains messages that failed to be processed
+  # DLQ for messages that fail processing after retry attempts
+  # Critical for debugging processing failures and ensuring no data loss
   UnicornContractsIngestDLQ:
     Type: AWS::SQS::Queue
     UpdateReplacePolicy: Delete
@@ -222,8 +233,8 @@ Resources:
         - Key: namespace
           Value: "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
 
-  # "Catchall" EventBridge rule used for development purposes. 
-  # Captures all domain events and sends the event to a CloudWatch Log. 
+  # Development and debugging rule that captures all contract domain events
+  # Useful for monitoring event flow and troubleshooting integration issues 
   UnicornContractsCatchAllRule:
     Type: AWS::Events::Rule
     Properties:
@@ -240,7 +251,7 @@ Resources:
         - Arn: !GetAtt UnicornContractsCatchAllLogGroup.Arn
           Id: !Sub UnicornContractsCatchAllLogGroupTarget-${Stage}
 
-  # CloudWatch log group used to catch all events
+  # CloudWatch log group for the catchall rule - stores all contract events for debugging
   UnicornContractsCatchAllLogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Delete
@@ -255,7 +266,8 @@ Resources:
         - !Ref Stage
         - Days
 
-  # Permissions to allow EventBridge to send logs to CloudWatch
+  # Resource policy that grants EventBridge permission to write to CloudWatch Logs
+  # Required for the catchall rule to function properly
   EventBridgeCloudWatchLogGroupPolicy:
     Type: AWS::Logs::ResourcePolicy
     Properties:
@@ -285,7 +297,10 @@ Resources:
         }
 
   #### EVENT BRIDGE PIPES
-  # Pipe to transform a changed Contracts table record to ContractStatusChanged and publish it via the UnicornContractsEventBus
+  # EventBridge Pipe that transforms DynamoDB stream records into domain events
+  # Automatically publishes ContractStatusChanged events when contract status changes
+  # Main pipe that converts DynamoDB changes to structured domain events
+  # Filters for DRAFT and APPROVED status changes and transforms data for downstream consumers
   ContractsTableStreamToEventPipe:
     Type: AWS::Pipes::Pipe
     Properties:
@@ -319,6 +334,7 @@ Resources:
           }
       Target: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsEventBusArn}}"
 
+  # CloudWatch log group for EventBridge Pipe execution logs and error tracking
   ContractsTableStreamToEventPipeLogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Delete
@@ -326,7 +342,8 @@ Resources:
     Properties:
       RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
-  # IAM Role for EventBridge Pipe
+  # IAM role that grants EventBridge Pipe permissions to read DynamoDB streams and publish events
+  # Includes access to DLQ for failed transformations
   ContractsTableStreamToEventPipeRole:
     Type: AWS::IAM::Role
     Properties:
@@ -364,6 +381,8 @@ Resources:
                   - sqs:SendMessage
                 Resource: !GetAtt ContractsTableStreamToEventPipeDLQ.Arn
 
+  # DLQ for EventBridge Pipe failures - captures records that fail transformation or delivery
+  # Essential for debugging event publishing issues and ensuring data integrity
   ContractsTableStreamToEventPipeDLQ:
     Type: AWS::SQS::Queue
     UpdateReplacePolicy: Delete
@@ -382,9 +401,11 @@ Resources:
 
   #################################################################################################
   #### DYNAMODB TABLE
+  #### Primary data store for contract information with change data capture via streams
   #################################################################################################
 
-  # Persist Contracts information in DynamoDB
+  # Main data store for contract information with DynamoDB Streams enabled
+  # Streams trigger EventBridge Pipe for real-time event publishing to downstream services
   ContractsTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Delete
@@ -408,6 +429,7 @@ Resources:
           Value: "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
 
 Outputs:
+  
   #### API GATEWAY OUTPUTS
   BaseUrl:
     Description: Web service API endpoint
