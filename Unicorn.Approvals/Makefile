@@ -5,7 +5,7 @@ STAGE ?= local
 REGION ?= ap-southeast-2
 STACK_PREFIX = uni-prop-$(STAGE)
 
-.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions test clean delete
+.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions test lint clean delete
 
 help: ## Show available commands
 	@echo "Unicorn Approvals Service Infrastructure"
@@ -84,6 +84,14 @@ deploy: deploy-domain deploy-service deploy-schema deploy-subscriptions ## Deplo
 test: ## Run tests
 	@echo "Running tests..."
 	@dotnet test ApprovalsService.Tests/ApprovalsService.Tests.csproj
+
+lint: ## Lint CloudFormation templates
+	@echo "Linting CloudFormation templates..."
+	@cfn-lint iac/approvals-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint iac/domain.yaml
+	@cfn-lint iac/schema-registry/PublicationEvaluationCompleted-schema.yaml
+	@cfn-lint iac/subscriptions/unicorn-contracts-subscriptions.yaml
+	@cfn-lint iac/subscriptions/unicorn-web-subscriptions.yaml
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
