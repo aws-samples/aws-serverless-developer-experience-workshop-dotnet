@@ -4,7 +4,11 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform:
   - AWS::Serverless-2016-10-31
 Description: >
-  Unicorn Contracts Service
+  Unicorn Contracts Service - A serverless microservice for managing property contracts
+  with event-driven architecture. Features REST API with async SQS processing, DynamoDB 
+  storage with change data capture, and EventBridge integration for real-time domain 
+  event publishing. Includes comprehensive observability with AWS Powertools, 
+  and dead letter queues for reliable message processing.
 
 Metadata:
   cfn-lint:
@@ -234,7 +238,7 @@ Resources:
           Value: "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
 
   # Development and debugging rule that captures all contract domain events
-  # Useful for monitoring event flow and troubleshooting integration issues 
+  # Useful for monitoring event flow and troubleshooting integration issues
   UnicornContractsCatchAllRule:
     Type: AWS::Events::Rule
     Properties:
@@ -429,7 +433,6 @@ Resources:
           Value: "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
 
 Outputs:
-  
   #### API GATEWAY OUTPUTS
   BaseUrl:
     Description: Web service API endpoint

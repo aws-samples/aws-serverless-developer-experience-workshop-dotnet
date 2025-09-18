@@ -4,7 +4,12 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform:
   - AWS::Serverless-2016-10-31
 Description: >
-  Unicorn Approvals Service. Validate the content, images and contract of property listings.
+  Unicorn Approvals Service - A serverless workflow orchestration service for automated 
+  property listing validation and approval. Features Step Functions workflows with AI-powered 
+  content analysis using Amazon Comprehend and Rekognition, event-driven coordination 
+  with external services, and DynamoDB-based state management. Implements the "wait for 
+  callback" pattern for human approval processes with comprehensive error handling and 
+  observability through AWS Powertools.
 
 Metadata:
   cfn-lint:
@@ -277,7 +282,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       SqsManagedSseEnabled: true
-      MessageRetentionPeriod: 1209600 # Maximum value, 1,209,600 (14days)
+      MessageRetentionPeriod: 604800 # 7 days
       Tags:
         - Key: project
           Value: !FindInMap [Constants, ProjectName, Value]
@@ -294,7 +299,7 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       SqsManagedSseEnabled: true
-      MessageRetentionPeriod: 1209600 # Maximum value, 1,209,600 (14days)
+      MessageRetentionPeriod: 604800 # 7 days
       Tags:
         - Key: project
           Value: !FindInMap [Constants, ProjectName, Value]
