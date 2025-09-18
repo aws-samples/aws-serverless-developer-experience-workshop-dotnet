@@ -1,0 +1,44 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Establishes cross-service event flow by creating an EventBridge rule that facilitates 
+  bus-to-bus communication (subscription rule), routing PublicationApprovalRequested events from the Unicorn Web 
+  event bus to the Unicorn Approvals event bus for downstream processing.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: local
+    AllowedValues:
+      - local
+      - dev
+      - prod
+
+Resources:
+  #### UNICORN WEB EVENT SUBSCRIPTIONS
+
+  # EventBridge rule that subscribes to PublicationApprovalRequested events from the Unicorn Web service
+  # and forwards them to the Unicorn Approvals event bus for processing approval workflows
+  PublicationApprovalRequestedSubscriptionRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}-PublicationApprovalRequested"
+      Description: Publication evaluation completed subscription
+      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornWebEventBusArn}}"
+      EventPattern:
+        source:
+          - "{{resolve:ssm:/uni-prop/UnicornWebNamespace}}"
+        detail-type:
+          - PublicationApprovalRequested
+      State: ENABLED
+      Targets:
+        - Id: SendEventTo
+          Arn: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBusArn}}"
+          RoleArn: !ImportValue "${StackName}-UnicornApprovalsEventBridgeRoleArn"
+
+Outputs:
+  PublicationApprovalRequestedSubscription:
+    Description: Rule ARN for Web service event subscription
+    Value:
+      Fn::GetAtt: [PublicationApprovalRequestedSubscriptionRule, Arn]
