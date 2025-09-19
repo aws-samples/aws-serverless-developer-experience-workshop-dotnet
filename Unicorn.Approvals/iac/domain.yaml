@@ -55,12 +55,12 @@ Resources:
       Value: !GetAtt ApprovalsEventBus.Arn
 
   # Export the Schema registry name
-  UnicornApprovalsSchemaRegistryName:
+  ApprovalsSchemaRegistryName:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /uni-prop/${Stage}/UnicornApprovalsSchemaRegistryName
-      Value: !GetAtt UnicornApprovalsSchemaRegistry.RegistryName
+      Name: !Sub /uni-prop/${Stage}/ApprovalsSchemaRegistryName
+      Value: !GetAtt ApprovalsSchemaRegistry.RegistryName
 
   #################################################################################################
   #### EVENT BUS
@@ -128,7 +128,7 @@ Resources:
 
   # This IAM role allows EventBridge to assume the permissions necessary to send events
   # to the UnicornApprovals event bus
-  UnicornApprovalsEventBridgeRole:
+  ApprovalsEventBridgeRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -196,7 +196,7 @@ Resources:
   #################################################################################################
   #### SCHEMA REGISTRY
   #################################################################################################
-  UnicornApprovalsSchemaRegistry:
+  ApprovalsSchemaRegistry:
     Type: AWS::EventSchemas::Registry
     Properties:
       Description: "Event schemas for Unicorn Approvals"
@@ -205,7 +205,7 @@ Resources:
   EventRegistryPolicy:
     Type: AWS::EventSchemas::RegistryPolicy
     Properties:
-      RegistryName: !GetAtt UnicornApprovalsSchemaRegistry.RegistryName
+      RegistryName: !GetAtt ApprovalsSchemaRegistry.RegistryName
       Policy:
         Version: "2012-10-17"
         Statement:
@@ -222,8 +222,8 @@ Resources:
               - schemas:ListSchemaVersions
               - schemas:SearchSchemas
             Resource:
-              - !GetAtt UnicornApprovalsSchemaRegistry.RegistryArn
-              - !Sub "arn:${AWS::Partition}:schemas:${AWS::Region}:${AWS::AccountId}:schema/${UnicornApprovalsSchemaRegistry.RegistryName}*"
+              - !GetAtt ApprovalsSchemaRegistry.RegistryArn
+              - !Sub "arn:${AWS::Partition}:schemas:${AWS::Region}:${AWS::AccountId}:schema/$ApprovalsSchemaRegistry.RegistryName}*"
 
 Outputs:
   ApprovalsEventBusName:
@@ -242,18 +242,18 @@ Outputs:
     Value: !GetAtt EventBusLogGroup.Arn
 
   # Schema Registry Outputs
-  UnicornApprovalsSchemaRegistryName:
+  ApprovalsSchemaRegistryName:
     Description: "Name of the Unicorn Approvals Schema Registry"
-    Value: !Ref UnicornApprovalsSchemaRegistry
+    Value: !Ref ApprovalsSchemaRegistry
 
-  UnicornApprovalsSchemaRegistryArn:
+  ApprovalsSchemaRegistryArn:
     Description: "ARN of the Unicorn Approvals Schema Registry"
-    Value: !GetAtt UnicornApprovalsSchemaRegistry.RegistryArn
+    Value: !GetAtt ApprovalsSchemaRegistry.RegistryArn
 
   # Exporting this role so it can be referenced across Approval subscriptions
   # This is not a global variable, so not sharing as a SSM parameter.
-  UnicornApprovalsEventBridgeRoleArn:
+  ApprovalsEventBridgeRoleArn:
     Description: "ARN of the Unicorn Approvals EventBridge Role"
-    Value: !GetAtt UnicornApprovalsEventBridgeRole.Arn
+    Value: !GetAtt ApprovalsEventBridgeRole.Arn
     Export:
-      Name: !Sub "${AWS::StackName}-UnicornApprovalsEventBridgeRoleArn"
+      Name: !Sub "${AWS::StackName}-ApprovalsEventBridgeRoleArn"

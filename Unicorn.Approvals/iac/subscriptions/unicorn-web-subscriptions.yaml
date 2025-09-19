@@ -35,7 +35,10 @@ Resources:
       Targets:
         - Id: SendEventTo
           Arn: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBusArn}}"
-          RoleArn: !ImportValue "${StackName}-UnicornApprovalsEventBridgeRoleArn"
+          RoleArn: !ImportValue "${StackName}-ApprovalsEventBridgeRoleArn"
+      Tags:
+        - Key: service-namespace
+          Value: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
 
 Outputs:
   PublicationApprovalRequestedSubscription:
