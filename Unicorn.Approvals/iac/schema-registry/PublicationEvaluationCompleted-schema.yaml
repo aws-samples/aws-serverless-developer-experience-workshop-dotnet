@@ -25,7 +25,7 @@ Resources:
       RegistryName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsSchemaRegistryName}}"
       SchemaName: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}@PublicationEvaluationCompleted"
       Description: The EventBridge schema for when a property publication evaluation is completed.
-      Content: !Sub |
+      Content: |
           {
             "openapi": "3.0.0",
             "info": {
@@ -49,7 +49,7 @@ Resources:
                     "account"
                   ],
                   "x-amazon-events-detail-type": "PublicationEvaluationCompleted",
-                  "x-amazon-events-source": "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsSchemaRegistryName}}",
+                  "x-amazon-events-source": "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}",
                   "properties": {
                     "detail": {
                       "$ref": "#/components/schemas/PublicationEvaluationCompleted"
