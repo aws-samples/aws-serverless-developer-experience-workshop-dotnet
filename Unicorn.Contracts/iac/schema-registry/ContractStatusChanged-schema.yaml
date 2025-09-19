@@ -28,7 +28,7 @@ Resources:
       Description: >
         EventBridge schema for ContractStatusChanged events published by the Unicorn Contracts Service 
         when a contract is updated.
-      Content: !Sub |
+      Content: |
         {
           "openapi": "3.0.0",
           "info": {
@@ -52,7 +52,7 @@ Resources:
                   "account"
                 ],
                 "x-amazon-events-detail-type": "ContractStatusChanged",
-                "x-amazon-events-source": "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsSchemaRegistryName}}",
+                "x-amazon-events-source": "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}",
                 "properties": {
                   "detail": {
                     "$ref": "#/components/schemas/ContractStatusChanged"
