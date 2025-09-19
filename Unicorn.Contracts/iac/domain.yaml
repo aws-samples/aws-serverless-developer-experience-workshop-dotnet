@@ -39,34 +39,34 @@ Resources:
   #################################################################################################
 
   # Export the event bus name
-  UnicornContractsEventBusName:
+  ContractsEventBusName:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /uni-prop/${Stage}/UnicornContractsEventBus
-      Value: !GetAtt UnicornContractsEventBus.Name
+      Name: !Sub /uni-prop/${Stage}/ContractsEventBus
+      Value: !GetAtt ContractsEventBus.Name
 
   # Export the event bus ARN
-  UnicornContractsEventBusArn:
+  ContractsEventBusArn:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /uni-prop/${Stage}/UnicornContractsEventBusArn
-      Value: !GetAtt UnicornContractsEventBus.Arn
+      Name: !Sub /uni-prop/${Stage}/ContractsEventBusArn
+      Value: !GetAtt ContractsEventBus.Arn
 
   # Export the Schema registry name
-  UnicornContractsSchemaRegistryName:
+  ContractsSchemaRegistryName:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
-      Name: !Sub /uni-prop/${Stage}/UnicornContractsSchemaRegistryName
-      Value: !GetAtt UnicornContractsSchemaRegistry.RegistryName
+      Name: !Sub /uni-prop/${Stage}/ContractsSchemaRegistryName
+      Value: !GetAtt ContractsSchemaRegistry.RegistryName
 
   #################################################################################################
   #### EVENT BUS
   #################################################################################################
 
-  UnicornContractsEventBus:
+  ContractsEventBus:
     Type: AWS::Events::EventBus
     Properties:
       Name: !Sub unicorn-contracts-eventbus-${Stage}
@@ -79,10 +79,10 @@ Resources:
   #################################################################################################
 
   # Event bus policy to restrict who can publish events (should only be services from UnicornContractsNamespace)
-  UnicornContractsEventBusPublishPolicy:
+  ContractsEventBusPublishPolicy:
     Type: AWS::Events::EventBusPolicy
     Properties:
-      EventBusName: !Ref UnicornContractsEventBus
+      EventBusName: !Ref ContractsEventBus
       StatementId: !Sub OnlyContactsServiceCanPublishToEventBus-${Stage}
       Statement:
         Effect: Allow
@@ -90,7 +90,7 @@ Resources:
           AWS:
             - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
         Action: events:PutEvents
-        Resource: !GetAtt UnicornContractsEventBus.Arn
+        Resource: !GetAtt ContractsEventBus.Arn
         Condition:
           StringEquals:
             events:source:
@@ -101,7 +101,7 @@ Resources:
   RuleManagementPolicy:
     Type: AWS::Events::EventBusPolicy
     Properties:
-      EventBusName: !Ref UnicornContractsEventBus
+      EventBusName: !Ref ContractsEventBus
       StatementId: !Sub "OnlyRulesForContractsServiceEvents-${Stage}"
       Statement:
         Effect: Allow
@@ -115,7 +115,7 @@ Resources:
           - events:EnableRule
           - events:PutTargets
           - events:RemoveTargets
-        Resource: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${UnicornContractsEventBus}/*
+        Resource: !Sub arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:rule/${ContractsEventBus}/*
         Condition:
           StringEqualsIfExists:
             "events:creatorAccount": "${aws:PrincipalAccount}"
@@ -127,7 +127,7 @@ Resources:
 
   # This IAM role allows EventBridge to assume the permissions necessary to send events
   # to the UnicornApprovals event bus
-  UnicornContractsEventBridgeRole:
+  ContractsEventBridgeRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -137,64 +137,64 @@ Resources:
             Principal:
               Service: events.amazonaws.com
       Policies:
-        - PolicyName: PutEventsOnUnicornContractsEventBus
+        - PolicyName: PutEventsOnContractsEventBus
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action: events:PutEvents
-                Resource: !GetAtt UnicornContractsEventBus.Arn
+                Resource: !GetAtt ContractsEventBus.Arn
 
   ########################################################################################################
   #### EVENT BUS LOGGING
   #### See (https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus-logs.html)
   ########################################################################################################
 
-  UnicornContractsEventBusErrorDeliverySource:
+  ContractsEventBusErrorDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
-      Name: !Sub "${UnicornContractsEventBus.Name}-ERROR-LOGS-${Stage}"
+      Name: !Sub "${ContractsEventBus.Name}-ERROR-LOGS-${Stage}"
       LogType: ERROR_LOGS
-      ResourceArn: !GetAtt UnicornContractsEventBus.Arn
+      ResourceArn: !GetAtt ContractsEventBus.Arn
 
-  UnicornContractsEventBusInfoDeliverySource:
+  ContractsEventBusInfoDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
-      Name: !Sub "${UnicornContractsEventBus.Name}-INFO-LOGS-${Stage}"
+      Name: !Sub "${ContractsEventBus.Name}-INFO-LOGS-${Stage}"
       LogType: INFO_LOGS
-      ResourceArn: !GetAtt UnicornContractsEventBus.Arn
+      ResourceArn: !GetAtt ContractsEventBus.Arn
 
-  UnicornContractsEventBusDeliveryDestination:
+  ContractsEventBusDeliveryDestination:
     Type: AWS::Logs::DeliveryDestination
     Properties:
-      Name: !Sub "${UnicornContractsEventBus.Name}-DeliveryDestination-${Stage}"
+      Name: !Sub "${ContractsEventBus.Name}-DeliveryDestination-${Stage}"
       DestinationResourceArn: !GetAtt ContractsEventHandlerFunctionLogGroup.Arn
 
-  UnicornContractsEventBusErrorLoggingDelivery:
+  ContractsEventBusErrorLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: UnicornContractsEventBusErrorDeliverySource
-      DeliveryDestinationArn: !GetAtt UnicornContractsEventBusDeliveryDestination.Arn
+        Ref: ContractsEventBusErrorDeliverySource
+      DeliveryDestinationArn: !GetAtt ContractsEventBusDeliveryDestination.Arn
 
-  UnicornContractsEventBusInfoLoggingDelivery:
+  ContractsEventBusInfoLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: UnicornContractsEventBusInfoDeliverySource
-      DeliveryDestinationArn: !GetAtt UnicornContractsEventBusDeliveryDestination.Arn
+        Ref: ContractsEventBusInfoDeliverySource
+      DeliveryDestinationArn: !GetAtt ContractsEventBusDeliveryDestination.Arn
 
   ContractsEventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/vendedlogs/events/event-bus/${UnicornContractsEventBus.Name}-logs"
+      LogGroupName: !Sub "/aws/vendedlogs/events/event-bus/${ContractsEventBus.Name}-logs"
       RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
 
   #################################################################################################
   #### SCHEMA REGISTRY
   #################################################################################################
 
-  UnicornContractsSchemaRegistry:
+  ContractsSchemaRegistry:
     Type: AWS::EventSchemas::Registry
     Properties:
       Description: "Event schemas for Unicorn Contracts"
@@ -203,7 +203,7 @@ Resources:
   EventRegistryPolicy:
     Type: AWS::EventSchemas::RegistryPolicy
     Properties:
-      RegistryName: !GetAtt UnicornContractsSchemaRegistry.RegistryName
+      RegistryName: !GetAtt ContractsSchemaRegistry.RegistryName
       Policy:
         Version: "2012-10-17"
         Statement:
@@ -220,38 +220,38 @@ Resources:
               - schemas:ListSchemaVersions
               - schemas:SearchSchemas
             Resource:
-              - !GetAtt UnicornContractsSchemaRegistry.RegistryArn
-              - !Sub "arn:${AWS::Partition}:schemas:${AWS::Region}:${AWS::AccountId}:schema/${UnicornContractsSchemaRegistry.RegistryName}*"
+              - !GetAtt ContractsSchemaRegistry.RegistryArn
+              - !Sub "arn:${AWS::Partition}:schemas:${AWS::Region}:${AWS::AccountId}:schema/${ContractsSchemaRegistry.RegistryName}*"
 
 Outputs:
-  UnicornContractsEventBusName:
+  ContractsEventBusName:
     Description: "Name of the Unicorn Contracts Event Bus"
-    Value: !Ref UnicornContractsEventBus
-  UnicornContractsEventBusArn:
+    Value: !Ref ContractsEventBus
+  ContractsEventBusArn:
     Description: "ARN of the Unicorn Contracts Event Bus"
-    Value: !GetAtt UnicornContractsEventBus.Arn
+    Value: !GetAtt ContractsEventBus.Arn
 
   # CloudWatch Log Group Outputs
-  ContractsEventHandlerFunctionLogGroupName:
+  EventHandlerFunctionLogGroupName:
     Description: "Name of the Contracts Event Handler Function Log Group"
     Value: !Ref ContractsEventHandlerFunctionLogGroup
-  ContractsEventHandlerFunctionLogGroupArn:
+  EventHandlerFunctionLogGroupArn:
     Description: "ARN of the Contracts Event Handler Function Log Group"
     Value: !GetAtt ContractsEventHandlerFunctionLogGroup.Arn
 
   # Schema Registry Outputs
-  UnicornContractsSchemaRegistryName:
+  SchemaRegistryName:
     Description: "Name of the Unicorn Contracts Schema Registry"
-    Value: !Ref UnicornContractsSchemaRegistry
+    Value: !Ref ContractsSchemaRegistry
 
-  UnicornContractsSchemaRegistryArn:
+  SchemaRegistryArn:
     Description: "ARN of the Unicorn Contracts Schema Registry"
-    Value: !GetAtt UnicornContractsSchemaRegistry.RegistryArn
+    Value: !GetAtt ContractsSchemaRegistry.RegistryArn
 
   # Exporting this role so it can be referenced across Approval subscriptions
   # This is not a global variable, so not sharing as a SSM parameter.
-  UnicornContractsEventBridgeRoleArn:
+  ContractsEventBridgeRoleArn:
     Description: "ARN of the Unicorn Contracts EventBridge Role"
-    Value: !GetAtt UnicornContractsEventBridgeRole.Arn
+    Value: !GetAtt ContractsEventBridgeRole.Arn
     Export:
-      Name: !Sub "${AWS::StackName}-UnicornContractsEventBridgeRoleArn"
+      Name: !Sub "${AWS::StackName}-ContractsEventBridgeRoleArn"
