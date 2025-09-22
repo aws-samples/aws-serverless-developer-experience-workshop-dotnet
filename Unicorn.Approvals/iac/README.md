@@ -64,7 +64,7 @@ This directory contains AWS SAM (Serverless Application Model) templates for the
 - Proper deletion policies for all logging resources to ensure clean stack deletion
 - Cross-service event bus policy restricting rule creation to specific sources
 - Exported EventBridge role for use in subscription templates
-- Comprehensive event bus logging with delivery sources and destinations
+- Comprehensive event bus logging with delivery sources an
 
 **Note**: This template provides the foundation for event-driven integrations for all Unicorn Approval services. It needs to be deployed before any other services.
 

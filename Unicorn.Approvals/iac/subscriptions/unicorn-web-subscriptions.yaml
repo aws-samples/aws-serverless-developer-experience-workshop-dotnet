@@ -26,7 +26,7 @@ Resources:
       Name: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}-PublicationApprovalRequested"
       Description: Subscription rule for the PublicationApprovalRequested events from the Unicorn 
         Web service and forwards them to the Unicorn Approvals event bus, triggering the Approval workflow.
-      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornWebEventBusArn}}"
+      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/WebEventBusArn}}"
       EventPattern:
         source:
           - "{{resolve:ssm:/uni-prop/UnicornWebNamespace}}"
@@ -35,7 +35,7 @@ Resources:
       State: ENABLED
       Targets:
         - Id: SendEventTo
-          Arn: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBusArn}}"
+          Arn: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBusArn}}"
           RoleArn: 
             Fn::ImportValue: 
               Fn::Sub: "uni-prop-${Stage}-web-domain-EventBridgeRoleArn"

@@ -244,7 +244,7 @@ Resources:
     Properties:
       Name: "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}-CatchAllEvents"
       Description: Catch all events published by the Contracts service.
-      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsEventBus}}"
+      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ContractsEventBus}}"
       EventPattern:
         account:
           - !Ref AWS::AccountId
@@ -336,7 +336,7 @@ Resources:
             "ContractStatus": "<$.dynamodb.NewImage.ContractStatus.S>",
             "ContractLastModifiedOn": "<$.dynamodb.NewImage.ContractLastModifiedOn.S>"
           }
-      Target: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsEventBusArn}}"
+      Target: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ContractsEventBusArn}}"
 
   # CloudWatch log group for EventBridge Pipe execution logs and error tracking
   ContractsTableStreamToEventPipeLogGroup:
@@ -379,7 +379,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - events:PutEvents
-                Resource: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsEventBusArn}}"
+                Resource: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ContractsEventBusArn}}"
               - Effect: Allow
                 Action:
                   - sqs:SendMessage

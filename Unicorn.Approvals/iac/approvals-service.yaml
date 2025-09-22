@@ -57,7 +57,7 @@ Globals:
     Environment:
       Variables:
         CONTRACT_STATUS_TABLE: !Ref ContractStatusTable
-        EVENT_BUS: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBus}}"
+        EVENT_BUS: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBus}}"
         SERVICE_NAMESPACE: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
         POWERTOOLS_LOGGER_CASE: PascalCase
         POWERTOOLS_SERVICE_NAME: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
@@ -73,6 +73,7 @@ Globals:
       namespace: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
 
 Resources:
+
   #################################################################################################
   #### LAMBDA FUNCTIONS
   #### These functions handle the core business logic for property approval workflows
@@ -95,7 +96,7 @@ Resources:
           Type: EventBridgeRule
           Properties:
             RuleName: unicorn.approvals-ContractStatusChanged
-            EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBus}}"
+            EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBus}}"
             Pattern:
               source:
                 - "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
@@ -216,7 +217,7 @@ Resources:
         - S3ReadPolicy:
             BucketName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ImagesBucket}}"
         - EventBridgePutEventsPolicy:
-            EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBus}}"
+            EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBus}}"
         - Statement:
             - Effect: Allow
               Action:
@@ -241,7 +242,7 @@ Resources:
           Type: EventBridgeRule
           Properties:
             RuleName: unicorn.approvals-PublicationApprovalRequested
-            EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBus}}"
+            EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBus}}"
             Pattern:
               source:
                 - "{{resolve:ssm:/uni-prop/UnicornWebNamespace}}"
@@ -257,7 +258,7 @@ Resources:
         WaitForContractApprovalArn: !GetAtt WaitForContractApprovalFunction.Arn
         TableName: !Ref ContractStatusTable
         ImageUploadBucketName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ImagesBucket}}"
-        EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBus}}"
+        EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBus}}"
         ServiceName: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
 
   # CloudWatch log group for Step Functions execution logs with detailed tracing enabled
@@ -346,7 +347,7 @@ Resources:
     Properties:
       Name: approvals.catchall
       Description: Catchall rule used for development purposes.
-      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBus}}"
+      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBus}}"
       EventPattern:
         account:
           - !Ref AWS::AccountId

@@ -78,4 +78,7 @@ delete: ## Delete all stacks
 	@echo "Deleting stacks in reverse order..."
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-contracts-contracts-service --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-contracts-schema-ContractStatusChanged --region $(REGION) || true
+	@echo "Waiting for service and schema stacks to be deleted..."
+	@aws cloudformation wait stack-delete-complete --stack-name $(STACK_PREFIX)-contracts-contracts-service --region $(REGION) || true
+	@aws cloudformation wait stack-delete-complete --stack-name $(STACK_PREFIX)-contracts-schema-ContractStatusChanged --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-contracts-domain --region $(REGION) || true
