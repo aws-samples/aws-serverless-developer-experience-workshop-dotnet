@@ -152,7 +152,7 @@ Resources:
 
   # Delivery source for capturing ERROR level logs from the Contracts EventBridge event bus
   # This resource defines the source of error logs including failed contract events and delivery failures
-  ContractsEventBusErrorDeliverySource:
+  EventBusErrorDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
       Name: !Sub "${ContractsEventBus.Name}-ERROR-LOGS-${Stage}"
@@ -161,7 +161,7 @@ Resources:
 
   # Delivery source for capturing INFO level logs from the Contracts EventBridge event bus
   # This resource defines the source of informational logs including successful contract processing
-  ContractsEventBusInfoDeliverySource:
+  EventBusInfoDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
       Name: !Sub "${ContractsEventBus.Name}-INFO-LOGS-${Stage}"
@@ -170,33 +170,35 @@ Resources:
 
   # Delivery destination that specifies where Contracts EventBridge logs should be sent
   # This connects the delivery sources to the target CloudWatch Log Group for contract events
-  ContractsEventBusDeliveryDestination:
+  EventBusDeliveryDestination:
     Type: AWS::Logs::DeliveryDestination
     Properties:
       Name: !Sub "${ContractsEventBus.Name}-DeliveryDestination-${Stage}"
-      DestinationResourceArn: !GetAtt ContractsEventHandlerFunctionLogGroup.Arn # Points to our custom contracts log group
+      DestinationResourceArn: !GetAtt EventHandlerFunctionLogGroup.Arn # Points to our custom contracts log group
 
   # Delivery configuration that routes ERROR logs from source to destination
   # This creates the actual log delivery pipeline for contract error events
-  ContractsEventBusErrorLoggingDelivery:
+  EventBusErrorLoggingDelivery:
     Type: AWS::Logs::Delivery
+    DependsOn:
+      - EventBusInfoLoggingDelivery
     Properties:
       DeliverySourceName:
-        Ref: ContractsEventBusErrorDeliverySource # Links to the contract error log source
-      DeliveryDestinationArn: !GetAtt ContractsEventBusDeliveryDestination.Arn # Routes to our destination
+        Ref: EventBusErrorDeliverySource # Links to the contract error log source
+      DeliveryDestinationArn: !GetAtt EventBusDeliveryDestination.Arn # Routes to our destination
 
   # Delivery configuration that routes INFO logs from source to destination
   # This creates the actual log delivery pipeline for contract informational events
-  ContractsEventBusInfoLoggingDelivery:
+  EventBusInfoLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: ContractsEventBusInfoDeliverySource # Links to the contract info log source
-      DeliveryDestinationArn: !GetAtt ContractsEventBusDeliveryDestination.Arn # Routes to our destination
+        Ref: EventBusInfoDeliverySource # Links to the contract info log source
+      DeliveryDestinationArn: !GetAtt EventBusDeliveryDestination.Arn # Routes to our destination
 
   # CloudWatch Log Group for storing Contracts EventBridge event bus logs
   # This is the final destination where all contract event bus logs are stored and can be queried
-  ContractsEventHandlerFunctionLogGroup:
+  EventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     UpdateReplacePolicy: Delete
     DeletionPolicy: Delete
@@ -248,10 +250,10 @@ Outputs:
   # CloudWatch Log Group Outputs
   EventHandlerFunctionLogGroupName:
     Description: "Name of the Contracts Event Handler Function Log Group"
-    Value: !Ref ContractsEventHandlerFunctionLogGroup
+    Value: !Ref EventHandlerFunctionLogGroup
   EventHandlerFunctionLogGroupArn:
     Description: "ARN of the Contracts Event Handler Function Log Group"
-    Value: !GetAtt ContractsEventHandlerFunctionLogGroup.Arn
+    Value: !GetAtt EventHandlerFunctionLogGroup.Arn
 
   # Schema Registry Outputs
   SchemaRegistryName:
