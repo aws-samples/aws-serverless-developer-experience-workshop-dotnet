@@ -181,6 +181,8 @@ Resources:
   # This creates the actual log delivery pipeline for error events
   EventBusErrorLoggingDelivery:
     Type: AWS::Logs::Delivery
+    DependsOn:
+      - EventBusInfoLoggingDelivery
     Properties:
       DeliverySourceName:
         Ref: EventBusErrorDeliverySource # Links to the error log source

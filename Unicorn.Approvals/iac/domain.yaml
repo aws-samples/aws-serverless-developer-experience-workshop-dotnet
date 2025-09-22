@@ -181,6 +181,8 @@ Resources:
   # This creates the actual log delivery pipeline for approval error events
   EventBusErrorLoggingDelivery:
     Type: AWS::Logs::Delivery
+    DependsOn:
+      - EventBusInfoLoggingDelivery
     Properties:
       DeliverySourceName:
         Ref: EventBusErrorDeliverySource # Links to the approval error log source
