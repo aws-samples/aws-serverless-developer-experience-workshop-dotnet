@@ -69,28 +69,13 @@ Globals:
       namespace: "{{resolve:ssm:/uni-prop/UnicornWebNamespace}}"
 
 Resources:
-  #### SSM PARAMETERS
-  # Services share their event bus name and arn
-  UnicornWebEventBusParam:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Type: String
-      Name: !Sub /uni-prop/${Stage}/UnicornWebEventBus
-      Value: !GetAtt UnicornWebEventBus.Name
-
-  UnicornWebEventBusArnParam:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Type: String
-      Name: !Sub /uni-prop/${Stage}/UnicornWebEventBusArn
-      Value: !GetAtt UnicornWebEventBus.Arn
-
+  
   ##### LAMBDA FUNCTIONS
   # Handle Search and Property details requests from API
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./SearchService
+      CodeUri: ../SearchService
       Handler: Unicorn.Web.SearchService::Unicorn.Web.SearchService.PropertySearchFunction::FunctionHandler
       Policies:
         - DynamoDBReadPolicy:
@@ -109,7 +94,7 @@ Resources:
   RequestApprovalFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./PublicationManagerService
+      CodeUri: ../PublicationManagerService
       Handler: Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.RequestApprovalFunction::FunctionHandler
       Policies:
         - EventBridgePutEventsPolicy:
@@ -139,7 +124,7 @@ Resources:
   PublicationEvaluationEventHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./PublicationManagerService
+      CodeUri: ../PublicationManagerService
       Handler: Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.PublicationEvaluationEventHandler::FunctionHandler
       Policies:
         - DynamoDBCrudPolicy:
@@ -372,15 +357,13 @@ Resources:
             - ES4000
     Properties:
       Name: web.catchall
-      Description: Catch all events published by the web service.
+      Description: Catch all events published by the Web service.
       EventBusName: !Ref UnicornWebEventBus
       EventPattern:
         account:
           - !Ref AWS::AccountId
         source:
-          - "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
           - "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
-          - "{{resolve:ssm:/uni-prop/UnicornWebNamespace}}"
       State: ENABLED #You may want to disable this rule in production
       Targets:
         - Arn: !GetAtt UnicornWebCatchAllLogGroup.Arn
@@ -426,41 +409,6 @@ Resources:
             }
           ]
         }
-
-  #### CLOUDFORMATION NESTED STACKS
-  # CloudFormation Stack with the Web Service Event Registry and Schemas
-  EventSchemasStack:
-    Type: AWS::Serverless::Application
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
-    Properties:
-      Location: "Integration/event-schemas.yaml"
-      Parameters:
-        Stage: !Ref Stage
-
-  # CloudFormation Stack with the Cross-service EventBus policy for Web Service
-  SubscriberPoliciesStack:
-    Type: AWS::Serverless::Application
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
-    DependsOn:
-      - UnicornWebEventBusParam
-    Properties:
-      Location: "Integration/subscriber-policies.yaml"
-      Parameters:
-        Stage: !Ref Stage
-
-  # CloudFormation Stack with the Cross-service EventBus Rules for Web Service
-  SubscriptionsStack:
-    Type: AWS::Serverless::Application
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
-    DependsOn:
-      - UnicornWebEventBusArnParam
-    Properties:
-      Location: "Integration/subscriptions.yaml"
-      Parameters:
-        Stage: !Ref Stage
 
 Outputs:
   #### API GATEWAY OUTPUTS
