@@ -64,10 +64,11 @@ This directory contains AWS SAM (Serverless Application Model) templates for the
 - Proper deletion policies for all logging resources to ensure clean stack deletion
 - Cross-service event bus policy restricting rule creation to specific sources
 - Exported EventBridge role for use in subscription templates
+- Comprehensive event bus logging with delivery sources and destinations
 
-Note: This template provides the foundation for event-driven integrations for all Unicorn Approval services. It needs to be deployed before any other services.
+**Note**: This template provides the foundation for event-driven integrations for all Unicorn Approval services. It needs to be deployed before any other services.
 
-### 2. `schema-registry/PublicationEvaluationCompleted-schema.yaml` - Event Schema Template
+### 3. `schema-registry/PublicationEvaluationCompleted-schema.yaml` - Event Schema Template
 
 **Purpose**: Defines the event schema for `PublicationEvaluationCompleted` events in the EventBridge Schema Registry.
 
@@ -89,15 +90,15 @@ Note: This template provides the foundation for event-driven integrations for al
 - Follows AWS EventBridge event envelope structure
 - Enables code generation for strongly-typed event handling
 
-### 3. `subscriptions/` - Event Subscription Templates
+### 4. `subscriptions/` - Event Subscription Templates
 
 **Purpose**: Manages cross-service event subscriptions by creating EventBridge rules that route events between different service event buses.
 
-#### 3.1 `unicorn-contracts-subscriptions.yaml`
+#### 4.1 `unicorn-contracts-subscriptions.yaml`
 
 **Key Resources**:
 
-- **ContractStatusChangedSubscriptionRule**: EventBridge rule owned by the Approvals service that subscribes to ContractStatusChanged events from the Unicorn Contracts service and forwards them to the Unicorn Approvals event bus for processing approval workflows. This rule is managed and deployed as part of the Approvals service infrastructure.
+- **ContractStatusChangedSubscriptionRule**: EventBridge rule that subscribes to ContractStatusChanged events from the Unicorn Contracts service and forwards them to the Unicorn Approvals event bus for processing approval workflows
 
 **Event Flow**:
 
@@ -105,11 +106,11 @@ Note: This template provides the foundation for event-driven integrations for al
 - Event Type: `ContractStatusChanged`
 - Routes to: Unicorn Approvals Event Bus
 
-#### 3.2 `unicorn-web-subscriptions.yaml`
+#### 4.2 `unicorn-web-subscriptions.yaml`
 
 **Key Resources**:
 
-- **PublicationApprovalRequestedSubscriptionRule**: Routes `PublicationApprovalRequested` events from the Unicorn Web service to the Approvals service
+- **PublicationApprovalRequestedSubscriptionRule**: Routes `PublicationApprovalRequested` events from the Unicorn Web service to the Approvals service and triggers the Approval workflow
 
 **Event Flow**:
 

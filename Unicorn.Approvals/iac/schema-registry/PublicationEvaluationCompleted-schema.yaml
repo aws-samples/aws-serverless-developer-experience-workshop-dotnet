@@ -10,7 +10,7 @@ Parameters:
     Default: local
     AllowedValues:
       - local
-      - dve
+      - dev
       - prod
 
 Resources:
