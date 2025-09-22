@@ -38,7 +38,7 @@ Resources:
           Arn: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBusArn}}"
           RoleArn: 
             Fn::ImportValue: 
-              Fn::Sub: "uni-prop-${Stage}-approvals-domain-ApprovalsEventBridgeRoleArn"
+              Fn::Sub: "uni-prop-${Stage}-web-domain-EventBridgeRoleArn"
       Tags:
         - Key: service-namespace
           Value: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"

@@ -268,4 +268,4 @@ Outputs:
     Description: "ARN of the Unicorn Approvals EventBridge Role"
     Value: !GetAtt ApprovalsEventBridgeRole.Arn
     Export:
-      Name: !Sub "uni-prop-${Stage}-approvalsEventBridgeRoleArn"
+      Name: !Sub "uni-prop-${Stage}-approvals-domain-EventBridgeRoleArn"
