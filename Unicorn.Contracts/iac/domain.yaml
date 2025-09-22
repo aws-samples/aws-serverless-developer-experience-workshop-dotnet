@@ -198,6 +198,8 @@ Resources:
   # This is the final destination where all contract event bus logs are stored and can be queried
   ContractsEventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/vendedlogs/events/event-bus/${ContractsEventBus.Name}-logs"
       RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days] # Retention varies by environment (3 days for local/dev, 14 days for prod)
@@ -266,4 +268,4 @@ Outputs:
     Description: "ARN of the Unicorn Contracts EventBridge Role"
     Value: !GetAtt ContractsEventBridgeRole.Arn
     Export:
-      Name: !Sub "uni-prop-${Stage}-contracts-domain-ContractsEventBridgeRoleArn"
+            Name: !Sub "uni-prop-${Stage}-contracts-domain-EventBridgeRoleArn"

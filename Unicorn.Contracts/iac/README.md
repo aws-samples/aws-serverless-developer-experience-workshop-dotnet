@@ -24,7 +24,24 @@ This directory contains AWS SAM (Serverless Application Model) templates for the
 
 Note: This template provides the foundation for event-driven integrations for all Unicorn Contract services. It needs to be deployed before any other services.
 
-### 2. `contracts-registry/contract-status-changed-schema.yaml` - Event Schema Template
+### 2. `api.yaml` - OpenAPI Specification
+
+**Purpose**: Defines the RESTful API specification for the Unicorn Contracts Service using OpenAPI 3.0.
+
+**Key Endpoints**:
+
+- **POST /contracts**: Creates new property contracts
+- **PUT /contracts**: Updates existing contract information
+- **OPTIONS /contracts**: CORS preflight support
+
+**Integration Features**:
+
+- API Gateway integration with SQS for async request processing
+- Request validation and response schemas
+- CORS support for web applications
+- Comprehensive data models for contract creation and updates
+
+### 3. `schema-registry/ContractStatusChanged-schema.yaml` - Event Schema Template
 
 **Purpose**: Defines the event schema for `ContractStatusChanged` events in the EventBridge Schema Registry.
 
@@ -37,11 +54,10 @@ Note: This template provides the foundation for event-driven integrations for al
 - **Event Source**: Retrieved from SSM parameter (unicorn-contracts namespace)
 - **Detail Type**: `ContractStatusChanged`
 - **Required Fields**:
-  - `contract_id`: Unique identifier for the contract
-  - `contract_status`: Current status of the contract
-  - `property_id`: Associated property identifier
-  - `contract_last_modified_by`: User who made the change
-  - `contract_last_modified_on`: Timestamp of the change (ISO 8601 format)
+  - `PropertyId`: Associated property identifier
+  - `ContractId`: Unique identifier for the contract
+  - `ContractStatus`: Current status of the contract (DRAFT, APPROVED)
+  - `ContractLastModifiedOn`: Timestamp of the change (ISO 8601 format)
 
 **Integration**:
 
@@ -49,7 +65,7 @@ Note: This template provides the foundation for event-driven integrations for al
 - Follows AWS EventBridge event envelope structure
 - Enables code generation for strongly-typed event handling
 
-### 3. `contracts-service.yaml` - Service Resources Template
+### 4. `contracts-service.yaml` - Service Resources Template
 
 **Purpose**: Deploys the complete Unicorn Contracts Service with all its components.
 
@@ -79,12 +95,13 @@ Note: This template provides the foundation for event-driven integrations for al
 - **UnicornContractsIngestQueue**: Main SQS queue for API requests
 - **UnicornContractsIngestDLQ**: Dead letter queue for failed messages
 - **EventBridge Pipes**: Transforms DynamoDB stream events to EventBridge events
+- **ContractsTableStreamToEventPipe**: Converts DynamoDB changes to ContractStatusChanged events
 
 #### Event Processing
 
 - **Event Bus Policies**: Publishing restrictions to domain namespace
 - **Catchall Rule**: Development rule to log all events (should be disabled in production)
-- **EventBridge Pipes**: Converts DynamoDB changes to `ContractStatusChanged` events
+- **EventBridge Pipes**: Filters for DRAFT and APPROVED status changes and publishes domain events
 
 #### Observability
 
@@ -114,28 +131,26 @@ All templates accept a `Stage` parameter with allowed values:
    --resolve-s3
    ```
 
-2. **Deploy Event Schema** (For schema governance):
+2. **Deploy Service Resources**:
 
    ```bash
+   sam deploy \
+   --template-file ./iac/contracts-service.yaml \
+   --stack-name uni-prop-local-contracts-service \
+   --parameter-overrides Stage=local \
+   --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+   --region ap-southeast-2 \
+   --resolve-s3
+   ```
 
+3. **Deploy Event Schema** (For schema governance):
+
+   ```bash
    sam deploy \
       --template-file ./iac/schema-registry/ContractStatusChanged-schema.yaml \
       --stack-name uni-prop-local-contracts-contract-status-changed-schema \
       --parameter-overrides Stage=local \
       --capabilities CAPABILITY_IAM \
-      --region ap-southeast-2 \
-      --resolve-s3
-
-   ```
-
-3. **Deploy Service Resources**:
-
-   ```bash
-      sam deploy \
-      --template-file ./iac/contracts-service.yaml \
-      --stack-name uni-prop-local-contracts-contracts-service \
-      --parameter-overrides Stage=local \
-      --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
       --region ap-southeast-2 \
       --resolve-s3
    ```
@@ -172,7 +187,7 @@ All templates accept a `Stage` parameter with allowed values:
 ### Cross-Template Dependencies
 
 - `contracts-service.yaml` depends on SSM parameters created by `domain.yaml`
-- `contract-status-changed-schema.yaml` depends on schema registry created by `domain.yaml`
+- `ContractStatusChanged-schema.yaml` depends on schema registry created by `domain.yaml`
 - Event bus ARN and schema registry name are shared via SSM parameters between templates
 
 ## Best Practices Implemented
@@ -200,6 +215,28 @@ All templates accept a `Stage` parameter with allowed values:
 - Monitor SQS dead letter queues for failed messages
 - Use X-Ray traces for performance analysis
 - Review EventBridge metrics for event processing
+
+## Event-Driven Architecture
+
+The Contracts service follows an event-driven architecture pattern:
+
+- **Domain Events**: Publishes `ContractStatusChanged` events when contract status changes
+- **Change Data Capture**: Uses DynamoDB Streams to detect data changes
+- **Event Transformation**: EventBridge Pipes transform database changes to domain events
+- **Cross-Service Communication**: Uses EventBridge for loose coupling
+- **Schema Governance**: Enforces event structure through schema registry
+
+## Architecture Notes
+
+The Contracts service acts as an event producer:
+
+- **Produces**: `ContractStatusChanged` events for downstream services (Approvals)
+- **API Gateway**: Provides RESTful endpoints for contract management
+- **Async Processing**: Uses SQS queues for decoupling API requests from business logic
+- **Change Data Capture**: DynamoDB Streams automatically trigger event publishing
+- **Event Filtering**: Only publishes events for DRAFT and APPROVED status changes
+
+This design enables loose coupling between services while maintaining clear event ownership and reliable event delivery.
 
 ## Configuration Files
 
