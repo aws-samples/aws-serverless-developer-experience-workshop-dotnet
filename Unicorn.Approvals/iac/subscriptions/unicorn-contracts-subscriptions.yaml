@@ -24,7 +24,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Name: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}-ContractStatusChanged"
-      Description: > 
+      Description: >
         Subscription rule for ContractStatusChanged event targeting the Unicorn 
         Approvals event bus for processing approval workflows.
       EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsEventBusArn}}"
@@ -37,7 +37,9 @@ Resources:
       Targets:
         - Id: SendEventTo
           Arn: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBusArn}}"
-          RoleArn: !ImportValue "${StackName}-ApprovalsEventBridgeRoleArn"
+          RoleArn:
+            Fn::ImportValue:
+              Fn::Sub: "uni-prop-${Stage}-approvals-domain-ApprovalsEventBridgeRoleArn"
       Tags:
         - Key: service-namespace
           Value: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"

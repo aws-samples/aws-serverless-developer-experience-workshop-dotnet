@@ -150,45 +150,57 @@ Resources:
   #### See (https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus-logs.html)
   ########################################################################################################
 
+  # Delivery source for capturing ERROR level logs from the Contracts EventBridge event bus
+  # This resource defines the source of error logs including failed contract events and delivery failures
   ContractsEventBusErrorDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
       Name: !Sub "${ContractsEventBus.Name}-ERROR-LOGS-${Stage}"
-      LogType: ERROR_LOGS
+      LogType: ERROR_LOGS # Captures only error-level events and delivery failures for contract workflows
       ResourceArn: !GetAtt ContractsEventBus.Arn
 
+  # Delivery source for capturing INFO level logs from the Contracts EventBridge event bus
+  # This resource defines the source of informational logs including successful contract processing
   ContractsEventBusInfoDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
       Name: !Sub "${ContractsEventBus.Name}-INFO-LOGS-${Stage}"
-      LogType: INFO_LOGS
+      LogType: INFO_LOGS # Captures informational events and successful contract deliveries
       ResourceArn: !GetAtt ContractsEventBus.Arn
 
+  # Delivery destination that specifies where Contracts EventBridge logs should be sent
+  # This connects the delivery sources to the target CloudWatch Log Group for contract events
   ContractsEventBusDeliveryDestination:
     Type: AWS::Logs::DeliveryDestination
     Properties:
       Name: !Sub "${ContractsEventBus.Name}-DeliveryDestination-${Stage}"
-      DestinationResourceArn: !GetAtt ContractsEventHandlerFunctionLogGroup.Arn
+      DestinationResourceArn: !GetAtt ContractsEventHandlerFunctionLogGroup.Arn # Points to our custom contracts log group
 
+  # Delivery configuration that routes ERROR logs from source to destination
+  # This creates the actual log delivery pipeline for contract error events
   ContractsEventBusErrorLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: ContractsEventBusErrorDeliverySource
-      DeliveryDestinationArn: !GetAtt ContractsEventBusDeliveryDestination.Arn
+        Ref: ContractsEventBusErrorDeliverySource # Links to the contract error log source
+      DeliveryDestinationArn: !GetAtt ContractsEventBusDeliveryDestination.Arn # Routes to our destination
 
+  # Delivery configuration that routes INFO logs from source to destination
+  # This creates the actual log delivery pipeline for contract informational events
   ContractsEventBusInfoLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: ContractsEventBusInfoDeliverySource
-      DeliveryDestinationArn: !GetAtt ContractsEventBusDeliveryDestination.Arn
+        Ref: ContractsEventBusInfoDeliverySource # Links to the contract info log source
+      DeliveryDestinationArn: !GetAtt ContractsEventBusDeliveryDestination.Arn # Routes to our destination
 
+  # CloudWatch Log Group for storing Contracts EventBridge event bus logs
+  # This is the final destination where all contract event bus logs are stored and can be queried
   ContractsEventHandlerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub "/aws/vendedlogs/events/event-bus/${ContractsEventBus.Name}-logs"
-      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days] # Retention varies by environment (3 days for local/dev, 14 days for prod)
 
   #################################################################################################
   #### SCHEMA REGISTRY
@@ -254,4 +266,4 @@ Outputs:
     Description: "ARN of the Unicorn Contracts EventBridge Role"
     Value: !GetAtt ContractsEventBridgeRole.Arn
     Export:
-      Name: !Sub "${AWS::StackName}-ContractsEventBridgeRoleArn"
+      Name: !Sub "uni-prop-${Stage}-contracts-domain-ContractsEventBridgeRoleArn"

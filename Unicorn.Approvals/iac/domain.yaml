@@ -151,47 +151,59 @@ Resources:
   #### See (https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-event-bus-logs.html)
   ########################################################################################################
 
+  # Delivery source for capturing ERROR level logs from the Approvals EventBridge event bus
+  # This resource defines the source of error logs including failed approval events and delivery failures
   EventBusErrorDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
       Name: !Sub "${ApprovalsEventBus.Name}-ERROR-LOGS-${Stage}"
-      LogType: ERROR_LOGS
+      LogType: ERROR_LOGS # Captures only error-level events and delivery failures for approval workflows
       ResourceArn: !GetAtt ApprovalsEventBus.Arn
 
+  # Delivery source for capturing INFO level logs from the Approvals EventBridge event bus
+  # This resource defines the source of informational logs including successful approval processing
   EventBusInfoDeliverySource:
     Type: AWS::Logs::DeliverySource
     Properties:
       Name: !Sub "${ApprovalsEventBus.Name}-INFO-LOGS-${Stage}"
-      LogType: INFO_LOGS
+      LogType: INFO_LOGS # Captures informational events and successful approval deliveries
       ResourceArn: !GetAtt ApprovalsEventBus.Arn
 
+  # Delivery destination that specifies where Approvals EventBridge logs should be sent
+  # This connects the delivery sources to the target CloudWatch Log Group for approval events
   EventBusDeliveryDestination:
     Type: AWS::Logs::DeliveryDestination
     Properties:
       Name: !Sub "${ApprovalsEventBus.Name}-DeliveryDestination-${Stage}"
-      DestinationResourceArn: !GetAtt EventBusLogGroup.Arn
+      DestinationResourceArn: !GetAtt EventBusLogGroup.Arn # Points to our custom approvals log group
 
+  # Delivery configuration that routes ERROR logs from source to destination
+  # This creates the actual log delivery pipeline for approval error events
   EventBusErrorLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: EventBusErrorDeliverySource
-      DeliveryDestinationArn: !GetAtt EventBusDeliveryDestination.Arn
+        Ref: EventBusErrorDeliverySource # Links to the approval error log source
+      DeliveryDestinationArn: !GetAtt EventBusDeliveryDestination.Arn # Routes to our destination
 
+  # Delivery configuration that routes INFO logs from source to destination
+  # This creates the actual log delivery pipeline for approval informational events
   EventBusInfoLoggingDelivery:
     Type: AWS::Logs::Delivery
     Properties:
       DeliverySourceName:
-        Ref: EventBusInfoDeliverySource
-      DeliveryDestinationArn: !GetAtt EventBusDeliveryDestination.Arn
+        Ref: EventBusInfoDeliverySource # Links to the approval info log source
+      DeliveryDestinationArn: !GetAtt EventBusDeliveryDestination.Arn # Routes to our destination
 
+  # CloudWatch Log Group for storing Approvals EventBridge event bus logs
+  # This is the final destination where all approval event bus logs are stored and can be queried
   EventBusLogGroup:
     Type: AWS::Logs::LogGroup
-    UpdateReplacePolicy: Delete
-    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete # Log group will be deleted when stack is updated/replaced
+    DeletionPolicy: Delete # Log group will be deleted when stack is deleted
     Properties:
       LogGroupName: !Sub "/aws/vendedlogs/events/event-bus/${ApprovalsEventBus.Name}-${Stage}"
-      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days]
+      RetentionInDays: !FindInMap [LogsRetentionPeriodMap, !Ref Stage, Days] # Retention varies by environment (3 days for local/dev, 14 days for prod)
 
   #################################################################################################
   #### SCHEMA REGISTRY
@@ -256,4 +268,4 @@ Outputs:
     Description: "ARN of the Unicorn Approvals EventBridge Role"
     Value: !GetAtt ApprovalsEventBridgeRole.Arn
     Export:
-      Name: !Sub "${AWS::StackName}-ApprovalsEventBridgeRoleArn"
+      Name: !Sub "uni-prop-${Stage}-approvalsEventBridgeRoleArn"
