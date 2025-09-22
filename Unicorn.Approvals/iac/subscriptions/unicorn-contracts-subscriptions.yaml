@@ -27,7 +27,7 @@ Resources:
       Description: >
         Subscription rule for ContractStatusChanged event targeting the Unicorn 
         Approvals event bus for processing approval workflows.
-      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornContractsEventBusArn}}"
+      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ContractsEventBusArn}}"
       EventPattern:
         source:
           - "{{resolve:ssm:/uni-prop/UnicornContractsNamespace}}"
@@ -36,7 +36,7 @@ Resources:
       State: ENABLED
       Targets:
         - Id: SendEventTo
-          Arn: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBusArn}}"
+          Arn: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBusArn}}"
           RoleArn:
             Fn::ImportValue:
               Fn::Sub: "uni-prop-${Stage}-contracts-domain-EventBridgeRoleArn"

@@ -94,4 +94,8 @@ delete: ## Delete all stacks
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-web-service --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-web-subscriptions-approvals --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-web-schema-PublicationApprovalRequested --region $(REGION) || true
+	@echo "Waiting for service, subscriptions, and schema stacks to be deleted..."
+	@aws cloudformation wait stack-delete-complete --stack-name $(STACK_PREFIX)-web-service --region $(REGION) || true
+	@aws cloudformation wait stack-delete-complete --stack-name $(STACK_PREFIX)-web-subscriptions-approvals --region $(REGION) || true
+	@aws cloudformation wait stack-delete-complete --stack-name $(STACK_PREFIX)-web-schema-PublicationApprovalRequested --region $(REGION) || true
 	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-web-domain --region $(REGION) || true

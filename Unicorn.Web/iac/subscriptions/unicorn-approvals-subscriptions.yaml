@@ -28,7 +28,7 @@ Resources:
         Subscription rule for the PublicationEvaluationCompleted events from the Unicorn 
         Approvals service and forwards them to the Unicorn Web event bus for processing 
         publication approval results
-      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/UnicornApprovalsEventBusArn}}"
+      EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBusArn}}"
       EventPattern:
         source:
           - "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}"
