@@ -5,7 +5,7 @@ STAGE ?= local
 REGION ?= ap-southeast-2
 STACK_PREFIX = uni-prop-$(STAGE)
 
-.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions deploy-contracts-subscriptions deploy-web-subscriptions test lint clean delete
+.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions deploy-contracts-subscriptions deploy-web-subscriptions delete-contracts-subscriptions delete-web-subscriptions test lint clean delete
 
 help: ## Show available commands
 	@echo "Unicorn Approvals Service Infrastructure"
@@ -83,27 +83,19 @@ deploy-web-subscriptions: ## Deploy web event subscriptions
 		--no-confirm-changeset \
 		--no-fail-on-empty-changeset
 
-deploy-subscriptions: ## Deploy event subscriptions
-	@echo "Deploying contracts subscriptions..."
-	@sam deploy \
-		--template-file iac/subscriptions/unicorn-contracts-subscriptions.yaml \
-		--stack-name $(STACK_PREFIX)-approvals-contracts-subscriptions \
-		--parameter-overrides Stage=$(STAGE) \
-		--capabilities CAPABILITY_IAM \
-		--region $(REGION) \
-		--resolve-s3 \
-		--no-confirm-changeset \
-		--no-fail-on-empty-changeset
-	@echo "Deploying web subscriptions..."
-	@sam deploy \
-		--template-file iac/subscriptions/unicorn-web-subscriptions.yaml \
-		--stack-name $(STACK_PREFIX)-approvals-web-subscriptions \
-		--parameter-overrides Stage=$(STAGE) \
-		--capabilities CAPABILITY_IAM \
-		--region $(REGION) \
-		--resolve-s3 \
-		--no-confirm-changeset \
-		--no-fail-on-empty-changeset
+delete-contracts-subscriptions: ## Deploy contracts event subscriptions
+	@echo "Deleting contracts subscriptions..."
+	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-approvals-contracts-subscriptions --region $(REGION) || true
+	@echo "Waiting for subscription stack to be deleted..."
+	@aws cloudformation wait stack-delete-complete --stack-name $(STACK_PREFIX)-approvals-contracts-subscriptions --region $(REGION) || true
+	@echo "Done"
+
+delete-web-subscriptions: ## Deploy web event subscriptions
+	@echo "Deleting web subscriptions..."
+	@aws cloudformation delete-stack --stack-name $(STACK_PREFIX)-approvals-web-subscriptions --region $(REGION) || true
+	@echo "Waiting for subscription stack to be deleted..."
+	@aws cloudformation wait stack-delete-complete --stack-name $(STACK_PREFIX)-approvals-web-subscriptions --region $(REGION) || true
+	@echo "Done"
 
 deploy: deploy-domain deploy-service deploy-schema deploy-contracts-subscriptions ## Deploy all infrastructure and application
 
