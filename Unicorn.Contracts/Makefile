@@ -19,12 +19,12 @@ build: ## Build the application
 	@dotnet restore ContractsService/ContractsService.csproj
 	@dotnet restore ContractsService.Test/ContractsService.Tests.csproj
 	@dotnet build ContractsService/ContractsService.csproj
-	@sam build --template-file infrastructure/contracts-service.yaml
+	@sam build --template-file Infrastructure/contracts-service.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 	@echo "Deploying domain resources..."
 	@sam deploy \
-		--template-file infrastructure/domain.yaml \
+		--template-file Infrastructure/domain.yaml \
 		--stack-name $(STACK_PREFIX)-contracts-domain \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -36,7 +36,7 @@ deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 deploy-schema: ## Deploy event schema
 	@echo "Deploying event schema..."
 	@sam deploy \
-		--template-file infrastructure/schema-registry/ContractStatusChanged-schema.yaml \
+		--template-file Infrastructure/schema-registry/ContractStatusChanged-schema.yaml \
 		--stack-name $(STACK_PREFIX)-contracts-schema-ContractStatusChanged \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM \
@@ -48,7 +48,7 @@ deploy-schema: ## Deploy event schema
 deploy-service: build ## Deploy service resources (Lambda, API Gateway, DynamoDB)
 	@echo "Deploying service resources..."
 	@sam deploy \
-		--template-file infrastructure/contracts-service.yaml \
+		--template-file Infrastructure/contracts-service.yaml \
 		--stack-name $(STACK_PREFIX)-contracts-contracts-service \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -57,7 +57,7 @@ deploy-service: build ## Deploy service resources (Lambda, API Gateway, DynamoDB
 		--no-confirm-changeset \
 		--no-fail-on-empty-changeset
 
-deploy: deploy-domain deploy-schema deploy-service ## Deploy all infrastructure and application
+deploy: deploy-domain deploy-schema deploy-service ## Deploy all Infrastructure and application
 
 test: ## Run tests
 	@echo "Running tests..."
@@ -65,9 +65,9 @@ test: ## Run tests
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint infrastructure/contracts-service.yaml -a cfn_lint_serverless.rules
-	@cfn-lint infrastructure/domain.yaml
-	@cfn-lint infrastructure/schema-registry/ContractStatusChanged-schema.yaml
+	@cfn-lint Infrastructure/contracts-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint Infrastructure/domain.yaml
+	@cfn-lint Infrastructure/schema-registry/ContractStatusChanged-schema.yaml
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."

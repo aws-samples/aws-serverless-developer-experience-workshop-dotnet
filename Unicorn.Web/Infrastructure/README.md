@@ -145,7 +145,7 @@ All templates accept a `Stage` parameter with allowed values:
 
    ```bash
    sam deploy \
-   --template-file ./infrastructure/domain.yaml \
+   --template-file ./Infrastructure/domain.yaml \
    --stack-name uni-prop-local-web-domain \
    --parameter-overrides Stage=local \
    --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -157,7 +157,7 @@ All templates accept a `Stage` parameter with allowed values:
 
    ```bash
    sam deploy \
-   --template-file ./infrastructure/web-service.yaml \
+   --template-file ./Infrastructure/web-service.yaml \
    --stack-name uni-prop-local-web-service \
    --parameter-overrides Stage=local \
    --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -169,7 +169,7 @@ All templates accept a `Stage` parameter with allowed values:
 
    ```bash
    sam deploy \
-      --template-file ./infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml \
+      --template-file ./Infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml \
       --stack-name uni-prop-local-web-publication-approval-requested-schema \
       --parameter-overrides Stage=local \
       --capabilities CAPABILITY_IAM \
@@ -182,7 +182,7 @@ All templates accept a `Stage` parameter with allowed values:
    ```bash
    # Deploy Approvals subscriptions
    sam deploy \
-      --template-file ./infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml \
+      --template-file ./Infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml \
       --stack-name uni-prop-local-web-approvals-subscriptions \
       --parameter-overrides Stage=local \
       --capabilities CAPABILITY_IAM \
