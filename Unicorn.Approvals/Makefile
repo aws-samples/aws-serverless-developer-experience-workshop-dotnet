@@ -19,12 +19,12 @@ build: ## Build the application
 	@dotnet restore ApprovalsService/ApprovalsService.csproj
 	@dotnet restore ApprovalsService.Tests/ApprovalsService.Tests.csproj
 	@dotnet build ApprovalsService/ApprovalsService.csproj
-	@sam build --template-file infrastructure/approvals-service.yaml
+	@sam build --template-file Infrastructure/approvals-service.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 	@echo "Deploying domain resources..."
 	@sam deploy \
-		--template-file infrastructure/domain.yaml \
+		--template-file Infrastructure/domain.yaml \
 		--stack-name $(STACK_PREFIX)-approvals-domain \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -36,7 +36,7 @@ deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 deploy-service: build ## Deploy service resources (Lambda, Step Functions, DynamoDB)
 	@echo "Deploying service resources..."
 	@sam deploy \
-		--template-file infrastructure/approvals-service.yaml \
+		--template-file Infrastructure/approvals-service.yaml \
 		--stack-name $(STACK_PREFIX)-approvals-service \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -48,7 +48,7 @@ deploy-service: build ## Deploy service resources (Lambda, Step Functions, Dynam
 deploy-schema: ## Deploy event schema
 	@echo "Deploying event schema..."
 	@sam deploy \
-		--template-file infrastructure/schema-registry/PublicationEvaluationCompleted-schema.yaml \
+		--template-file Infrastructure/schema-registry/PublicationEvaluationCompleted-schema.yaml \
 		--stack-name $(STACK_PREFIX)-approvals-schema-PublicationEvaluationCompleted \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM \
@@ -62,7 +62,7 @@ deploy-subscriptions: deploy-contracts-subscriptions deploy-web-subscriptions ##
 deploy-contracts-subscriptions: ## Deploy contracts event subscriptions
 	@echo "Deploying contracts subscriptions..."
 	@sam deploy \
-		--template-file infrastructure/subscriptions/unicorn-contracts-subscriptions.yaml \
+		--template-file Infrastructure/subscriptions/unicorn-contracts-subscriptions.yaml \
 		--stack-name $(STACK_PREFIX)-approvals-contracts-subscriptions \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM \
@@ -74,7 +74,7 @@ deploy-contracts-subscriptions: ## Deploy contracts event subscriptions
 deploy-web-subscriptions: ## Deploy web event subscriptions
 	@echo "Deploying web subscriptions..."
 	@sam deploy \
-		--template-file infrastructure/subscriptions/unicorn-web-subscriptions.yaml \
+		--template-file Infrastructure/subscriptions/unicorn-web-subscriptions.yaml \
 		--stack-name $(STACK_PREFIX)-approvals-web-subscriptions \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM \
@@ -105,11 +105,11 @@ test: ## Run tests
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint infrastructure/approvals-service.yaml -a cfn_lint_serverless.rules
-	@cfn-lint infrastructure/domain.yaml
-	@cfn-lint infrastructure/schema-registry/PublicationEvaluationCompleted-schema.yaml
-	@cfn-lint infrastructure/subscriptions/unicorn-contracts-subscriptions.yaml
-	@cfn-lint infrastructure/subscriptions/unicorn-web-subscriptions.yaml
+	@cfn-lint Infrastructure/approvals-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint Infrastructure/domain.yaml
+	@cfn-lint Infrastructure/schema-registry/PublicationEvaluationCompleted-schema.yaml
+	@cfn-lint Infrastructure/subscriptions/unicorn-contracts-subscriptions.yaml
+	@cfn-lint Infrastructure/subscriptions/unicorn-web-subscriptions.yaml
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."

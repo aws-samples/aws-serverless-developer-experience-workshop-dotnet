@@ -20,12 +20,12 @@ build: ## Build the application
 	@dotnet restore SearchService/SearchService.csproj
 	@dotnet build PublicationManagerService/PublicationManagerService.csproj
 	@dotnet build SearchService/SearchService.csproj
-	@sam build --template-file infrastructure/web-service.yaml
+	@sam build --template-file Infrastructure/web-service.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 	@echo "Deploying domain resources..."
 	@sam deploy \
-		--template-file infrastructure/domain.yaml \
+		--template-file Infrastructure/domain.yaml \
 		--stack-name $(STACK_PREFIX)-web-domain \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -37,7 +37,7 @@ deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 deploy-schema: ## Deploy event schema
 	@echo "Deploying event schema..."
 	@sam deploy \
-		--template-file infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml \
+		--template-file Infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml \
 		--stack-name $(STACK_PREFIX)-web-schema-PublicationApprovalRequested \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM \
@@ -49,7 +49,7 @@ deploy-schema: ## Deploy event schema
 deploy-subscriptions: ## Deploy event subscriptions
 	@echo "Deploying event subscriptions..."
 	@sam deploy \
-		--template-file infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml \
+		--template-file Infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml \
 		--stack-name $(STACK_PREFIX)-web-subscriptions-approvals \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -61,7 +61,7 @@ deploy-subscriptions: ## Deploy event subscriptions
 deploy-service: build ## Deploy web service
 	@echo "Deploying web service..."
 	@sam deploy \
-		--template-file infrastructure/web-service.yaml \
+		--template-file Infrastructure/web-service.yaml \
 		--stack-name $(STACK_PREFIX)-web-service \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -79,10 +79,10 @@ test: ## Run tests
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint infrastructure/web-service.yaml -a cfn_lint_serverless.rules
-	@cfn-lint infrastructure/domain.yaml
-	@cfn-lint infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml
-	@cfn-lint infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml
+	@cfn-lint Infrastructure/web-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint Infrastructure/domain.yaml
+	@cfn-lint Infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml
+	@cfn-lint Infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
