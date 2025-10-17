@@ -8,33 +8,24 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Contracts", "Unicorn.Contracts", "{A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}"
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Contracts\README.md = Unicorn.Contracts\README.md
-		Unicorn.Contracts\template.yaml = Unicorn.Contracts\template.yaml
-		Unicorn.Contracts\api.yaml = Unicorn.Contracts\api.yaml
-		Unicorn.Contracts\samconfig.toml = Unicorn.Contracts\samconfig.toml
+		Unicorn.Contracts\Makefile = Unicorn.Contracts\Makefile
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractsService.Tests", "Unicorn.Contracts\ContractsService.Test\ContractsService.Tests.csproj", "{C67A91F9-E6D3-E9E3-C174-950C91FEE787}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractsService", "Unicorn.Contracts\ContractsService\ContractsService.csproj", "{229865D9-AF08-8458-DBC5-5734617581EF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{6B2C0C58-6A97-8455-2979-78ECCD445A37}"
-	ProjectSection(SolutionItems) = preProject
-		Unicorn.Contracts\integration\subscriber-policies.yaml = Unicorn.Contracts\integration\subscriber-policies.yaml
-		Unicorn.Contracts\Integration\event-schemas.yaml = Unicorn.Contracts\Integration\event-schemas.yaml
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Shared", "Unicorn.Shared", "{D6A55B46-1454-E4C6-8276-8D2F4A200548}"
 	ProjectSection(SolutionItems) = preProject
-		Unicorn.Shared\samconfig.yaml = Unicorn.Shared\samconfig.yaml
-		Unicorn.Shared\template.yaml = Unicorn.Shared\template.yaml
+		Unicorn.Shared\Makefile = Unicorn.Shared\Makefile
+		Unicorn.Shared\uni-prop-images.yaml = Unicorn.Shared\uni-prop-images.yaml
+		Unicorn.Shared\uni-prop-namespaces.yaml = Unicorn.Shared\uni-prop-namespaces.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Web", "Unicorn.Web", "{E4577E5B-D414-4FCF-A607-571017FA058A}"
 	ProjectSection(SolutionItems) = preProject
 		Unicorn.Web\README.md = Unicorn.Web\README.md
-		Unicorn.Web\template.yaml = Unicorn.Web\template.yaml
-		Unicorn.Web\api.yaml = Unicorn.Web\api.yaml
-		Unicorn.Web\samconfig.yaml = Unicorn.Web\samconfig.yaml
+		Unicorn.Web\Makefile = Unicorn.Web\Makefile
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PublicationManagerService.Tests", "Unicorn.Web\PublicationManagerService.Tests\PublicationManagerService.Tests.csproj", "{0A0053A9-9804-96BC-B32D-A8FA70B86240}"
@@ -47,18 +38,83 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SearchService.Tests", "Unic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SearchService", "Unicorn.Web\SearchService\SearchService.csproj", "{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{08489194-1198-279C-32FE-0A55A615881C}"
-	ProjectSection(SolutionItems) = preProject
-		Unicorn.Web\Integration\subscriber-policies.yaml = Unicorn.Web\Integration\subscriber-policies.yaml
-		Unicorn.Web\Integration\subscriptions.yaml = Unicorn.Web\Integration\subscriptions.yaml
-		Unicorn.Web\Integration\event-schemas.yaml = Unicorn.Web\Integration\event-schemas.yaml
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unicorn.Approvals", "Unicorn.Approvals", "{72A70219-AA65-4917-A6DA-9523E5310453}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Approvals\Makefile = Unicorn.Approvals\Makefile
+		Unicorn.Approvals\README.md = Unicorn.Approvals\README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApprovalsService", "Unicorn.Approvals\ApprovalsService\ApprovalsService.csproj", "{4A544116-53A6-4C72-9078-6A32317D08CF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApprovalsService.Tests", "Unicorn.Approvals\ApprovalsService.Tests\ApprovalsService.Tests.csproj", "{94EC5955-35D1-42E8-8EC3-89FC32C6AA5D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{AF1083D4-22C4-4D61-AFDA-1A2DB99CAFFE}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Web\Infrastructure\api.yaml = Unicorn.Web\Infrastructure\api.yaml
+		Unicorn.Web\Infrastructure\domain.yaml = Unicorn.Web\Infrastructure\domain.yaml
+		Unicorn.Web\Infrastructure\web-service.yaml = Unicorn.Web\Infrastructure\web-service.yaml
+		Unicorn.Web\Infrastructure\README.md = Unicorn.Web\Infrastructure\README.md
+		Unicorn.Web\Infrastructure\samconfig.toml = Unicorn.Web\Infrastructure\samconfig.toml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{411D7845-2733-4716-8C4D-CC48F17404B9}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Web\Data\load_data.sh = Unicorn.Web\Data\load_data.sh
+		Unicorn.Web\Data\property_data.json = Unicorn.Web\Data\property_data.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{ACB62492-5FE9-40E6-829E-DFAAAA21625F}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Contracts\Infrastructure\api.yaml = Unicorn.Contracts\Infrastructure\api.yaml
+		Unicorn.Contracts\Infrastructure\domain.yaml = Unicorn.Contracts\Infrastructure\domain.yaml
+		Unicorn.Contracts\Infrastructure\subscriptions\.gitkeep = Unicorn.Contracts\Infrastructure\subscriptions\.gitkeep
+		Unicorn.Contracts\Infrastructure\README.md = Unicorn.Contracts\Infrastructure\README.md
+		Unicorn.Contracts\Infrastructure\contracts-service.yaml = Unicorn.Contracts\Infrastructure\contracts-service.yaml
+		Unicorn.Contracts\Infrastructure\samconfig.toml = Unicorn.Contracts\Infrastructure\samconfig.toml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{0A540545-51E6-40A6-925E-D7832478A06C}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Approvals\Infrastructure\domain.yaml = Unicorn.Approvals\Infrastructure\domain.yaml
+		Unicorn.Approvals\Infrastructure\README.md = Unicorn.Approvals\Infrastructure\README.md
+		Unicorn.Approvals\Infrastructure\approvals-service.yaml = Unicorn.Approvals\Infrastructure\approvals-service.yaml
+		Unicorn.Approvals\Infrastructure\samconfig.toml = Unicorn.Approvals\Infrastructure\samconfig.toml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "schema-registry", "schema-registry", "{656C4D6F-6A68-422B-ABD8-16A32702AA6F}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Approvals\Infrastructure\schema-registry\PublicationEvaluationCompleted-schema.yaml = Unicorn.Approvals\Infrastructure\schema-registry\PublicationEvaluationCompleted-schema.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "state-machine", "state-machine", "{75A45C07-77AA-4F7F-B8E3-6AFEA2BEB52E}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Approvals\Infrastructure\state-machine\PropertyApproval.asl.yaml = Unicorn.Approvals\Infrastructure\state-machine\PropertyApproval.asl.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "subscriptions", "subscriptions", "{7B698F10-D933-4965-808E-24F69E7C9165}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Approvals\Infrastructure\subscriptions\unicorn-contracts-subscriptions.yaml = Unicorn.Approvals\Infrastructure\subscriptions\unicorn-contracts-subscriptions.yaml
+		Unicorn.Approvals\Infrastructure\subscriptions\unicorn-web-subscriptions.yaml = Unicorn.Approvals\Infrastructure\subscriptions\unicorn-web-subscriptions.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "subscriptions", "subscriptions", "{8087958B-77C3-46C2-9DA4-FECC09779675}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "subscriptions", "subscriptions", "{11E66B2D-51A9-4D5C-9662-9AD148879F0C}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Web\Infrastructure\subscriptions\unicorn-approvals-subscriptions.yaml = Unicorn.Web\Infrastructure\subscriptions\unicorn-approvals-subscriptions.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "schema-registry", "schema-registry", "{F57535BE-3F4A-47F9-86D9-2E8293DEFB65}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "schema-registry", "schema-registry", "{650D814D-50C2-4781-A360-9F095169F958}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Web\Infrastructure\schema-registry\PublicationApprovalRequested-schema.yaml = Unicorn.Web\Infrastructure\schema-registry\PublicationApprovalRequested-schema.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "schema-registry", "schema-registry", "{C8C007B7-AF9E-4A2C-A74C-7BA34054AF24}"
+	ProjectSection(SolutionItems) = preProject
+		Unicorn.Contracts\Infrastructure\schema-registry\ContractStatusChanged-schema.yaml = Unicorn.Contracts\Infrastructure\schema-registry\ContractStatusChanged-schema.yaml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -106,14 +162,24 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{C67A91F9-E6D3-E9E3-C174-950C91FEE787} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
 		{229865D9-AF08-8458-DBC5-5734617581EF} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
-		{6B2C0C58-6A97-8455-2979-78ECCD445A37} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
 		{0A0053A9-9804-96BC-B32D-A8FA70B86240} = {E4577E5B-D414-4FCF-A607-571017FA058A}
 		{EBD43E94-06C4-19C7-848C-252F6C59EB60} = {E4577E5B-D414-4FCF-A607-571017FA058A}
 		{3190BFCE-D798-AC40-2350-C05B9AE9A375} = {E4577E5B-D414-4FCF-A607-571017FA058A}
 		{791CF16E-500F-4551-DDA4-12D2903CB735} = {E4577E5B-D414-4FCF-A607-571017FA058A}
 		{C84C8AD9-E31F-2994-EAE4-52946AE2EBBD} = {E4577E5B-D414-4FCF-A607-571017FA058A}
-		{08489194-1198-279C-32FE-0A55A615881C} = {E4577E5B-D414-4FCF-A607-571017FA058A}
 		{4A544116-53A6-4C72-9078-6A32317D08CF} = {72A70219-AA65-4917-A6DA-9523E5310453}
 		{94EC5955-35D1-42E8-8EC3-89FC32C6AA5D} = {72A70219-AA65-4917-A6DA-9523E5310453}
+		{AF1083D4-22C4-4D61-AFDA-1A2DB99CAFFE} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+		{411D7845-2733-4716-8C4D-CC48F17404B9} = {E4577E5B-D414-4FCF-A607-571017FA058A}
+		{ACB62492-5FE9-40E6-829E-DFAAAA21625F} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
+		{0A540545-51E6-40A6-925E-D7832478A06C} = {72A70219-AA65-4917-A6DA-9523E5310453}
+		{656C4D6F-6A68-422B-ABD8-16A32702AA6F} = {0A540545-51E6-40A6-925E-D7832478A06C}
+		{75A45C07-77AA-4F7F-B8E3-6AFEA2BEB52E} = {0A540545-51E6-40A6-925E-D7832478A06C}
+		{7B698F10-D933-4965-808E-24F69E7C9165} = {0A540545-51E6-40A6-925E-D7832478A06C}
+		{8087958B-77C3-46C2-9DA4-FECC09779675} = {ACB62492-5FE9-40E6-829E-DFAAAA21625F}
+		{11E66B2D-51A9-4D5C-9662-9AD148879F0C} = {AF1083D4-22C4-4D61-AFDA-1A2DB99CAFFE}
+		{F57535BE-3F4A-47F9-86D9-2E8293DEFB65} = {A08DF422-9B29-D08F-1E3E-78CAF1FBE5B2}
+		{650D814D-50C2-4781-A360-9F095169F958} = {AF1083D4-22C4-4D61-AFDA-1A2DB99CAFFE}
+		{C8C007B7-AF9E-4A2C-A74C-7BA34054AF24} = {ACB62492-5FE9-40E6-829E-DFAAAA21625F}
 	EndGlobalSection
 EndGlobal
