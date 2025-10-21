@@ -3,6 +3,10 @@ on:
   pull_request:
     types: [opened, ready_for_review]
 
+
+permissions:
+  pull-requests: write
+
 jobs:
   add-reviews:
     runs-on: ubuntu-latest
