@@ -10,14 +10,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.Core" Version="2.7.0" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.7.1" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
         <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
-        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="2.0.2" />
-        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="2.1.1" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.0.0" />
+        <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="3.0.0" />
         <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="1.6.1" />
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.404.11" />
-        <PackageReference Include="AWSSDK.XRay" Version="3.7.401.102" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.9" />
+        <PackageReference Include="AWSSDK.XRay" Version="4.0.2.8" />
         <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.13.0" />
     </ItemGroup>
 </Project>

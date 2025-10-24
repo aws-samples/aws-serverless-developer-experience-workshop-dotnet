@@ -43,8 +43,9 @@ public class PropertySearchFunction
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(PropertyRecord)] =
             new TypeMapping(typeof(PropertyRecord), dynamodbTable);
 
-        var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
-        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
+        _dynamoDbContext = new DynamoDBContextBuilder()
+            .ConfigureContext(c => c.Conversion=DynamoDBEntryConversion.V2)
+            .Build();
 
     }
     

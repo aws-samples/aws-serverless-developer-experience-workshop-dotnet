@@ -37,7 +37,7 @@ public class ContractEventHandler
 
         // Initialise DDB Client 
         _dynamoDbClient = new AmazonDynamoDBClient();
-
+        
         // Initialise DDB table name from Environment Variables
         _dynamodbTable = Environment.GetEnvironmentVariable("DYNAMODB_TABLE");
         if (string.IsNullOrEmpty(_dynamodbTable))
