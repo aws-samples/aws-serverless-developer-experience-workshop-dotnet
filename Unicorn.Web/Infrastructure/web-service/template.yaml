@@ -79,7 +79,7 @@ Resources:
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../SearchService
+      CodeUri: ../../SearchService
       Handler: Unicorn.Web.SearchService::Unicorn.Web.SearchService.PropertySearchFunction::FunctionHandler
       Policies:
         - DynamoDBReadPolicy:
@@ -98,7 +98,7 @@ Resources:
   RequestApprovalFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../PublicationManagerService
+      CodeUri: ../../PublicationManagerService
       Handler: Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.RequestApprovalFunction::FunctionHandler
       Policies:
         - EventBridgePutEventsPolicy:
@@ -128,7 +128,7 @@ Resources:
   PublicationEvaluationEventHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../PublicationManagerService
+      CodeUri: ../../PublicationManagerService
       Handler: Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.PublicationEvaluationEventHandler::FunctionHandler
       Policies:
         - DynamoDBCrudPolicy:

@@ -84,7 +84,7 @@ Resources:
   ContractStatusChangedHandlerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../ApprovalsService
+      CodeUri: ../../ApprovalsService
       Handler: Unicorn.Approvals.ApprovalsService::Unicorn.Approvals.ApprovalsService.ContractStatusChangedEventHandler::FunctionHandler
       Policies:
         - DynamoDBWritePolicy:
@@ -127,7 +127,7 @@ Resources:
   PropertiesApprovalSyncFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../ApprovalsService
+      CodeUri: ../../ApprovalsService
       Handler: Unicorn.Approvals.ApprovalsService::Unicorn.Approvals.ApprovalsService.PropertiesApprovalSyncFunction::FunctionHandler
       Policies:
         - DynamoDBReadPolicy:
@@ -175,7 +175,7 @@ Resources:
   WaitForContractApprovalFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../ApprovalsService
+      CodeUri: ../../ApprovalsService
       Handler: Unicorn.Approvals.ApprovalsService::Unicorn.Approvals.ApprovalsService.WaitForContractApprovalFunction::FunctionHandler
       Policies:
         - DynamoDBCrudPolicy:
@@ -203,7 +203,7 @@ Resources:
     UpdateReplacePolicy: Delete
     Properties:
       Name: !Sub "${AWS::StackName}-ApprovalStateMachine"
-      DefinitionUri: ./state-machine/PropertyApproval.asl.yaml
+      DefinitionUri: PropertyApproval.asl.yaml
       Tracing:
         Enabled: true
       Policies:
