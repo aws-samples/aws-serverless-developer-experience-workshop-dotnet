@@ -20,7 +20,7 @@ build: ## Build the application
 	@dotnet restore SearchService/SearchService.csproj
 	@dotnet build PublicationManagerService/PublicationManagerService.csproj
 	@dotnet build SearchService/SearchService.csproj
-	@sam build --template-file Infrastructure/web-service.yaml
+	@sam build --template-file Infrastructure/web-service/template.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 	@echo "Deploying domain resources..."
@@ -77,7 +77,7 @@ test: ## Run tests
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint Infrastructure/web-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint Infrastructure/web-service/template.yaml -a cfn_lint_serverless.rules
 	@cfn-lint Infrastructure/domain.yaml
 	@cfn-lint Infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml
 	@cfn-lint Infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml

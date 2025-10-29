@@ -19,7 +19,7 @@ build: ## Build the application
 	@dotnet restore ApprovalsService/ApprovalsService.csproj
 	@dotnet restore ApprovalsService.Tests/ApprovalsService.Tests.csproj
 	@dotnet build ApprovalsService/ApprovalsService.csproj
-	@sam build --template-file Infrastructure/approvals-service.yaml
+	@sam build --template-file Infrastructure/approvals-service/template.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 	@echo "Deploying domain resources..."
@@ -102,7 +102,7 @@ test: ## Run tests
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint Infrastructure/approvals-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint Infrastructure/approvals-service/template.yaml -a cfn_lint_serverless.rules
 	@cfn-lint Infrastructure/domain.yaml
 	@cfn-lint Infrastructure/schema-registry/PublicationEvaluationCompleted-schema.yaml
 	@cfn-lint Infrastructure/subscriptions/unicorn-contracts-subscriptions.yaml
