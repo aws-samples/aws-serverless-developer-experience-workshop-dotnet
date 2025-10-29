@@ -19,7 +19,7 @@ build: ## Build the application
 	@dotnet restore ContractsService/ContractsService.csproj
 	@dotnet restore ContractsService.Test/ContractsService.Tests.csproj
 	@dotnet build ContractsService/ContractsService.csproj
-	@sam build --template-file Infrastructure/contracts-service.yaml
+	@sam build --template-file Infrastructure/contracts-service/template.yaml
 
 deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 	@echo "Deploying domain resources..."
@@ -64,7 +64,7 @@ test: ## Run tests
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
-	@cfn-lint Infrastructure/contracts-service.yaml -a cfn_lint_serverless.rules
+	@cfn-lint Infrastructure/contracts-service/template.yaml -a cfn_lint_serverless.rules
 	@cfn-lint Infrastructure/domain.yaml
 	@cfn-lint Infrastructure/schema-registry/ContractStatusChanged-schema.yaml
 
