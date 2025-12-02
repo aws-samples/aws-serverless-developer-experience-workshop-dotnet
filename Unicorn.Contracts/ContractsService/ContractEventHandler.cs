@@ -205,15 +205,18 @@ public class ContractEventHandler
                     { "PropertyId", new AttributeValue { S = updateContractRequest.PropertyId } }
                 },
                 UpdateExpression = "SET #contract_status=:cs, #modified_date=:md",
+                ConditionExpression = "attribute_exists(#property_id) AND #contract_status = :draft_status",
                 ExpressionAttributeNames = new Dictionary<string, string>
                 {
+                    { "#property_id", "PropertyId" },
                     { "#modified_date", "ContractLastModifiedOn" },
                     { "#contract_status", "ContractStatus" }
                 },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
                     { ":md", new AttributeValue { S = DateTime.Now.ToString("O") } },
-                    { ":cs", new AttributeValue { S = ContractStatus.Approved } }
+                    { ":cs", new AttributeValue { S = ContractStatus.Approved } },
+                    { ":draft_status", new AttributeValue { S = ContractStatus.Draft } }
                 },
                 ReturnValues = "UPDATED_NEW"
             };
@@ -221,6 +224,10 @@ public class ContractEventHandler
             var response = await _dynamoDbClient.UpdateItemAsync(request);
         
             Logger.LogInformation(response);
+        }
+        catch (ConditionalCheckFailedException e)
+        {
+            Logger.LogError("Unable to update contract, because `{e.Message}`. Perhaps you are trying to add a contract that already has an active status?", e.Message);
         }
         catch (Exception e)
         {
