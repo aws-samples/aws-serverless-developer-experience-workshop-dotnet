@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyName>Unicorn.Web.PublicationManagerService.Tests</AssemblyName>
@@ -9,13 +9,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.1" />
-        <PackageReference Include="Amazon.Lambda.Core" Version="2.7.1" />
-        <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.1" />
-        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
-        <PackageReference Include="Amazon.Lambda.TestUtilities" Version="3.0.0" />
-        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.9" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
+        <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.7.3" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.8.0" />
+        <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="3.1.2" />
+        <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.5" />
+        <PackageReference Include="Amazon.Lambda.TestUtilities" Version="3.0.1" />
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.10.8" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
         <PackageReference Include="NBuilder" Version="6.1.0" />
         <PackageReference Include="NSubstitute" Version="5.3.0" />
         <PackageReference Include="xunit" Version="2.9.3" />
