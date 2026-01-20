@@ -12,6 +12,10 @@ The workshop employs a practical, code-centric approach, emphasizing direct impl
 
 The 6-8 hour workshop assumes your practical development skills in Python, TypeScript, Java, or .NET, and familiarity with [Amazon API Gateway](https://aws.amazon.com/apigateway/), [AWS Lambda](https://aws.amazon.com/lambda/), [Amazon EventBridge](https://aws.amazon.com/eventbridge/), [AWS Step Functions](https://aws.amazon.com/step-functions/), and [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
 
+## Infrastructure tooling: SAM and Terraform
+
+The original workshop is built around AWS SAM templates and SAM CLI workflows, and those templates remain in the repo as the canonical reference for the architecture and exercises. In addition, selected services (starting with `Unicorn.Approvals` and `Unicorn.Contracts`) now include equivalent Terraform modules under their `Infrastructure` folders. For those services, Terraform is the authoritative infrastructure definition, and the SAM templates are kept as documentation and a point of comparison. Future services may also be migrated from SAM to Terraform following the same pattern.
+
 ## Introducing the Unicorn Properties architecture
 
 ![AWS Serverless Developer Experience Workshop Reference Architecture](./docs/architecture.png)
