@@ -3,8 +3,12 @@
 # Variables
 STAGE ?= local
 REGION ?= ap-southeast-2
+TERRAFORM_DIR_NAMESPACES = Infrastructure/namespaces
+TERRAFORM_DIR_IMAGES = Infrastructure/images
+TERRAFORM_STATE_BUCKET ?= 
+AWS_ACCOUNT_ID := $(shell aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
 
-.PHONY: help deploy-namespaces deploy-images-local deploy-images-dev deploy-images-prod deploy-images deploy delete-namespaces delete-images-local delete-images-dev delete-images-prod delete-images delete list-parameters
+.PHONY: help deploy-namespaces deploy-images-local deploy-images-dev deploy-images-prod deploy-images deploy delete-namespaces delete-images-local delete-images-dev delete-images-prod delete-images delete list-parameters init-namespaces init-images-local init-images-dev init-images-prod ensure-state-bucket describe-namespaces describe-images-local describe-images-dev describe-images-prod describe-images
 
 help: ## Show available commands
 	@echo "Unicorn Shared Infrastructure"
@@ -13,78 +17,234 @@ help: ## Show available commands
 	@echo ""
 	@echo "Available targets:"
 	@echo "  help                      Show available commands"
-	@echo "  deploy-namespaces         Deploy global Unicorn Properties namespaces for all stages"
-	@echo "  deploy-images-local       Deploy shared images stack for local environment"
-	@echo "  deploy-images-dev         Deploy shared images stack for dev environment"
-	@echo "  deploy-images-prod        Deploy shared images stack for prod environment"
-	@echo "  deploy-images             Deploy shared images stack for all environments"
-	@echo "  deploy                    Deploy all shared infrastructure"
-	@echo "  list-parameters           List all parameters in the Unicorn Properties namespace"
-	@echo "  delete-namespaces         Delete Unicorn Properties namespaces"
-	@echo "  delete-images-local       Delete shared images stack for local environment"
-	@echo "  delete-images-dev         Delete shared images stack for dev environment"
-	@echo "  delete-images-prod        Delete shared images stack for prod environment"
-	@echo "  delete-images             Delete all shared images stacks"
-	@echo "  delete                    Delete all shared infrastructure"
+	@echo "  ensure-state-bucket         Ensure Terraform state bucket exists"
+	@echo "  init-namespaces             Initialize Terraform for namespaces"
+	@echo "  init-images-local           Initialize Terraform for local images"
+	@echo "  init-images-dev             Initialize Terraform for dev images"
+	@echo "  init-images-prod            Initialize Terraform for prod images"
+	@echo "  deploy-namespaces           Deploy global Unicorn Properties namespaces for all stages"
+	@echo "  deploy-images-local         Deploy shared images stack for local environment"
+	@echo "  deploy-images-dev           Deploy shared images stack for dev environment"
+	@echo "  deploy-images-prod          Deploy shared images stack for prod environment"
+	@echo "  deploy-images               Deploy shared images stack for all environments"
+	@echo "  deploy                      Deploy all shared infrastructure"
+	@echo "  describe-namespaces         Show Terraform state for namespaces"
+	@echo "  describe-images-local       Show Terraform state for local images stack"
+	@echo "  describe-images-dev         Show Terraform state for dev images stack"
+	@echo "  describe-images-prod        Show Terraform state for prod images stack"
+	@echo "  describe-images             Show Terraform state for all images stacks"
+	@echo "  list-parameters             List all parameters in the Unicorn Properties namespace"
+	@echo "  delete-namespaces           Delete Unicorn Properties namespaces"
+	@echo "  delete-images-local         Delete shared images stack for local environment"
+	@echo "  delete-images-dev           Delete shared images stack for dev environment"
+	@echo "  delete-images-prod          Delete shared images stack for prod environment"
+	@echo "  delete-images               Delete all shared images stacks"
+	@echo "  delete                      Delete all shared infrastructure"
 
-deploy-namespaces: ## Deploy global Unicorn Properties namespaces for all stages
+ensure-state-bucket: ## Ensure Terraform state bucket exists
+	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
+		BUCKET_NAME="uni-prop-terraform-state-$(AWS_ACCOUNT_ID)-$(REGION)"; \
+		echo "No TERRAFORM_STATE_BUCKET specified, checking bucket: $$BUCKET_NAME"; \
+		if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+			echo "Creating Terraform state bucket: $$BUCKET_NAME"; \
+			if [ "$(REGION)" = "us-east-1" ]; then \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION); \
+			else \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION) \
+					--create-bucket-configuration LocationConstraint=$(REGION); \
+			fi; \
+			aws s3api put-bucket-versioning \
+				--bucket "$$BUCKET_NAME" \
+				--versioning-configuration Status=Enabled \
+				--region $(REGION); \
+			echo "Created Terraform state bucket: $$BUCKET_NAME"; \
+		else \
+			echo "Terraform state bucket already exists: $$BUCKET_NAME"; \
+		fi; \
+	else \
+		echo "Using specified Terraform state bucket: $(TERRAFORM_STATE_BUCKET)"; \
+	fi
+
+init-namespaces: ## Initialize Terraform for namespaces
+	@echo "Initializing Terraform for namespaces..."
+	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
+		BUCKET_NAME="uni-prop-terraform-state-$(AWS_ACCOUNT_ID)-$(REGION)"; \
+		if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+			echo "Creating Terraform state bucket: $$BUCKET_NAME"; \
+			if [ "$(REGION)" = "us-east-1" ]; then \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION); \
+			else \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION) \
+					--create-bucket-configuration LocationConstraint=$(REGION); \
+			fi; \
+			aws s3api put-bucket-versioning \
+				--bucket "$$BUCKET_NAME" \
+				--versioning-configuration Status=Enabled \
+				--region $(REGION); \
+		fi; \
+		cd $(TERRAFORM_DIR_NAMESPACES) && terraform init \
+			-backend-config="bucket=$$BUCKET_NAME" \
+			-backend-config="key=uni-prop-namespaces.tfstate" \
+			-backend-config="region=$(REGION)"; \
+	else \
+		cd $(TERRAFORM_DIR_NAMESPACES) && terraform init \
+			-backend-config="bucket=$(TERRAFORM_STATE_BUCKET)" \
+			-backend-config="key=uni-prop-namespaces.tfstate" \
+			-backend-config="region=$(REGION)"; \
+	fi
+
+init-images-local: ## Initialize Terraform for local images
+	@echo "Initializing Terraform for local images..."
+	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
+		BUCKET_NAME="uni-prop-terraform-state-$(AWS_ACCOUNT_ID)-$(REGION)"; \
+		if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+			echo "Creating Terraform state bucket: $$BUCKET_NAME"; \
+			if [ "$(REGION)" = "us-east-1" ]; then \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION); \
+			else \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION) \
+					--create-bucket-configuration LocationConstraint=$(REGION); \
+			fi; \
+			aws s3api put-bucket-versioning \
+				--bucket "$$BUCKET_NAME" \
+				--versioning-configuration Status=Enabled \
+				--region $(REGION); \
+		fi; \
+		cd $(TERRAFORM_DIR_IMAGES) && terraform init \
+			-backend-config="bucket=$$BUCKET_NAME" \
+			-backend-config="key=uni-prop-local-images.tfstate" \
+			-backend-config="region=$(REGION)"; \
+	else \
+		cd $(TERRAFORM_DIR_IMAGES) && terraform init \
+			-backend-config="bucket=$(TERRAFORM_STATE_BUCKET)" \
+			-backend-config="key=uni-prop-local-images.tfstate" \
+			-backend-config="region=$(REGION)"; \
+	fi
+
+init-images-dev: ## Initialize Terraform for dev images
+	@echo "Initializing Terraform for dev images..."
+	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
+		BUCKET_NAME="uni-prop-terraform-state-$(AWS_ACCOUNT_ID)-$(REGION)"; \
+		if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+			echo "Creating Terraform state bucket: $$BUCKET_NAME"; \
+			if [ "$(REGION)" = "us-east-1" ]; then \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION); \
+			else \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION) \
+					--create-bucket-configuration LocationConstraint=$(REGION); \
+			fi; \
+			aws s3api put-bucket-versioning \
+				--bucket "$$BUCKET_NAME" \
+				--versioning-configuration Status=Enabled \
+				--region $(REGION); \
+		fi; \
+		cd $(TERRAFORM_DIR_IMAGES) && terraform init \
+			-backend-config="bucket=$$BUCKET_NAME" \
+			-backend-config="key=uni-prop-dev-images.tfstate" \
+			-backend-config="region=$(REGION)"; \
+	else \
+		cd $(TERRAFORM_DIR_IMAGES) && terraform init \
+			-backend-config="bucket=$(TERRAFORM_STATE_BUCKET)" \
+			-backend-config="key=uni-prop-dev-images.tfstate" \
+			-backend-config="region=$(REGION)"; \
+	fi
+
+init-images-prod: ## Initialize Terraform for prod images
+	@echo "Initializing Terraform for prod images..."
+	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
+		BUCKET_NAME="uni-prop-terraform-state-$(AWS_ACCOUNT_ID)-$(REGION)"; \
+		if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+			echo "Creating Terraform state bucket: $$BUCKET_NAME"; \
+			if [ "$(REGION)" = "us-east-1" ]; then \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION); \
+			else \
+				aws s3api create-bucket \
+					--bucket "$$BUCKET_NAME" \
+					--region $(REGION) \
+					--create-bucket-configuration LocationConstraint=$(REGION); \
+			fi; \
+			aws s3api put-bucket-versioning \
+				--bucket "$$BUCKET_NAME" \
+				--versioning-configuration Status=Enabled \
+				--region $(REGION); \
+		fi; \
+		cd $(TERRAFORM_DIR_IMAGES) && terraform init \
+			-backend-config="bucket=$$BUCKET_NAME" \
+			-backend-config="key=uni-prop-prod-images.tfstate" \
+			-backend-config="region=$(REGION)"; \
+	else \
+		cd $(TERRAFORM_DIR_IMAGES) && terraform init \
+			-backend-config="bucket=$(TERRAFORM_STATE_BUCKET)" \
+			-backend-config="key=uni-prop-prod-images.tfstate" \
+			-backend-config="region=$(REGION)"; \
+	fi
+
+deploy-namespaces: init-namespaces ## Deploy global Unicorn Properties namespaces for all stages
 	@echo "Deploying global namespaces..."
-	@aws cloudformation create-stack \
-		--stack-name uni-prop-namespaces \
-		--template-body file://uni-prop-namespaces.yaml \
-		--capabilities CAPABILITY_AUTO_EXPAND \
-		--region $(REGION) || \
-	aws cloudformation update-stack \
-		--stack-name uni-prop-namespaces \
-		--template-body file://uni-prop-namespaces.yaml \
-		--capabilities CAPABILITY_AUTO_EXPAND \
-		--region $(REGION) || true
+	@cd $(TERRAFORM_DIR_NAMESPACES) && terraform apply \
+		-var="region=$(REGION)" \
+		-auto-approve
 
-deploy-images-local: ## Deploy shared images stack for local environment
+deploy-images-local: init-images-local ## Deploy shared images stack for local environment
 	@echo "Deploying shared images stack for local environment..."
-	@if ! aws cloudformation describe-stacks --stack-name "uni-prop-local-images" --region $(REGION) >/dev/null 2>&1; then \
-		echo "Creating shared images stack for local environment"; \
-		aws cloudformation create-stack \
-			--stack-name "uni-prop-local-images" \
-			--template-body file://uni-prop-images.yaml \
-			--parameters ParameterKey=Stage,ParameterValue=local \
-			--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-			--region $(REGION) || echo "Stack creation failed for local!"; \
-	else \
-		echo "Stack uni-prop-local-images already exists, skipping..."; \
-	fi
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform apply \
+		-var="stage=local" \
+		-var="region=$(REGION)" \
+		-auto-approve
 
-deploy-images-dev: ## Deploy shared images stack for dev environment
+deploy-images-dev: init-images-dev ## Deploy shared images stack for dev environment
 	@echo "Deploying shared images stack for dev environment..."
-	@if ! aws cloudformation describe-stacks --stack-name "uni-prop-dev-images" --region $(REGION) >/dev/null 2>&1; then \
-		echo "Creating shared images stack for dev environment"; \
-		aws cloudformation create-stack \
-			--stack-name "uni-prop-dev-images" \
-			--template-body file://uni-prop-images.yaml \
-			--parameters ParameterKey=Stage,ParameterValue=dev \
-			--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-			--region $(REGION) || echo "Stack creation failed for dev!"; \
-	else \
-		echo "Stack uni-prop-dev-images already exists, skipping..."; \
-	fi
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform apply \
+		-var="stage=dev" \
+		-var="region=$(REGION)" \
+		-auto-approve
 
-deploy-images-prod: ## Deploy shared images stack for prod environment
+deploy-images-prod: init-images-prod ## Deploy shared images stack for prod environment
 	@echo "Deploying shared images stack for prod environment..."
-	@if ! aws cloudformation describe-stacks --stack-name "uni-prop-prod-images" --region $(REGION) >/dev/null 2>&1; then \
-		echo "Creating shared images stack for prod environment"; \
-		aws cloudformation create-stack \
-			--stack-name "uni-prop-prod-images" \
-			--template-body file://uni-prop-images.yaml \
-			--parameters ParameterKey=Stage,ParameterValue=prod \
-			--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-			--region $(REGION) || echo "Stack creation failed for prod!"; \
-	else \
-		echo "Stack uni-prop-prod-images already exists, skipping..."; \
-	fi
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform apply \
+		-var="stage=prod" \
+		-var="region=$(REGION)" \
+		-auto-approve
 
 deploy-images: deploy-images-local deploy-images-dev deploy-images-prod ## Deploy shared images stack for all environments
 
 deploy: deploy-namespaces deploy-images ## Deploy all shared infrastructure
+
+describe-namespaces: ## Show Terraform state for namespaces
+	@echo "Describing namespaces Terraform state..."
+	@cd $(TERRAFORM_DIR_NAMESPACES) && terraform show
+
+describe-images-local: init-images-local ## Show Terraform state for local images stack
+	@echo "Describing local images Terraform state..."
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform show
+
+describe-images-dev: init-images-dev ## Show Terraform state for dev images stack
+	@echo "Describing dev images Terraform state..."
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform show
+
+describe-images-prod: init-images-prod ## Show Terraform state for prod images stack
+	@echo "Describing prod images Terraform state..."
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform show
+
+describe-images: describe-images-local describe-images-dev describe-images-prod ## Show Terraform state for all images stacks
 
 list-parameters: ## List all parameters in the Unicorn Properties namespace
 	@echo "Listing all Unicorn Properties parameters..."
@@ -98,39 +258,30 @@ list-parameters: ## List all parameters in the Unicorn Properties namespace
 
 delete-namespaces: ## Delete Unicorn Properties namespaces
 	@echo "Deleting global namespaces..."
-	@aws cloudformation delete-stack \
-		--stack-name uni-prop-namespaces \
-		--region $(REGION) || true
+	@cd $(TERRAFORM_DIR_NAMESPACES) && terraform destroy \
+		-var="region=$(REGION)" \
+		-auto-approve || true
 
 delete-images-local: ## Delete shared images stack for local environment
 	@echo "Deleting shared images stack for local environment..."
-	@if aws cloudformation describe-stacks --stack-name "uni-prop-local-images" --region $(REGION) >/dev/null 2>&1; then \
-		aws cloudformation delete-stack \
-			--stack-name "uni-prop-local-images" \
-			--region $(REGION); \
-	else \
-		echo "Stack uni-prop-local-images does not exist, skipping..."; \
-	fi
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform destroy \
+		-var="stage=local" \
+		-var="region=$(REGION)" \
+		-auto-approve || true
 
 delete-images-dev: ## Delete shared images stack for dev environment
 	@echo "Deleting shared images stack for dev environment..."
-	@if aws cloudformation describe-stacks --stack-name "uni-prop-dev-images" --region $(REGION) >/dev/null 2>&1; then \
-		aws cloudformation delete-stack \
-			--stack-name "uni-prop-dev-images" \
-			--region $(REGION); \
-	else \
-		echo "Stack uni-prop-dev-images does not exist, skipping..."; \
-	fi
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform destroy \
+		-var="stage=dev" \
+		-var="region=$(REGION)" \
+		-auto-approve || true
 
 delete-images-prod: ## Delete shared images stack for prod environment
 	@echo "Deleting shared images stack for prod environment..."
-	@if aws cloudformation describe-stacks --stack-name "uni-prop-prod-images" --region $(REGION) >/dev/null 2>&1; then \
-		aws cloudformation delete-stack \
-			--stack-name "uni-prop-prod-images" \
-			--region $(REGION); \
-	else \
-		echo "Stack uni-prop-prod-images does not exist, skipping..."; \
-	fi
+	@cd $(TERRAFORM_DIR_IMAGES) && terraform destroy \
+		-var="stage=prod" \
+		-var="region=$(REGION)" \
+		-auto-approve || true
 
 delete-images: delete-images-prod delete-images-dev delete-images-local ## Delete all shared images stacks
 
