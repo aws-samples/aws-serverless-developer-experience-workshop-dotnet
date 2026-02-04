@@ -40,7 +40,9 @@ public class ContractStatusChangedEventHandler
             new TypeMapping(typeof(ContractStatusChangedEvent), dynamodbTable);
 
         var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
+#pragma warning disable CS0618 // Type or member is obsolete
         _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
 
