@@ -77,6 +77,7 @@ define tf_init
 		exit 1; \
 	fi; \
 	cd $(2) && terraform init \
+		-reconfigure \
 		-backend-config="bucket=$$BUCKET_NAME" \
 		-backend-config="key=uni-prop-$(STAGE)-contracts-$(1).tfstate" \
 		-backend-config="region=$(REGION)" \

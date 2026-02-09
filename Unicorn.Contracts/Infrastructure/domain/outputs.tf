@@ -21,6 +21,7 @@ output "event_handler_function_log_group_arn" {
 output "schema_registry_name" {
   description = "Name of the Unicorn Contracts Schema Registry"
   value       = aws_schemas_registry.contracts_schema_registry.name
+  sensitive   = true
 }
 
 output "schema_registry_arn" {

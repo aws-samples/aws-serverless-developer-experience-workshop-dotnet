@@ -1,36 +1,9 @@
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.region
-}
-
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
 data "aws_ssm_parameter" "unicorn_contracts_namespace" {
   name = "/uni-prop/UnicornContractsNamespace"
-}
-
-locals {
-  event_bus_name      = "unicorn-contracts-eventbus-${var.stage}"
-  registry_name       = "${data.aws_ssm_parameter.unicorn_contracts_namespace.value}-${var.stage}"
-  logs_retention_days = var.stage == "prod" ? 14 : 3
-  is_prod            = var.stage == "prod"
-  log_level          = var.stage == "prod" ? "ERROR" : "INFO"
-  common_tags = {
-    stage     = var.stage
-    project   = "AWS Serverless Developer Experience"
-    namespace = data.aws_ssm_parameter.unicorn_contracts_namespace.value
-  }
 }
 
 resource "aws_cloudwatch_event_bus" "contracts_event_bus" {
@@ -58,35 +31,29 @@ resource "aws_ssm_parameter" "contracts_event_bus_arn" {
   tags  = local.common_tags
 }
 
-resource "aws_cloudwatch_event_bus_policy" "contracts_event_bus_publish_policy" {
-  event_bus_name = aws_cloudwatch_event_bus.contracts_event_bus.name
-  statement_id   = "OnlyContactsServiceCanPublishToEventBus-${var.stage}"
+data "aws_iam_policy_document" "contracts_event_bus_policy" {
+  statement {
+    sid    = "OnlyContactsServiceCanPublishToEventBus-${var.stage}"
+    effect = "Allow"
+    actions = ["events:PutEvents"]
+    resources = [aws_cloudwatch_event_bus.contracts_event_bus.arn]
 
-  statement = jsonencode({
-    Effect = "Allow"
-    Principal = {
-      AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
-    Action   = "events:PutEvents"
-    Resource = aws_cloudwatch_event_bus.contracts_event_bus.arn
-    Condition = {
-      StringEquals = {
-        "events:source" = [data.aws_ssm_parameter.unicorn_contracts_namespace.value]
-      }
-    }
-  })
-}
 
-resource "aws_cloudwatch_event_bus_policy" "rule_management_policy" {
-  event_bus_name = aws_cloudwatch_event_bus.contracts_event_bus.name
-  statement_id   = "OnlyRulesForContractsServiceEvents-${var.stage}"
-
-  statement = jsonencode({
-    Effect = "Allow"
-    Principal = {
-      AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+    condition {
+      test     = "StringEquals"
+      variable = "events:source"
+      values   = [data.aws_ssm_parameter.unicorn_contracts_namespace.value]
     }
-    Action = [
+  }
+
+  statement {
+    sid    = "OnlyRulesForContractsServiceEvents-${var.stage}"
+    effect = "Allow"
+    actions = [
       "events:PutRule",
       "events:DeleteRule",
       "events:DescribeRule",
@@ -95,19 +62,36 @@ resource "aws_cloudwatch_event_bus_policy" "rule_management_policy" {
       "events:PutTargets",
       "events:RemoveTargets"
     ]
-    Resource = "arn:${data.aws_partition.current.partition}:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/${aws_cloudwatch_event_bus.contracts_event_bus.name}/*"
-    Condition = {
-      StringEqualsIfExists = {
-        "events:creatorAccount" = "${data.aws_caller_identity.current.account_id}"
-      }
-      StringEquals = {
-        "events:source" = [data.aws_ssm_parameter.unicorn_contracts_namespace.value]
-      }
-      Null = {
-        "events:source" = "false"
-      }
+    resources = ["arn:${data.aws_partition.current.partition}:events:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:rule/${aws_cloudwatch_event_bus.contracts_event_bus.name}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
-  })
+
+    condition {
+      test     = "StringEqualsIfExists"
+      variable = "events:creatorAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "events:source"
+      values   = [data.aws_ssm_parameter.unicorn_contracts_namespace.value]
+    }
+
+    condition {
+      test     = "Null"
+      variable = "events:source"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_bus_policy" "contracts_event_bus_policy" {
+  event_bus_name = aws_cloudwatch_event_bus.contracts_event_bus.name
+  policy         = data.aws_iam_policy_document.contracts_event_bus_policy.json
 }
 
 resource "aws_iam_role" "contracts_eventbridge_role" {
@@ -164,8 +148,10 @@ resource "aws_cloudwatch_log_delivery_source" "event_bus_info_delivery_source" {
 }
 
 resource "aws_cloudwatch_log_delivery_destination" "event_bus_delivery_destination" {
-  name                  = "${aws_cloudwatch_event_bus.contracts_event_bus.name}-DeliveryDestination-${var.stage}"
-  destination_resource_arn = aws_cloudwatch_log_group.event_handler_function_log_group.arn
+  name = "${aws_cloudwatch_event_bus.contracts_event_bus.name}-DeliveryDestination-${var.stage}"
+  delivery_destination_configuration {
+    destination_resource_arn = aws_cloudwatch_log_group.event_handler_function_log_group.arn
+  }
 }
 
 resource "aws_cloudwatch_log_delivery" "event_bus_info_logging_delivery" {
@@ -229,11 +215,3 @@ resource "aws_schemas_registry_policy" "event_registry_policy" {
     ]
   })
 }
-
-
-
-
-
-
-
-

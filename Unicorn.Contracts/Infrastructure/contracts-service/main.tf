@@ -1,24 +1,3 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
-
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.0"
-    }
-    archive = {
-      source  = "hashicorp/archive"
-      version = ">= 2.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.region
-}
-
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
@@ -33,14 +12,6 @@ data "aws_ssm_parameter" "contracts_event_bus_arn" {
 
 data "aws_ssm_parameter" "contracts_event_bus_name" {
   name = "/uni-prop/${var.stage}/ContractsEventBus"
-}
-
-locals {
-  common_tags = {
-    stage     = var.stage
-    project   = local.project_name
-    namespace = data.aws_ssm_parameter.unicorn_contracts_namespace.value
-  }
 }
 
 #################################################################################################
@@ -278,15 +249,6 @@ resource "aws_cloudwatch_log_group" "unicorn_contracts_api" {
   name              = "/aws/apigateway/uni-prop-${var.stage}-contracts-api"
   retention_in_days = local.logs_retention_days
   tags              = local.common_tags
-}
-
-locals {
-  api_openapi_spec = templatefile("${path.module}/api.yaml.tpl", {
-    UnicornContractsApiIntegrationRoleArn = aws_iam_role.unicorn_contracts_api_integration_role.arn
-    UnicornContractsIngestQueueName       = aws_sqs_queue.unicorn_contracts_ingest_queue.name
-    AWS_Region                            = data.aws_region.current.id
-    AWS_AccountId                         = data.aws_caller_identity.current.account_id
-  })
 }
 
 resource "aws_api_gateway_rest_api" "unicorn_contracts_api" {
