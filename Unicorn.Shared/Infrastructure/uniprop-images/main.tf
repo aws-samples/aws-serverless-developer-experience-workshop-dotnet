@@ -1,36 +1,5 @@
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.0"
-    }
-    archive = {
-      source  = "hashicorp/archive"
-      version = ">= 2.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = ">= 3.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.region
-}
-
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
-
-locals {
-  bucket_name = "uni-prop-${var.stage}-images-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.id}"
-  common_tags = {
-    stage   = var.stage
-    project = "AWS Serverless Developer Experience"
-    service = "Unicorn Base Infrastructure"
-  }
-}
 
 resource "aws_s3_bucket" "unicorn_properties_images" {
   bucket = local.bucket_name
@@ -118,14 +87,14 @@ resource "aws_iam_role_policy" "image_upload_lambda_policy" {
 }
 
 resource "aws_lambda_function" "image_upload" {
-  filename         = data.archive_file.image_upload_lambda.output_path
-  function_name    = "uni-prop-${var.stage}-image-upload"
-  role            = aws_iam_role.image_upload_lambda_role.arn
-  handler         = "image_upload.lambda_handler"
-  runtime         = "python3.13"
-  timeout         = 15
-  memory_size     = 512
-  architectures   = ["arm64"]
+  filename      = data.archive_file.image_upload_lambda.output_path
+  function_name = "uni-prop-${var.stage}-image-upload"
+  role          = aws_iam_role.image_upload_lambda_role.arn
+  handler       = "image_upload.lambda_handler"
+  runtime       = "python3.13"
+  timeout       = 15
+  memory_size   = 512
+  architectures = ["arm64"]
   tracing_config {
     mode = "Active"
   }
@@ -145,7 +114,7 @@ resource "aws_lambda_invocation" "image_upload" {
   function_name = aws_lambda_function.image_upload.function_name
 
   input = jsonencode({
-    RequestType        = "Create"
+    RequestType = "Create"
     ResourceProperties = {
       DestinationBucket = aws_s3_bucket.unicorn_properties_images.bucket
     }
