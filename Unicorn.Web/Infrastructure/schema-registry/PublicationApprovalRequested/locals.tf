@@ -1,0 +1,105 @@
+locals {
+  schema_name = "${data.aws_ssm_parameter.unicorn_web_namespace.value}@PublicationApprovalRequested"
+  schema_content = jsonencode({
+    openapi = "3.0.0"
+    info = {
+      version = "1.0.0"
+      title   = "PublicationApprovalRequested"
+    }
+    paths = {}
+    components = {
+      schemas = {
+        AWSEvent = {
+          type     = "object"
+          required = ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"]
+          "x-amazon-events-detail-type" = "PublicationApprovalRequested"
+          "x-amazon-events-source"      = data.aws_ssm_parameter.unicorn_web_namespace.value
+          properties = {
+            detail = {
+              "$ref" = "#/components/schemas/PublicationApprovalRequested"
+            }
+            account = {
+              type = "string"
+            }
+            "detail-type" = {
+              type = "string"
+            }
+            id = {
+              type = "string"
+            }
+            region = {
+              type = "string"
+            }
+            resources = {
+              type  = "array"
+              items = {
+                type = "string"
+              }
+            }
+            source = {
+              type = "string"
+            }
+            time = {
+              type   = "string"
+              format = "date-time"
+            }
+            version = {
+              type = "string"
+            }
+          }
+        }
+        PublicationApprovalRequested = {
+          type     = "object"
+          required = ["images", "address", "listprice", "contract", "description", "currency", "property_id", "status"]
+          properties = {
+            address = {
+              "$ref" = "#/components/schemas/Address"
+            }
+            contract = {
+              type = "string"
+            }
+            currency = {
+              type = "string"
+            }
+            description = {
+              type = "string"
+            }
+            images = {
+              type  = "array"
+              items = {
+                type = "string"
+              }
+            }
+            listprice = {
+              type = "string"
+            }
+            property_id = {
+              type = "string"
+            }
+            status = {
+              type = "string"
+            }
+          }
+        }
+        Address = {
+          type     = "object"
+          required = ["country", "number", "city", "street"]
+          properties = {
+            city = {
+              type = "string"
+            }
+            country = {
+              type = "string"
+            }
+            number = {
+              type = "string"
+            }
+            street = {
+              type = "string"
+            }
+          }
+        }
+      }
+    }
+  })
+}
