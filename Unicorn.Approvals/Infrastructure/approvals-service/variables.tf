@@ -1,7 +1,6 @@
 variable "stage" {
   description = "Deployment stage (local, dev, prod)"
   type        = string
-  default     = "local"
 
   validation {
     condition     = contains(["local", "dev", "prod"], var.stage)
@@ -12,7 +11,6 @@ variable "stage" {
 variable "region" {
   description = "AWS region"
   type        = string
-  default     = "ap-southeast-2"
 }
 
 variable "lambda_code_path" {
@@ -20,5 +18,3 @@ variable "lambda_code_path" {
   type        = string
   default     = "../../ApprovalsService"
 }
-
-

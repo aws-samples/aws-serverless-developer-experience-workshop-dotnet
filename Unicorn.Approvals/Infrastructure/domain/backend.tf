@@ -4,11 +4,3 @@ terraform {
     # Example: terraform init -backend-config="bucket=my-terraform-state" -backend-config="key=uni-prop-{stage}-approvals-domain.tfstate"
   }
 }
-
-
-
-
-
-
-
-

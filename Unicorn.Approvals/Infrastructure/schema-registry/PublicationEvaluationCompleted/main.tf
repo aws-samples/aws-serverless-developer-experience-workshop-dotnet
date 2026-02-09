@@ -1,17 +1,3 @@
-terraform {
-  required_version = ">= 1.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.region
-}
-
 data "aws_ssm_parameter" "unicorn_approvals_namespace" {
   name = "/uni-prop/UnicornApprovalsNamespace"
 }
@@ -20,85 +6,10 @@ data "aws_ssm_parameter" "approvals_schema_registry_name" {
   name = "/uni-prop/${var.stage}/ApprovalsSchemaRegistryName"
 }
 
-locals {
-  schema_name = "${data.aws_ssm_parameter.unicorn_approvals_namespace.value}@PublicationEvaluationCompleted"
-  schema_content = jsonencode({
-    openapi = "3.0.0"
-    info = {
-      version = "1.0.0"
-      title   = "PublicationEvaluationCompleted"
-    }
-    paths = {}
-    components = {
-      schemas = {
-        AWSEvent = {
-          type     = "object"
-          required = ["detail-type", "resources", "detail", "id", "source", "time", "region", "version", "account"]
-          "x-amazon-events-detail-type" = "PublicationEvaluationCompleted"
-          "x-amazon-events-source"       = data.aws_ssm_parameter.unicorn_approvals_namespace.value
-          properties = {
-            detail = {
-              "$ref" = "#/components/schemas/PublicationEvaluationCompleted"
-            }
-            account = {
-              type = "string"
-            }
-            "detail-type" = {
-              type = "string"
-            }
-            id = {
-              type = "string"
-            }
-            region = {
-              type = "string"
-            }
-            resources = {
-              type  = "array"
-              items = {
-                type = "string"
-              }
-            }
-            source = {
-              type = "string"
-            }
-            time = {
-              type   = "string"
-              format = "date-time"
-            }
-            version = {
-              type = "string"
-            }
-          }
-        }
-        PublicationEvaluationCompleted = {
-          type     = "object"
-          required = ["PropertyId", "EvaluationResult"]
-          properties = {
-            PropertyId = {
-              type = "string"
-            }
-            EvaluationResult = {
-              type = "string"
-            }
-          }
-        }
-      }
-    }
-  })
-}
-
 resource "aws_schemas_schema" "publication_evaluation_completed" {
-  name         = local.schema_name
+  name          = local.schema_name
   registry_name = data.aws_ssm_parameter.approvals_schema_registry_name.value
-  type         = "OpenApi3"
-  description  = "The EventBridge schema for when a property publication evaluation is completed."
-  content      = local.schema_content
+  type          = "OpenApi3"
+  description   = "EventBridge schema for PublicationEvaluationCompleted events published by the Unicorn Approvals Service when a property publication evaluation is completed."
+  content       = local.schema_content
 }
-
-
-
-
-
-
-
-

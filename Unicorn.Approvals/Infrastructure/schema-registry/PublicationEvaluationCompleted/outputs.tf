@@ -7,11 +7,3 @@ output "schema_name" {
   description = "Name of the PublicationEvaluationCompleted schema"
   value       = aws_schemas_schema.publication_evaluation_completed.name
 }
-
-
-
-
-
-
-
-
