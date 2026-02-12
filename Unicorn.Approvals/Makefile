@@ -11,8 +11,8 @@ TF_VARS = -var="stage=$(STAGE)" -var="region=$(REGION)"
 TERRAFORM_DIR_DOMAIN = Infrastructure/domain
 TERRAFORM_DIR_SCHEMA = Infrastructure/schema-registry/PublicationEvaluationCompleted
 TERRAFORM_DIR_SERVICE = Infrastructure/approvals-service
-TERRAFORM_DIR_SUB_CONTRACTS = Infrastructure/subscriptions/contracts
-TERRAFORM_DIR_SUB_WEB = Infrastructure/subscriptions/web
+TERRAFORM_DIR_SUB_CONTRACTS = Infrastructure/subscriptions/unicorn-contracts
+TERRAFORM_DIR_SUB_WEB = Infrastructure/subscriptions/unicorn-web
 
 .PHONY: help build deploy deploy-domain deploy-schema deploy-service deploy-subscriptions deploy-contracts-subscriptions deploy-web-subscriptions test lint clean delete init-domain init-schema init-service init-sub-contracts init-sub-web init plan plan-domain plan-schema plan-service plan-sub-contracts plan-sub-web ensure-state-backend
 
@@ -21,7 +21,7 @@ help: ## Show available commands
 	@echo ""
 	@echo "Usage: make [target] [STAGE=local|dev|prod] [REGION=ap-southeast-2]"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $1, $2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 ensure-state-backend: ## Ensure Terraform state bucket and lock table exist
 	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
@@ -29,26 +29,26 @@ ensure-state-backend: ## Ensure Terraform state bucket and lock table exist
 	else \
 		BUCKET_NAME="$(TERRAFORM_STATE_BUCKET)"; \
 	fi; \
-	echo "Checking state bucket: $BUCKET_NAME"; \
-	if ! aws s3api head-bucket --bucket "$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
-		echo "Creating Terraform state bucket: $BUCKET_NAME"; \
+	echo "Checking state bucket: $$BUCKET_NAME"; \
+	if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+		echo "Creating Terraform state bucket: $$BUCKET_NAME"; \
 		if [ "$(REGION)" = "us-east-1" ]; then \
 			aws s3api create-bucket \
-				--bucket "$BUCKET_NAME" \
+				--bucket "$$BUCKET_NAME" \
 				--region $(REGION); \
 		else \
 			aws s3api create-bucket \
-				--bucket "$BUCKET_NAME" \
+				--bucket "$$BUCKET_NAME" \
 				--region $(REGION) \
 				--create-bucket-configuration LocationConstraint=$(REGION); \
 		fi; \
 		aws s3api put-bucket-versioning \
-			--bucket "$BUCKET_NAME" \
+			--bucket "$$BUCKET_NAME" \
 			--versioning-configuration Status=Enabled \
 			--region $(REGION); \
-		echo "Created state bucket: $BUCKET_NAME"; \
+		echo "Created state bucket: $$BUCKET_NAME"; \
 	else \
-		echo "State bucket already exists: $BUCKET_NAME"; \
+		echo "State bucket already exists: $$BUCKET_NAME"; \
 	fi; \
 	echo "Checking lock table: $(TERRAFORM_LOCK_TABLE)"; \
 	if ! aws dynamodb describe-table --table-name "$(TERRAFORM_LOCK_TABLE)" --region $(REGION) >/dev/null 2>&1; then \
@@ -74,31 +74,31 @@ define tf_init
 	else \
 		BUCKET_NAME="$(TERRAFORM_STATE_BUCKET)"; \
 	fi; \
-	if ! aws s3api head-bucket --bucket "$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+	if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
 		echo "State bucket not found. Run 'make ensure-state-backend' first."; \
 		exit 1; \
 	fi; \
 	cd $(2) && terraform init \
 		-reconfigure \
-		-backend-config="bucket=$BUCKET_NAME" \
+		-backend-config="bucket=$$BUCKET_NAME" \
 		-backend-config="key=uni-prop-$(STAGE)-approvals-$(1).tfstate" \
 		-backend-config="region=$(REGION)" \
 		-backend-config="dynamodb_table=$(TERRAFORM_LOCK_TABLE)"
 endef
 
-init-domain: ## Initialize Terraform for domain
+init-domain: ensure-state-backend ## Initialize Terraform for domain
 	$(call tf_init,domain,$(TERRAFORM_DIR_DOMAIN))
 
-init-schema: ## Initialize Terraform for schema registry
+init-schema: ensure-state-backend ## Initialize Terraform for schema registry
 	$(call tf_init,schema,$(TERRAFORM_DIR_SCHEMA))
 
-init-service: ## Initialize Terraform for approvals service
+init-service: ensure-state-backend ## Initialize Terraform for approvals service
 	$(call tf_init,service,$(TERRAFORM_DIR_SERVICE))
 
-init-sub-contracts: ## Initialize Terraform for contracts subscriptions
+init-sub-contracts: ensure-state-backend ## Initialize Terraform for contracts subscriptions
 	$(call tf_init,sub-contracts,$(TERRAFORM_DIR_SUB_CONTRACTS))
 
-init-sub-web: ## Initialize Terraform for web subscriptions
+init-sub-web: ensure-state-backend ## Initialize Terraform for web subscriptions
 	$(call tf_init,sub-web,$(TERRAFORM_DIR_SUB_WEB))
 
 init: init-domain init-schema init-service init-sub-contracts init-sub-web ## Initialize Terraform for all components

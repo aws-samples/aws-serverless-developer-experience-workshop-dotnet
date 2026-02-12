@@ -20,7 +20,7 @@ help: ## Show available commands
 	@echo ""
 	@echo "Usage: make [target] [STAGE=local|dev|prod] [REGION=ap-southeast-2]"
 	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $1, $2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
 ensure-state-backend: ## Ensure Terraform state bucket and lock table exist
 	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
@@ -28,26 +28,26 @@ ensure-state-backend: ## Ensure Terraform state bucket and lock table exist
 	else \
 		BUCKET_NAME="$(TERRAFORM_STATE_BUCKET)"; \
 	fi; \
-	echo "Checking state bucket: $BUCKET_NAME"; \
-	if ! aws s3api head-bucket --bucket "$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
-		echo "Creating Terraform state bucket: $BUCKET_NAME"; \
+	echo "Checking state bucket: $$BUCKET_NAME"; \
+	if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+		echo "Creating Terraform state bucket: $$BUCKET_NAME"; \
 		if [ "$(REGION)" = "us-east-1" ]; then \
 			aws s3api create-bucket \
-				--bucket "$BUCKET_NAME" \
+				--bucket "$$BUCKET_NAME" \
 				--region $(REGION); \
 		else \
 			aws s3api create-bucket \
-				--bucket "$BUCKET_NAME" \
+				--bucket "$$BUCKET_NAME" \
 				--region $(REGION) \
 				--create-bucket-configuration LocationConstraint=$(REGION); \
 		fi; \
 		aws s3api put-bucket-versioning \
-			--bucket "$BUCKET_NAME" \
+			--bucket "$$BUCKET_NAME" \
 			--versioning-configuration Status=Enabled \
 			--region $(REGION); \
-		echo "Created state bucket: $BUCKET_NAME"; \
+		echo "Created state bucket: $$BUCKET_NAME"; \
 	else \
-		echo "State bucket already exists: $BUCKET_NAME"; \
+		echo "State bucket already exists: $$BUCKET_NAME"; \
 	fi; \
 	echo "Checking lock table: $(TERRAFORM_LOCK_TABLE)"; \
 	if ! aws dynamodb describe-table --table-name "$(TERRAFORM_LOCK_TABLE)" --region $(REGION) >/dev/null 2>&1; then \
@@ -73,28 +73,28 @@ define tf_init
 	else \
 		BUCKET_NAME="$(TERRAFORM_STATE_BUCKET)"; \
 	fi; \
-	if ! aws s3api head-bucket --bucket "$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
+	if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
 		echo "State bucket not found. Run 'make ensure-state-backend' first."; \
 		exit 1; \
 	fi; \
 	cd $(2) && terraform init \
 		-reconfigure \
-		-backend-config="bucket=$BUCKET_NAME" \
+		-backend-config="bucket=$$BUCKET_NAME" \
 		-backend-config="key=uni-prop-$(STAGE)-web-$(1).tfstate" \
 		-backend-config="region=$(REGION)" \
 		-backend-config="dynamodb_table=$(TERRAFORM_LOCK_TABLE)"
 endef
 
-init-domain: ## Initialize Terraform for domain
+init-domain: ensure-state-backend ## Initialize Terraform for domain
 	$(call tf_init,domain,$(TERRAFORM_DIR_DOMAIN))
 
-init-schema: ## Initialize Terraform for schema registry
+init-schema: ensure-state-backend ## Initialize Terraform for schema registry
 	$(call tf_init,schema,$(TERRAFORM_DIR_SCHEMA))
 
-init-service: ## Initialize Terraform for web service
+init-service: ensure-state-backend ## Initialize Terraform for web service
 	$(call tf_init,service,$(TERRAFORM_DIR_SERVICE))
 
-init-sub-approvals: ## Initialize Terraform for approvals subscriptions
+init-sub-approvals: ensure-state-backend ## Initialize Terraform for approvals subscriptions
 	$(call tf_init,sub-approvals,$(TERRAFORM_DIR_SUB_APPROVALS))
 
 init: init-domain init-schema init-service init-sub-approvals ## Initialize Terraform for all components
@@ -103,6 +103,8 @@ build: ## Build the application
 	@echo "Building .NET application..."
 	@dotnet restore PublicationManagerService/PublicationManagerService.csproj
 	@dotnet restore SearchService/SearchService.csproj
+	@dotnet restore PublicationManagerService.Tests/PublicationManagerService.Tests.csproj
+	@dotnet restore SearchService.Tests/SearchService.Tests.csproj
 	@dotnet build PublicationManagerService/PublicationManagerService.csproj
 	@dotnet build SearchService/SearchService.csproj
 
@@ -140,8 +142,8 @@ plan: plan-domain plan-schema plan-service plan-sub-approvals ## Plan all infras
 
 test: ## Run tests
 	@echo "Running tests..."
-	@dotnet test PublicationManagerService.Test/PublicationManagerService.Tests.csproj
-	@dotnet test SearchService.Test/SearchService.Tests.csproj
+	@dotnet test PublicationManagerService.Tests/PublicationManagerService.Tests.csproj
+	@dotnet test SearchService.Tests/SearchService.Tests.csproj
 
 lint: ## Validate Terraform configurations
 	@echo "Validating Terraform configurations..."

@@ -84,13 +84,13 @@ define tf_init
 		-backend-config="dynamodb_table=$(TERRAFORM_LOCK_TABLE)"
 endef
 
-init-domain: ## Initialize Terraform for domain
+init-domain: ensure-state-backend ## Initialize Terraform for domain
 	$(call tf_init,domain,$(TERRAFORM_DIR_DOMAIN))
 
-init-schema: ## Initialize Terraform for schema registry
+init-schema: ensure-state-backend ## Initialize Terraform for schema registry
 	$(call tf_init,schema,$(TERRAFORM_DIR_SCHEMA))
 
-init-service: ## Initialize Terraform for contracts service
+init-service: ensure-state-backend ## Initialize Terraform for contracts service
 	$(call tf_init,service,$(TERRAFORM_DIR_SERVICE))
 
 init: init-domain init-schema init-service ## Initialize Terraform for all components
