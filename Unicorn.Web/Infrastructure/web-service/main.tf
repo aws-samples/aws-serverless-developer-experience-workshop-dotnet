@@ -143,7 +143,7 @@ resource "aws_lambda_function" "search_function" {
   function_name    = "uni-prop-${var.stage}-search-function"
   role             = aws_iam_role.search_function_role.arn
   handler          = "Unicorn.Web.SearchService::Unicorn.Web.SearchService.PropertySearchFunction::FunctionHandler"
-  runtime          = "dotnet8"
+  runtime          = "dotnet10"
   timeout          = 10
   memory_size      = 512
   architectures    = ["x86_64"]
@@ -236,7 +236,7 @@ resource "aws_lambda_function" "request_approval_function" {
   function_name    = "uni-prop-${var.stage}-request-approval-function"
   role             = aws_iam_role.request_approval_function_role.arn
   handler          = "Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.RequestApprovalFunction::FunctionHandler"
-  runtime          = "dotnet8"
+  runtime          = "dotnet10"
   timeout          = 10
   memory_size      = 512
   architectures    = ["x86_64"]
@@ -343,7 +343,7 @@ resource "aws_lambda_function" "publication_evaluation_event_handler" {
   function_name    = "uni-prop-${var.stage}-pub-eval-event-handler"
   role             = aws_iam_role.publication_evaluation_event_handler_role.arn
   handler          = "Unicorn.Web.PublicationManagerService::Unicorn.Web.PublicationManagerService.PublicationEvaluationEventHandler::FunctionHandler"
-  runtime          = "dotnet8"
+  runtime          = "dotnet10"
   timeout          = 10
   memory_size      = 512
   architectures    = ["x86_64"]

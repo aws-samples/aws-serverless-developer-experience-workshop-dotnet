@@ -135,7 +135,7 @@ resource "aws_lambda_function" "contract_status_changed_handler" {
   function_name    = "uni-prop-${var.stage}-contract-status-changed-handler"
   role             = aws_iam_role.contract_status_changed_handler_role.arn
   handler          = "Unicorn.Approvals.ApprovalsService::Unicorn.Approvals.ApprovalsService.ContractStatusChangedEventHandler::FunctionHandler"
-  runtime          = "dotnet8"
+  runtime          = "dotnet10"
   timeout          = 10
   memory_size      = 512
   architectures    = ["x86_64"]
@@ -275,7 +275,7 @@ resource "aws_lambda_function" "properties_approval_sync" {
   function_name    = "uni-prop-${var.stage}-properties-approval-sync"
   role             = aws_iam_role.properties_approval_sync_role.arn
   handler          = "Unicorn.Approvals.ApprovalsService::Unicorn.Approvals.ApprovalsService.PropertiesApprovalSyncFunction::FunctionHandler"
-  runtime          = "dotnet8"
+  runtime          = "dotnet10"
   timeout          = 10
   memory_size      = 512
   architectures    = ["x86_64"]
@@ -380,7 +380,7 @@ resource "aws_lambda_function" "wait_for_contract_approval" {
   function_name    = "uni-prop-${var.stage}-wait-for-contract-approval"
   role             = aws_iam_role.wait_for_contract_approval_role.arn
   handler          = "Unicorn.Approvals.ApprovalsService::Unicorn.Approvals.ApprovalsService.WaitForContractApprovalFunction::FunctionHandler"
-  runtime          = "dotnet8"
+  runtime          = "dotnet10"
   timeout          = 10
   memory_size      = 512
   architectures    = ["x86_64"]

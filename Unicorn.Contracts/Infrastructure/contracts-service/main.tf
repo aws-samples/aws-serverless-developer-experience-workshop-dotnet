@@ -130,7 +130,7 @@ resource "aws_lambda_function" "contract_event_handler" {
   function_name    = "uni-prop-${var.stage}-contract-event-handler"
   role             = aws_iam_role.contract_event_handler_role.arn
   handler          = "Unicorn.Contracts.ContractService::Unicorn.Contracts.ContractService.ContractEventHandler::FunctionHandler"
-  runtime          = "dotnet8"
+  runtime          = "dotnet10"
   timeout          = 15
   memory_size      = 512
   architectures    = ["x86_64"]
