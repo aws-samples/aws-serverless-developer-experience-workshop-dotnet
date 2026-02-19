@@ -6,6 +6,11 @@ on:
     types:
       - completed
 
+
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   get_pr_details:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
