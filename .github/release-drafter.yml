@@ -1,0 +1,59 @@
+name: Release Drafter
+
+on:
+  push:
+    # branches to consider in the event; optional, defaults to all
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+categories:
+
+  - title: '🚀 Enhancements'
+    labels:
+      - feature
+      - enhancement
+  - title: '📚 Documentation Updates'
+    labels:
+      - docs
+  - title: '🐛 Bug Fixes'
+    labels:
+      - fix
+      - bugfix
+      - bug
+  - title: '🧰 Maintenance'
+    label:
+      - chore
+
+template: |
+  ## Summary
+
+  _Human readable summary of changes_
+
+  ## Changes
+
+  $CHANGES
+
+  ## This release was made possible by the following contributors:
+
+  $CONTRIBUTORS
+
+exclude-labels:
+  - skip-changelog
+
+jobs:
+  update_release_draft:
+    permissions:
+      # write permission is required to create a github release
+      contents: write
+      # write permission is required for autolabeler
+      # otherwise, read permission is required at least
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
