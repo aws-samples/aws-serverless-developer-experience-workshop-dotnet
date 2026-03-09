@@ -112,9 +112,9 @@ public class ContractEventHandlerTest
 
 public class ApiGwSqsPayload
 {
-    public string property_id { get; set; }
-    public address address { get; set; }
-    public string seller_name { get; set; }
+    public required string property_id { get; set; }
+    public required address address { get; set; }
+    public required string seller_name { get; set; }
 }
 
 public class address

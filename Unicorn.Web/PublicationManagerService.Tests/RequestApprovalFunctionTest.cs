@@ -152,5 +152,6 @@ public class RequestApprovalFunctionTest
 
 public class ApiGwSqsPayload
 {
-    public string PropertyId { get; set; }
+    public required string PropertyId { get; set; }
+    
 }

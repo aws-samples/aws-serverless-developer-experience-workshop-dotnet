@@ -11,7 +11,6 @@ using Amazon.StepFunctions;
 using Amazon.StepFunctions.Model;
 using Amazon.Util;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
-using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
@@ -45,10 +44,10 @@ public class PropertiesApprovalSyncFunction
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(ContractStatusItem)] =
             new TypeMapping(typeof(ContractStatusItem), dynamodbTable);
 
-        var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
-#pragma warning disable CS0618 // Type or member is obsolete
-        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
-#pragma warning restore CS0618 // Type or member is obsolete
+        _dynamoDbContext = new DynamoDBContextBuilder()
+            .WithDynamoDBClient(() => new AmazonDynamoDBClient())
+            .ConfigureContext(config => config.Conversion = DynamoDBEntryConversion.V2)
+            .Build();
 
         // Initialise Step Functions client
         _amazonStepFunctionsClient = new AmazonStepFunctionsClient();
