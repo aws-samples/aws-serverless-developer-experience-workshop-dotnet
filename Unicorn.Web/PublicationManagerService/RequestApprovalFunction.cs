@@ -17,7 +17,6 @@ using AWS.Lambda.Powertools.Logging;
 using AWS.Lambda.Powertools.Metrics;
 using AWS.Lambda.Powertools.Tracing;
 using Unicorn.Web.Common;
-using DynamoDBContextConfig = Amazon.DynamoDBv2.DataModel.DynamoDBContextConfig;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -49,8 +48,10 @@ public class RequestApprovalFunction
         AWSConfigsDynamoDB.Context.TypeMappings[typeof(PropertyRecord)] =
             new TypeMapping(typeof(PropertyRecord), _dynamodbTable);
         
-        var config = new DynamoDBContextConfig { Conversion = DynamoDBEntryConversion.V2 };
-        _dynamoDbContext = new DynamoDBContext(new AmazonDynamoDBClient(), config);
+        _dynamoDbContext = new DynamoDBContextBuilder()
+            .WithDynamoDBClient(() => new AmazonDynamoDBClient())
+            .ConfigureContext(config => config.Conversion = DynamoDBEntryConversion.V2)
+            .Build();
 
         // Initialise EventBridge client
         _eventBindingClient = new AmazonEventBridgeClient();
