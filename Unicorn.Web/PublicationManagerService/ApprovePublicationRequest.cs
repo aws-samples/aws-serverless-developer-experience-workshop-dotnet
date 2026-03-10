@@ -1,6 +1,8 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
+using System.Text.Json.Serialization;
+
 namespace Unicorn.Web.PublicationManagerService;
 
 /// <summary>
@@ -8,7 +10,8 @@ namespace Unicorn.Web.PublicationManagerService;
 /// </summary>
 [Serializable]
 public class ApprovePublicationRequest
-{ 
+{
+    [JsonPropertyName("property_id")]
     public string PropertyId { get; set; } = null!;
 }
 
