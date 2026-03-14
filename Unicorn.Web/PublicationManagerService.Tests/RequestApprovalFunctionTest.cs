@@ -91,6 +91,67 @@ public class RequestApprovalFunctionTest
     }
 
     [Fact]
+    public async Task Request_approval_with_snake_case_json_deserializes_property_id()
+    {
+        // Arrange - use snake_case JSON matching the actual API Gateway payload format
+        var snakeCaseJson = """
+            {
+                "property_id": "usa/anytown/main-street/777"
+            }
+            """;
+
+        var context = TestHelpers.NewLambdaContext();
+        var dynamoDbContext = Substitute.For<IDynamoDBContext>();
+        var eventBindingClient = Substitute.For<IAmazonEventBridge>();
+
+        var sqsEvent = new SQSEvent()
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    Body = snakeCaseJson
+                }
+            }
+        };
+
+        var searchResult = new List<PropertyRecord>
+        {
+            new()
+            {
+                Country = "USA",
+                City = "Anytown",
+                Street = "Main Street",
+                PropertyNumber = "777",
+                ListPrice = 2000000.00M,
+                Images = new() { "image1.jpg" },
+                Status = PropertyStatus.Pending
+            }
+        };
+
+        dynamoDbContext
+            .FromQueryAsync<PropertyRecord>(Arg.Any<Amazon.DynamoDBv2.DocumentModel.QueryOperationConfig>())
+            .Returns(TestHelpers.NewDynamoDBSearchResult(searchResult));
+
+        eventBindingClient.PutEventsAsync(Arg.Any<PutEventsRequest>(), Arg.Any<CancellationToken>())
+            .Returns(new PutEventsResponse { FailedEntryCount = 0 });
+
+        // Act
+        var function = new RequestApprovalFunction(dynamoDbContext, eventBindingClient);
+        await function.FunctionHandler(sqsEvent, context);
+
+        // Assert - verify the property_id was deserialized correctly and DynamoDB was queried
+        dynamoDbContext.Received(1)
+            .FromQueryAsync<PropertyRecord>(Arg.Any<Amazon.DynamoDBv2.DocumentModel.QueryOperationConfig>());
+
+        await eventBindingClient.Received(1)
+            .PutEventsAsync(
+                Arg.Is<PutEventsRequest>(r =>
+                    r.Entries.First().Resources.Contains("usa/anytown/main-street/777")),
+                Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Do_not_publish_event_when_property_status_is_approved()
     {
         // Arrange
@@ -152,6 +213,6 @@ public class RequestApprovalFunctionTest
 
 public class ApiGwSqsPayload
 {
+    [System.Text.Json.Serialization.JsonPropertyName("property_id")]
     public required string PropertyId { get; set; }
-    
 }

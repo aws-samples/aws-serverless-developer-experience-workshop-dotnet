@@ -57,7 +57,7 @@ public class ContractEventHandlerTest
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
         mockDynamoDbClient.PutItemAsync(Arg.Any<PutItemRequest>())
             .Returns(new PutItemResponse());
-        
+
         var context = TestHelpers.NewLambdaContext();
 
         // Act
@@ -66,7 +66,65 @@ public class ContractEventHandlerTest
 
         // Assert
         await mockDynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
-        
+
+    }
+
+    [Fact]
+    public async Task Create_contract_with_snake_case_json_populates_all_dynamodb_attributes()
+    {
+        // Arrange - use snake_case JSON matching the actual API Gateway payload format
+        var snakeCaseJson = """
+            {
+                "address": {
+                    "country": "USA",
+                    "city": "Anytown",
+                    "street": "Main Street",
+                    "number": 222
+                },
+                "seller_name": "John Doe",
+                "property_id": "usa/anytown/main-street/222"
+            }
+            """;
+
+        var sqsEvent = new SQSEvent()
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    Body = snakeCaseJson,
+                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
+                    {
+                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "POST" } }
+                    }
+                }
+            }
+        };
+
+        PutItemRequest? capturedRequest = null;
+        var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
+        mockDynamoDbClient.PutItemAsync(Arg.Do<PutItemRequest>(r => capturedRequest = r))
+            .Returns(new PutItemResponse());
+
+        var context = TestHelpers.NewLambdaContext();
+
+        // Act
+        var function = new ContractEventHandler(mockDynamoDbClient);
+        await function.FunctionHandler(sqsEvent, context);
+
+        // Assert - verify DynamoDB item has non-empty attribute values
+        Assert.NotNull(capturedRequest);
+        Assert.False(string.IsNullOrEmpty(capturedRequest.Item["PropertyId"].S),
+            "PropertyId should not be null or empty - snake_case 'property_id' must map to PascalCase 'PropertyId'");
+        Assert.False(string.IsNullOrEmpty(capturedRequest.Item["SellerName"].S),
+            "SellerName should not be null or empty - snake_case 'seller_name' must map to PascalCase 'SellerName'");
+        Assert.NotNull(capturedRequest.Item["Address"].M);
+        Assert.False(string.IsNullOrEmpty(capturedRequest.Item["Address"].M["City"].S),
+            "Address.City should not be null or empty");
+        Assert.False(string.IsNullOrEmpty(capturedRequest.Item["Address"].M["Street"].S),
+            "Address.Street should not be null or empty");
+        Assert.Equal("usa/anytown/main-street/222", capturedRequest.Item["PropertyId"].S);
+        Assert.Equal("John Doe", capturedRequest.Item["SellerName"].S);
     }
 
     [Fact]
