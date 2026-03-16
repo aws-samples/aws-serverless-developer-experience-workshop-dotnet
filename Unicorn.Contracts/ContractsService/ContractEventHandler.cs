@@ -164,7 +164,7 @@ public class ContractEventHandler
             Logger.LogInformation(response);
 
             // Add custom metric for "New Contracts"
-            Metrics.AddMetric("NewContracts", 1, MetricUnit.Count, MetricResolution.Standard);
+            Metrics.AddMetric("ContractCreated", 1, MetricUnit.Count, MetricResolution.Standard);
         }
         catch (ConditionalCheckFailedException e)
         {
@@ -222,8 +222,9 @@ public class ContractEventHandler
             };
 
             var response = await _dynamoDbClient.UpdateItemAsync(request);
-        
+
             Logger.LogInformation(response);
+            Metrics.AddMetric("ContractUpdated", 1, MetricUnit.Count, MetricResolution.Standard);
         }
         catch (ConditionalCheckFailedException e)
         {
