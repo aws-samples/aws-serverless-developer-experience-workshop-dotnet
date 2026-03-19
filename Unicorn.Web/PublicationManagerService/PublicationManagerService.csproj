@@ -13,7 +13,7 @@
         <PackageReference Include="Amazon.Lambda.CloudWatchEvents" Version="4.4.1" />
         <PackageReference Include="Amazon.Lambda.Core" Version="2.8.1" />
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.5" />
-        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.1.0" />
+        <PackageReference Include="AWS.Lambda.Powertools.Logging" Version="3.2.0" />
         <PackageReference Include="AWS.Lambda.Powertools.Metrics" Version="3.1.0" />
         <PackageReference Include="AWS.Lambda.Powertools.Tracing" Version="3.1.0" />
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.15" />
