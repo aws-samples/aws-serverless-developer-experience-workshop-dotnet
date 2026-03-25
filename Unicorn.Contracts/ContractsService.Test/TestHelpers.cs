@@ -46,6 +46,11 @@ public static class TestHelpers
         return sqsEvent;
     }
 
+    public static string LoadPayload(string filename)
+    {
+        return File.ReadAllText(filename);
+    }
+
     // This utility method takes care of removing the BOM that System.Text.Json doesn't like.
     public static MemoryStream LoadJsonTestFile(string filename)
     {

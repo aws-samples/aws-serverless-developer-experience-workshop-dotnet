@@ -1,0 +1,10 @@
+{
+    "Address": {
+        "Country": "USA",
+        "City": "Anytown",
+        "Street": "Main Street",
+        "Number": 111
+    },
+    "SellerName": "John Doe",
+    "PropertyId": "usa/anytown/main-street/111"
+}

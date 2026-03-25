@@ -3,12 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.SQSEvents;
-using FizzWare.NBuilder;
 using NSubstitute;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,35 +22,35 @@ public class ContractEventHandlerTest
     {
         _testOutputHelper = testOutputHelper;
 
-        // Set env variable for Powertools Metrics 
+        // Set env variable for Powertools Metrics
         Environment.SetEnvironmentVariable("DYNAMODB_TABLE", "uni-prop-local-contract-ContractsTable");
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "ContractService");
+    }
+
+    private static SQSEvent CreateSqsEvent(string body, string httpMethod)
+    {
+        return new SQSEvent
+        {
+            Records = new List<SQSEvent.SQSMessage>
+            {
+                new()
+                {
+                    Body = body,
+                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
+                    {
+                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = httpMethod } }
+                    }
+                }
+            }
+        };
     }
 
     [Fact]
     public async Task Create_contract_saves_message_with_new_status()
     {
         // Arrange
-        var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
-            .With(x => x.property_id = "usa/anytown/main-street/777")
-            .With(x => x.seller_name = "any seller")
-            .With(x => x.address = new address() { city = "anytown", number = 777, street = "main-street" })
-            .Build();
-
-        var sqsEvent = new SQSEvent()
-        {
-            Records = new List<SQSEvent.SQSMessage>
-            {
-                new()
-                {
-                    Body = JsonSerializer.Serialize(eventPayload),
-                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
-                    {
-                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "POST" } }
-                    }
-                }
-            }
-        };
+        var payload = TestHelpers.LoadPayload("./events/create_contract_valid_1.json");
+        var sqsEvent = CreateSqsEvent(payload, "POST");
 
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
         mockDynamoDbClient.PutItemAsync(Arg.Any<PutItemRequest>())
@@ -66,33 +64,14 @@ public class ContractEventHandlerTest
 
         // Assert
         await mockDynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
-
     }
 
     [Fact]
     public async Task Update_contract_saves_message_with_new_status()
     {
-        // Set up
-        var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
-            .With(x => x.property_id = "usa/anytown/main-street/111")
-            .With(x => x.seller_name = "any seller")
-            .With(x => x.address = new address() { city = "anytown", number = 111, street = "main-street" })
-            .Build();
-
-        var sqsEvent = new SQSEvent()
-        {
-            Records = new List<SQSEvent.SQSMessage>
-            {
-                new()
-                {
-                    Body = JsonSerializer.Serialize(eventPayload),
-                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
-                    {
-                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "PUT" } }
-                    }
-                }
-            }
-        };
+        // Arrange
+        var payload = TestHelpers.LoadPayload("./events/update_contract_valid_1.json");
+        var sqsEvent = CreateSqsEvent(payload, "PUT");
 
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
         mockDynamoDbClient.UpdateItemAsync(Arg.Any<UpdateItemRequest>())
@@ -100,7 +79,7 @@ public class ContractEventHandlerTest
 
         var context = TestHelpers.NewLambdaContext();
 
-        // Arrange
+        // Act
         var function = new ContractEventHandler(mockDynamoDbClient);
         await function.FunctionHandler(sqsEvent, context);
 
@@ -113,26 +92,8 @@ public class ContractEventHandlerTest
     public async Task Create_contract_already_exists_conditional_check_fails_does_not_throw()
     {
         // Arrange
-        var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
-            .With(x => x.property_id = "usa/anytown/main-street/888")
-            .With(x => x.seller_name = "existing seller")
-            .With(x => x.address = new address() { city = "anytown", number = 888, street = "main-street" })
-            .Build();
-
-        var sqsEvent = new SQSEvent()
-        {
-            Records = new List<SQSEvent.SQSMessage>
-            {
-                new()
-                {
-                    Body = JsonSerializer.Serialize(eventPayload),
-                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
-                    {
-                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "POST" } }
-                    }
-                }
-            }
-        };
+        var payload = TestHelpers.LoadPayload("./events/create_contract_valid_1.json");
+        var sqsEvent = CreateSqsEvent(payload, "POST");
 
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
         mockDynamoDbClient.PutItemAsync(Arg.Any<PutItemRequest>())
@@ -152,26 +113,8 @@ public class ContractEventHandlerTest
     public async Task Update_contract_not_in_draft_conditional_check_fails_does_not_throw()
     {
         // Arrange
-        var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
-            .With(x => x.property_id = "usa/anytown/main-street/999")
-            .With(x => x.seller_name = "any seller")
-            .With(x => x.address = new address() { city = "anytown", number = 999, street = "main-street" })
-            .Build();
-
-        var sqsEvent = new SQSEvent()
-        {
-            Records = new List<SQSEvent.SQSMessage>
-            {
-                new()
-                {
-                    Body = JsonSerializer.Serialize(eventPayload),
-                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
-                    {
-                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "PUT" } }
-                    }
-                }
-            }
-        };
+        var payload = TestHelpers.LoadPayload("./events/update_contract_valid_1.json");
+        var sqsEvent = CreateSqsEvent(payload, "PUT");
 
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
         mockDynamoDbClient.UpdateItemAsync(Arg.Any<UpdateItemRequest>())
@@ -191,26 +134,8 @@ public class ContractEventHandlerTest
     public async Task Invalid_http_method_does_not_call_dynamodb()
     {
         // Arrange
-        var eventPayload = Builder<ApiGwSqsPayload>.CreateNew()
-            .With(x => x.property_id = "usa/anytown/main-street/555")
-            .With(x => x.seller_name = "any seller")
-            .With(x => x.address = new address() { city = "anytown", number = 555, street = "main-street" })
-            .Build();
-
-        var sqsEvent = new SQSEvent()
-        {
-            Records = new List<SQSEvent.SQSMessage>
-            {
-                new()
-                {
-                    Body = JsonSerializer.Serialize(eventPayload),
-                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
-                    {
-                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "DELETE" } }
-                    }
-                }
-            }
-        };
+        var payload = TestHelpers.LoadPayload("./events/create_contract_valid_1.json");
+        var sqsEvent = CreateSqsEvent(payload, "DELETE");
 
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
         var context = TestHelpers.NewLambdaContext();
@@ -228,20 +153,7 @@ public class ContractEventHandlerTest
     public async Task Malformed_sqs_body_throws_exception()
     {
         // Arrange
-        var sqsEvent = new SQSEvent()
-        {
-            Records = new List<SQSEvent.SQSMessage>
-            {
-                new()
-                {
-                    Body = "this is not valid json {{{",
-                    MessageAttributes = new Dictionary<string, SQSEvent.MessageAttribute>
-                    {
-                        { "HttpMethod", new SQSEvent.MessageAttribute { StringValue = "POST" } }
-                    }
-                }
-            }
-        };
+        var sqsEvent = CreateSqsEvent("this is not valid json {{{", "POST");
 
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
         var context = TestHelpers.NewLambdaContext();
@@ -250,19 +162,4 @@ public class ContractEventHandlerTest
         var function = new ContractEventHandler(mockDynamoDbClient);
         await Assert.ThrowsAsync<System.Text.Json.JsonException>(() => function.FunctionHandler(sqsEvent, context));
     }
-}
-
-public class ApiGwSqsPayload
-{
-    public required string property_id { get; set; }
-    public required address address { get; set; }
-    public required string seller_name { get; set; }
-}
-
-public class address
-{
-    public int number { get; set; }
-    public string? street { get; set; }
-    public string? city { get; set; }
-    public string country { get; } = "USA";
 }
