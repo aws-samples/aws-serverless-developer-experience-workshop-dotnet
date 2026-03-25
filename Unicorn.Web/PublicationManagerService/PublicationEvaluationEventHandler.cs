@@ -43,6 +43,15 @@ public class PublicationEvaluationEventHandler
     }
 
     /// <summary>
+    /// Testing constructor for PublicationEvaluationEventHandler
+    /// </summary>
+    /// <param name="dynamoDbContext">DynamoDB context</param>
+    public PublicationEvaluationEventHandler(IDynamoDBContext dynamoDbContext)
+    {
+        _dynamoDbContext = dynamoDbContext;
+    }
+
+    /// <summary>
     /// Event handler for PublicationApprovedEvent
     /// </summary>
     /// <param name="publicationApprovedEvent">EventBridge event that triggers this function</param>
