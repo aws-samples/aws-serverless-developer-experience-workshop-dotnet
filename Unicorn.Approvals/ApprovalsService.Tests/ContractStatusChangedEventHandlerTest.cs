@@ -5,7 +5,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
-using Amazon.Lambda.CloudWatchEvents;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -34,16 +33,7 @@ public class ContractStatusChangedEventHandlerTest
         mockDynamoDbContext.SaveAsync(Arg.Any<ContractStatusChangedEvent>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var cloudWatchEvent = new CloudWatchEvent<ContractStatusChangedEvent>
-        {
-            Detail = new ContractStatusChangedEvent
-            {
-                PropertyId = "usa/anytown/main-street/111",
-                ContractId = Guid.NewGuid(),
-                ContractStatus = "DRAFT",
-                ContractLastModifiedOn = DateTime.Today
-            }
-        };
+        var cloudWatchEvent = TestHelpers.NewContractStatusChangedEvent("usa/anytown/main-street/111", "DRAFT");
 
         var context = TestHelpers.NewLambdaContext();
 
@@ -66,16 +56,8 @@ public class ContractStatusChangedEventHandlerTest
         mockDynamoDbContext.SaveAsync(Arg.Any<ContractStatusChangedEvent>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid event data"));
 
-        var cloudWatchEvent = new CloudWatchEvent<ContractStatusChangedEvent>
-        {
-            Detail = new ContractStatusChangedEvent
-            {
-                PropertyId = "",
-                ContractId = Guid.Empty,
-                ContractStatus = "",
-                ContractLastModifiedOn = DateTime.MinValue
-            }
-        };
+        var cloudWatchEvent = TestHelpers.NewContractStatusChangedEvent(
+            "", "", contractId: Guid.Empty, contractLastModifiedOn: DateTime.MinValue);
 
         var context = TestHelpers.NewLambdaContext();
 
@@ -93,16 +75,7 @@ public class ContractStatusChangedEventHandlerTest
         mockDynamoDbContext.SaveAsync(Arg.Any<ContractStatusChangedEvent>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("DynamoDB service unavailable"));
 
-        var cloudWatchEvent = new CloudWatchEvent<ContractStatusChangedEvent>
-        {
-            Detail = new ContractStatusChangedEvent
-            {
-                PropertyId = "usa/anytown/main-street/222",
-                ContractId = Guid.NewGuid(),
-                ContractStatus = "APPROVED",
-                ContractLastModifiedOn = DateTime.Today
-            }
-        };
+        var cloudWatchEvent = TestHelpers.NewContractStatusChangedEvent("usa/anytown/main-street/222", "APPROVED");
 
         var context = TestHelpers.NewLambdaContext();
 

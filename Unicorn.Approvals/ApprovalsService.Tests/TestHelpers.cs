@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Amazon.Lambda.CloudWatchEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.DynamoDBEvents;
 using Amazon.Lambda.Serialization.SystemTextJson;
@@ -13,6 +14,36 @@ namespace Unicorn.Approvals.ApprovalsService.Tests;
 
 public static class TestHelpers
 {
+    /// <summary>
+    /// Builds a CloudWatchEvent wrapping a ContractStatusChangedEvent detail for ContractStatusChangedEventHandler tests
+    /// </summary>
+    public static CloudWatchEvent<ContractStatusChangedEvent> NewContractStatusChangedEvent(
+        string propertyId, string contractStatus, Guid? contractId = null, DateTime? contractLastModifiedOn = null)
+    {
+        return new CloudWatchEvent<ContractStatusChangedEvent>
+        {
+            Detail = new ContractStatusChangedEvent
+            {
+                PropertyId = propertyId,
+                ContractId = contractId ?? Guid.NewGuid(),
+                ContractStatus = contractStatus,
+                ContractLastModifiedOn = contractLastModifiedOn ?? DateTime.Today
+            }
+        };
+    }
+
+    /// <summary>
+    /// Builds the Step Functions task-token input payload for WaitForContractApprovalFunction tests
+    /// </summary>
+    public static object NewWaitForContractApprovalInput(string propertyId, string taskToken)
+    {
+        return new
+        {
+            Input = new { PropertyId = propertyId },
+            TaskToken = taskToken
+        };
+    }
+
     public static DynamoDBEvent LoadDynamoDbEventSource(string filename)
     {
         var serializer = Activator.CreateInstance(typeof(DefaultLambdaJsonSerializer)) as ILambdaSerializer;

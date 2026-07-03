@@ -27,18 +27,6 @@
         <ProjectReference Include="..\ApprovalsService\ApprovalsService.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <None Update="events\DynamoDbStreamEvents\contract_status_changed_draft.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="events\DynamoDbStreamEvents\contract_status_draft_waiting_for_approval.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="events\DynamoDbStreamEvents\contract_status_changed_approved_waiting_for_approval.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="events\DynamoDbStreamEvents\contract_status_changed_approved.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
       <None Update="events\StreamEvents\contract_status_changed_approved.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>

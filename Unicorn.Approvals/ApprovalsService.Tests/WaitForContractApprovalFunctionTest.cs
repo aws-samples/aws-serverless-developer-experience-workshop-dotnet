@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT-0
 
 using System;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2.DataModel;
@@ -49,11 +48,7 @@ public class WaitForContractApprovalFunctionTest
         mockDynamoDbContext.SaveAsync(Arg.Any<ContractStatusItem>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
-        var input = new
-        {
-            Input = new { PropertyId = propertyId },
-            TaskToken = taskToken
-        };
+        var input = TestHelpers.NewWaitForContractApprovalInput(propertyId, taskToken);
 
         var context = TestHelpers.NewLambdaContext();
 
@@ -79,11 +74,7 @@ public class WaitForContractApprovalFunctionTest
         mockDynamoDbContext.LoadAsync<ContractStatusItem>(Arg.Is(propertyId), Arg.Any<CancellationToken>())
             .Returns((ContractStatusItem?)null);
 
-        var input = new
-        {
-            Input = new { PropertyId = propertyId },
-            TaskToken = taskToken
-        };
+        var input = TestHelpers.NewWaitForContractApprovalInput(propertyId, taskToken);
 
         var context = TestHelpers.NewLambdaContext();
 
@@ -116,11 +107,7 @@ public class WaitForContractApprovalFunctionTest
         mockDynamoDbContext.SaveAsync(Arg.Any<ContractStatusItem>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("DynamoDB save failed"));
 
-        var input = new
-        {
-            Input = new { PropertyId = propertyId },
-            TaskToken = taskToken
-        };
+        var input = TestHelpers.NewWaitForContractApprovalInput(propertyId, taskToken);
 
         var context = TestHelpers.NewLambdaContext();
 
