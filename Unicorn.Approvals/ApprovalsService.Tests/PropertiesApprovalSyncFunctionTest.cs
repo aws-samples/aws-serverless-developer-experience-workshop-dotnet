@@ -105,42 +105,6 @@ public class PropertiesApprovalSyncFunctionTest
 
 
     [Fact]
-    public Task StatusIsDraftWithTokenSyncShouldNotSendTaskSuccess()
-    {
-        var ddbEvent =
-            TestHelpers.LoadDynamoDbEventSource(
-                "./events/StreamEvents/contract_status_draft_waiting_for_approval.json");
-
-        var mockDynamoDbContext = Substitute.For<IDynamoDBContext>();
-        
-        mockDynamoDbContext.LoadAsync<ContractStatusItem>(Arg.Any<string>(), CancellationToken.None)
-            .Returns(new ContractStatusItem
-            {
-                PropertyId = "usa/anytown/main-street/999",
-                ContractId = Guid.NewGuid(),
-                ContractStatus = "DRAFT",
-                ContractLastModifiedOn = DateTime.Today,
-                SfnWaitApprovedTaskToken = Token
-            });
-
-        var mockStepFunctionsClient = Substitute.ForPartsOf<AmazonStepFunctionsClient>();
-
-        var context = TestHelpers.NewLambdaContext();
-
-        var function =
-            new PropertiesApprovalSyncFunction(mockStepFunctionsClient, mockDynamoDbContext);
-
-        var handler = function.FunctionHandler(ddbEvent, context);
-
-        mockStepFunctionsClient.Received(0).
-            SendTaskSuccessAsync(Arg.Any<SendTaskSuccessRequest>(),
-                Arg.Any<CancellationToken>());
-
-        return Task.CompletedTask;
-    }
-
-
-    [Fact]
     public Task StatusIsApprovedWithTokenSyncShouldSendTaskSuccess()
     {
         var ddbEvent =
@@ -149,7 +113,7 @@ public class PropertiesApprovalSyncFunctionTest
 
         var mockStepFunctionsClient = Substitute.ForPartsOf<AmazonStepFunctionsClient>();
         var mockDynamoDbContext = Substitute.For<IDynamoDBContext>();
-        
+
         mockDynamoDbContext.LoadAsync<ContractStatusItem>(Arg.Any<string>(), Arg.Is(CancellationToken.None))
             .Returns(new ContractStatusItem
             {
@@ -170,5 +134,32 @@ public class PropertiesApprovalSyncFunctionTest
                 Arg.Any<CancellationToken>());
 
         return Task.CompletedTask;
+    }
+
+
+    [Fact]
+    public async Task MissingNewImageShouldNotSendTaskSuccess()
+    {
+        var ddbEvent =
+            TestHelpers.LoadDynamoDbEventSource(
+                "./events/StreamEvents/contract_status_missing_new_image.json");
+
+        var mockStepFunctionsClient = Substitute.ForPartsOf<AmazonStepFunctionsClient>();
+        var mockDynamoDbContext = Substitute.For<IDynamoDBContext>();
+
+        mockDynamoDbContext.LoadAsync<ContractStatusItem>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((ContractStatusItem)null);
+
+        var context = TestHelpers.NewLambdaContext();
+
+        var function =
+            new PropertiesApprovalSyncFunction(mockStepFunctionsClient, mockDynamoDbContext);
+
+        await Assert.ThrowsAsync<ContractStatusNotFoundException>(
+            () => function.FunctionHandler(ddbEvent, context));
+
+        mockStepFunctionsClient.Received(0).
+            SendTaskSuccessAsync(Arg.Any<SendTaskSuccessRequest>(),
+                Arg.Any<CancellationToken>());
     }
 }
