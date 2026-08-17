@@ -88,7 +88,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "schema-registry", "schema-r
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "state-machine", "state-machine", "{75A45C07-77AA-4F7F-B8E3-6AFEA2BEB52E}"
 	ProjectSection(SolutionItems) = preProject
-		Unicorn.Approvals\Infrastructure\state-machine\PropertyApproval.asl.yaml = Unicorn.Approvals\Infrastructure\state-machine\PropertyApproval.asl.yaml
+		Unicorn.Approvals\Infrastructure\approvals-service\PropertyApproval.asl.json = Unicorn.Approvals\Infrastructure\approvals-service\PropertyApproval.asl.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "subscriptions", "subscriptions", "{7B698F10-D933-4965-808E-24F69E7C9165}"

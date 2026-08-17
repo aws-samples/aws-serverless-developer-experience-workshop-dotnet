@@ -4,35 +4,91 @@
 
 <img src="./docs/workshop_logo.png" alt="AWS Serverless Developer Experience Workshop Reference Architecture" width="80%" />
 
-This repository contains the .NET reference architecture for the AWS Serverless Developer Experience workshop.
+This repository contains the .NET 10 reference architecture for the AWS Serverless Developer Experience workshop. Unicorn Properties is a serverless, event-driven real-estate system built from three services:
 
-The AWS Serverless Developer Experience Workshop is a comprehensive, hands-on training program designed to equip developers with practical serverless development skills using the [**AWS Serverless Application Model (AWS SAM)**](https://aws.amazon.com/serverless/sam/) and **AWS SAM CLI**.
-
-The workshop employs a practical, code-centric approach, emphasizing direct implementation and real-world scenario exploration to ensure you develop serverless development skills across several critical areas including distributed event-driven architectures, messaging patterns, orchestration, and observability. You will explore open-source tools, [Powertools for AWS](https://powertools.aws.dev/), and simplified CI/CD deployments with AWS SAM Pipelines. By the end, you will be familiar with serverless developer workflows, microservice composition using AWS SAM, serverless development best practices, and applied event-driven architectures.
-
-The 6-8 hour workshop assumes your practical development skills in Python, TypeScript, Java, or .NET, and familiarity with [Amazon API Gateway](https://aws.amazon.com/apigateway/), [AWS Lambda](https://aws.amazon.com/lambda/), [Amazon EventBridge](https://aws.amazon.com/eventbridge/), [AWS Step Functions](https://aws.amazon.com/step-functions/), and [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
-
-## Introducing the Unicorn Properties architecture
+- [Unicorn Contracts](Unicorn.Contracts/README.md) manages seller contracts and publishes contract status changes.
+- [Unicorn Approvals](Unicorn.Approvals/README.md) evaluates listings with an AWS Step Functions workflow.
+- [Unicorn Web](Unicorn.Web/README.md) manages property listings, approval requests, and public search.
+- [Unicorn Shared](Unicorn.Shared/README.md) owns account/Region and cross-service shared infrastructure.
 
 ![AWS Serverless Developer Experience Workshop Reference Architecture](./docs/architecture.png)
 
-Real estate company **Unicorn Properties** needs to manage publishing of new property listings and sale contracts linked to individual properties, and provide a way for customers to view approved listings. They adopted a serverless, event-driven architecture with two primary domains: **Contracts** (managed by the Contracts Service) and **Properties** (managed by the Web and Approvals Services).
+## Infrastructure ownership
 
-**Unicorn Contracts** (using the `Unicorn.Contracts` namespace) service manages contractual relationships between property sellers and Unicorn Approvals, defining properties for sale, terms, and engagement costs.
+Terraform is the sole deployment and state owner. AWS SAM is limited to build and local testing of Terraform-defined Lambda functions through the native Terraform hook:
 
-**Unicorn Approvals** (using the `Unicorn.Approvals` namespace) service approves property listings by implementing a workflow that checks for contract existence, content and image safety, and contract approval before publishing.
+```bash
+sam build --hook-name terraform
+sam local invoke --hook-name terraform <terraform-resource-address> --skip-prepare-infra
+```
 
-**Unicorn Web** (using the `Unicorn.Web` namespace) manages property listing details (address, sale price, description, photos) to be published on the website, with only approved listings visible to the public.
+The service Makefiles set the required Terraform variables and expose these as `make build` and `make local-invoke`. SAM does not own infrastructure state.
 
-## Credits
+## Fifteen independent Terraform roots
 
-This workshop introduces you to some open-source tools that can help you build serverless applications. This is not an exhaustive list, but a small selection of what you will be using in the workshop.
+Each directory below is an independent root with its own backend key and committed `.terraform.lock.hcl`:
 
-Many thanks to all the AWS teams and community builders who have contributed to this list:
+| Owner     | Terraform root                                                                    | Responsibility                                                                            |
+| --------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Contracts | `Unicorn.Contracts/Infrastructure/domain`                                         | Contracts event bus, policies, forwarding role, logging, schema registry, and SSM exports |
+| Contracts | `Unicorn.Contracts/Infrastructure/contracts-service`                              | Contracts API, queue, Lambda, DynamoDB, pipe, IAM, and logs                               |
+| Contracts | `Unicorn.Contracts/Infrastructure/schema-registry/ContractStatusChanged`          | `ContractStatusChanged` schema                                                            |
+| Approvals | `Unicorn.Approvals/Infrastructure/domain`                                         | Approvals event bus, policies, forwarding role, logging, schema registry, and SSM exports |
+| Approvals | `Unicorn.Approvals/Infrastructure/approvals-service`                              | Approval Lambdas, DynamoDB, Step Functions, IAM, queues, and logs                         |
+| Approvals | `Unicorn.Approvals/Infrastructure/schema-registry/PublicationEvaluationCompleted` | `PublicationEvaluationCompleted` schema                                                   |
+| Approvals | `Unicorn.Approvals/Infrastructure/subscriptions/unicorn-contracts`                | Consumer-owned Contracts-to-Approvals forwarding rule                                     |
+| Approvals | `Unicorn.Approvals/Infrastructure/subscriptions/unicorn-web`                      | Consumer-owned Web-to-Approvals forwarding rule                                           |
+| Web       | `Unicorn.Web/Infrastructure/domain`                                               | Web event bus, policies, forwarding role, logging, schema registry, and SSM exports       |
+| Web       | `Unicorn.Web/Infrastructure/web-service`                                          | Web API, Lambdas, DynamoDB, queues, IAM, and logs                                         |
+| Web       | `Unicorn.Web/Infrastructure/schema-registry/PublicationApprovalRequested`         | `PublicationApprovalRequested` schema                                                     |
+| Web       | `Unicorn.Web/Infrastructure/subscriptions/approvals`                              | Consumer-owned Approvals-to-Web forwarding rule                                           |
+| Shared    | `Unicorn.Shared/Infrastructure/api-gateway-account`                               | Sole account/Region owner of API Gateway account logging configuration                    |
+| Shared    | `Unicorn.Shared/Infrastructure/namespaces`                                        | Global service namespace SSM parameters                                                   |
+| Shared    | `Unicorn.Shared/Infrastructure/uniprop-images`                                    | Stage-scoped shared image bucket and initialization resources                             |
 
-| Tools                    | Description                                                                                                                        | Download / Installation Instructions           |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| cfn-lint                 | Validate AWS CloudFormation yaml/json templates against the AWS CloudFormation Resource Specification and additional checks.       | https://github.com/aws-cloudformation/cfn-lint |
-| cfn-lint-serverless      | Compilation of rules to validate infrastructure-as-code templates against recommended practices for serverless applications.       | https://github.com/awslabs/serverless-rules    |
-| @mhlabs/iam-policies-cli | CLI for generating AWS IAM policy documents or SAM policy templates based on the JSON definition used in the AWS Policy Generator. | https://github.com/mhlabs/iam-policies-cli     |
-| @mhlabs/evb-cli          | Pattern generator and debugging tool for Amazon EventBridge                                                                        | https://github.com/mhlabs/evb-cli              |
+The boundaries are intentional: domain, workload, schema, subscription, and singleton resources have different lifecycles and access responsibilities. Separate state limits blast radius, prevents accidental co-ownership, and lets consuming services own their forwarding rules. Roots integrate through explicit SSM operational contracts rather than Terraform remote-state coupling.
+
+## Operational contracts and order
+
+Shared infrastructure publishes the global namespace parameters:
+
+- `/uni-prop/UnicornContractsNamespace`
+- `/uni-prop/UnicornApprovalsNamespace`
+- `/uni-prop/UnicornWebNamespace`
+
+Each domain publishes stage-scoped `EventBus`, `EventBusArn`, `SchemaRegistryName`, and `EventBridgeRoleArn` parameters under `/uni-prop/${stage}/`. Shared images publishes `/uni-prop/${stage}/ImagesBucket`. These external SSM parameters are intentional runtime and deployment contracts; renaming or removing one is a cross-root breaking change.
+
+Use this dependency order:
+
+1. Bootstrap the remote state bucket and lock table once with `make ensure-state-backend` from a service directory.
+2. Apply Shared API Gateway account logging and namespaces, then the image root for each required stage.
+3. Apply Contracts, Approvals, and Web domain roots.
+4. Apply each service schema and workload root.
+5. Apply subscription roots only after both source and destination domains exist.
+
+Destroy in reverse order. The Shared API Gateway account root is an account/Region singleton and is deliberately excluded from the aggregate Shared delete target.
+
+## Developer workflow
+
+Service Makefiles provide `init`, `plan`, `deploy`, `build`, `local-invoke`, `test`, `lint`, `clean`, and reverse-order `delete`, plus component-specific variants. Shared provides component-specific `init`, `plan`, `deploy`, `describe`, and delete targets.
+
+```bash
+make plan STAGE=local
+make deploy STAGE=dev
+
+# Build and invoke a Terraform-defined Lambda locally
+make build STAGE=local
+make local-invoke STAGE=local
+```
+
+Supported stages are `local`, `dev`, and `prod`. For a production root, `make plan STAGE=prod` writes `.terraform/prod.tfplan`. Review that saved plan immediately, then apply that exact plan with `CONFIRM_PROD=APPLY`; production deletion requires `CONFIRM_PROD=DESTROY`. Do not reuse a stale saved plan. Shared singleton roots are not stage-scoped; the production saved-plan gate applies to the Shared images root when `stage=prod`.
+
+Lambda archives are produced by [`scripts/package_dotnet_lambda.py`](scripts/package_dotnet_lambda.py), which publishes in Release mode and creates deterministic ZIP files using sorted entries, fixed timestamps, normalized permissions, maximum compression, and atomic replacement. Keep every root's `.terraform.lock.hcl` committed.
+
+Validate all roots from the repository root:
+
+```bash
+python3 scripts/validate_infrastructure.py
+```
+
+The validator checks the exact 15-root inventory, formatting, root validity, provider and lock-file conventions, singleton ownership, SAM metadata parity, production protections, SSM contracts, and PascalCase event schemas. It initializes providers with backends disabled and does not apply infrastructure.

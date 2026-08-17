@@ -17,6 +17,7 @@ project.lock.json
 
 ### SAM ###
 **/.aws-sam/
+**/.aws-sam-iacs/
 
 ### CDK ###
 **/cdk.out/

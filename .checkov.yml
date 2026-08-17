@@ -1,0 +1,25 @@
+# This repository is a workshop reference architecture, not a production baseline.
+# Keep no-cost safety controls in Terraform and document intentional exceptions
+# for controls that add production-only services, keys, networking, or cost.
+skip-check:
+  - CKV2_AWS_29  # WAF is intentionally outside the workshop API scope.
+  - CKV2_AWS_34  # SSM parameters contain non-sensitive names and ARNs, not secrets.
+  - CKV2_AWS_51  # Public workshop APIs do not use API Gateway client certificates.
+  - CKV2_AWS_61  # Image lifecycle policy is a workload-specific retention decision.
+  - CKV2_AWS_62  # The shared image bucket is not an event-notification source.
+  - CKV_AWS_18   # A dedicated S3 access-log bucket is outside workshop scope.
+  - CKV_AWS_21   # Versioning is enabled for prod and suspended for local/dev ergonomics.
+  - CKV_AWS_115  # Reserved concurrency requires workload-specific capacity decisions.
+  - CKV_AWS_116  # Event sources and async invoke configs own failure destinations.
+  - CKV_AWS_117  # These managed-service Lambdas do not require VPC-only resources.
+  - CKV_AWS_119  # DynamoDB AWS-owned encryption is sufficient for sample data.
+  - CKV_AWS_120  # API caching adds cost and changes workshop request behavior.
+  - CKV_AWS_144  # Cross-Region replication is outside the single-Region workshop.
+  - CKV_AWS_145  # S3 AES256 encryption is intentional; a customer key is not required.
+  - CKV_AWS_158  # Customer-managed encryption for log groups is outside workshop scope.
+  - CKV_AWS_173  # Lambda environment values contain identifiers, not secrets.
+  - CKV_AWS_225  # API method caching adds cost and changes workshop request behavior.
+  - CKV_AWS_272  # Lambda code-signing infrastructure is outside workshop scope.
+  - CKV_AWS_285  # Logging is enabled; Checkov cannot evaluate the stage expression.
+  - CKV_AWS_338  # Short log retention is intentional for workshop cost control.
+  - CKV_AWS_355  # Comprehend, Rekognition, and log-delivery actions require wildcard scope.

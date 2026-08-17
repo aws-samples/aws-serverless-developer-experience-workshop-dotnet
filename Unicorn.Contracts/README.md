@@ -2,24 +2,21 @@
 
 ![Contracts Service Architecture](https://static.us-east-1.prod.workshops.aws/public/f273b5fc-17cd-406b-9e63-1d331b00589d/static/images/architecture-contracts.png)
 
-## Architecture overview
+## Architecture
 
-The **Unicorn Contracts** service manages contractual relationships between customers and Unicorn Properties agency. The service handles standard terms and conditions, property service rates, fees, and additional services.
+Unicorn Contracts manages contractual relationships between property sellers and Unicorn Properties, including terms, service rates, fees, and additional services. A property address is its cross-service identifier, for example `usa/anytown/main-street/111`, and each property can have only one active contract.
 
-Each property can have only one active contract. Properties use their address as a unique identifier instead of a GUID, which correlates across services.
+1. Agents submit create or update requests through API Gateway.
+2. API Gateway sends requests to Amazon SQS.
+3. the Contracts Lambda updates Amazon DynamoDB.
+4. DynamoDB Streams and EventBridge Pipes publish `ContractStatusChanged` to the Contracts event bus.
+5. Unicorn Approvals consumes the event without direct access to the Contracts table.
 
-For example: `usa/anytown/main-street/111`.
+The Lambda project targets .NET 10. Terraform is the sole deployment and state owner; AWS SAM is used only through its Terraform hook for build and local invocation. See [Infrastructure](Infrastructure/README.md) for root ownership and dependencies.
 
-The contract workflow operates as follows:
+## Event contract
 
-1. Agents submit contract creation/update commands through the Contracts API
-1. The API sends requests to Amazon SQS
-1. A Contracts function processes the queue messages and updates Amazon DynamoDB
-1. DynamoDB Streams captures contract changes
-1. Amazon EventBridge Pipes transforms the DynamoDB records into ContractStatusChanged events
-1. Unicorn Approvals consumes these events to track contract changes without direct database dependencies
-
-An example of `ContractStatusChanged` event:
+Event `detail` fields use .NET-style PascalCase. The canonical `ContractStatusChanged` shape is:
 
 ```json
 {
@@ -32,34 +29,28 @@ An example of `ContractStatusChanged` event:
   "id": "c071bfbf-83c4-49ca-a6ff-3df053957145",
   "resources": [],
   "detail": {
-    "contract_updated_on": "10/08/2022 19:56:30",
-    "ContractId": "617dda8c-e79b-406a-bc5b-3a4712f5e4d7",
     "PropertyId": "usa/anytown/main-street/111",
-    "ContractStatus": "DRAFT"
+    "ContractId": "617dda8c-e79b-406a-bc5b-3a4712f5e4d7",
+    "ContractStatus": "DRAFT",
+    "ContractLastModifiedOn": "2022-08-14T22:06:31Z"
   }
 }
 ```
 
-### Testing the APIs
+`PropertyId`, `ContractId`, `ContractStatus`, and `ContractLastModifiedOn` are required. The Terraform schema at [`Infrastructure/schema-registry/ContractStatusChanged`](Infrastructure/schema-registry/ContractStatusChanged/) is authoritative.
+
+## Commands
+
+Run commands from `Unicorn.Contracts`:
 
 ```bash
-export API=`aws cloudformation describe-stacks --stack-name uni-prop-local-contract --query "Stacks[0].Outputs[?OutputKey=='ApiUrl'].OutputValue" --output text`
-
-curl --location --request POST "${API}contract" \
---header 'Content-Type: application/json' \
---data-raw '{
-"address": {
-"country": "USA",
-"city": "Anytown",
-"street": "Main Street",
-"number": 111
-},
-"seller_name": "John Doe",
-"property_id": "usa/anytown/main-street/111"
-}'
-
-
-curl --location --request PUT "${API}contract" \
---header 'Content-Type: application/json' \
---data-raw '{"property_id": "usa/anytown/main-street/111"}' | jq
+make test
+make build STAGE=local
+make local-invoke STAGE=local
+make plan STAGE=local
+make deploy STAGE=dev
 ```
+
+`make build` runs `sam build --hook-name terraform` in `Infrastructure/contracts-service`. `make local-invoke` runs `sam local invoke --hook-name terraform aws_lambda_function.contract_event_handler --skip-prepare-infra`; override the address with `FUNCTION=...`.
+
+For `prod`, first run and review `make plan STAGE=prod`, which saves one plan per root at `.terraform/prod.tfplan`. Apply only that reviewed plan with `make deploy STAGE=prod CONFIRM_PROD=APPLY`. Production deletion requires `CONFIRM_PROD=DESTROY`.

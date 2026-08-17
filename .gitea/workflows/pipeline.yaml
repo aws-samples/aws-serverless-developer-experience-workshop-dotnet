@@ -1,618 +1,400 @@
-name: Unicorn Properties Build Pipeline
+name: Unicorn Properties Terraform Pipeline
+
 on:
   push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Deployment stage; ignored by account-global Shared targets
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - prod
+      deployment_target:
+        description: Deploy one root at a time in the listed dependency order
+        required: true
+        default: contracts-domain
+        type: choice
+        options:
+          - shared-namespaces
+          - shared-images
+          - contracts-domain
+          - approvals-domain
+          - web-domain
+          - contracts-schema
+          - approvals-schema
+          - web-schema
+          - contracts-service
+          - approvals-service
+          - web-service
+          - approvals-contracts-subscriptions
+          - approvals-web-subscriptions
+          - web-approvals-subscriptions
+          - shared-api-gateway-account
+      region:
+        description: AWS region
+        required: true
+        default: ap-southeast-2
+        type: string
+      terraform_state_bucket:
+        description: Pre-provisioned Terraform state bucket accessible to the runner role
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
 jobs:
-  changes:
+  validate:
+    name: Validate solution and Terraform roots
     runs-on: ubuntu-latest
-    outputs:
-      unicorn_contracts: ${{ steps.filter.outputs.unicorn_contracts }}
-      unicorn_contracts_domain: ${{ steps.filter.outputs.unicorn_contracts_domain }}
-      unicorn_contracts_service: ${{ steps.filter.outputs.unicorn_contracts_service }}
-      unicorn_contracts_schema_contractstatuschanged: ${{ steps.filter.outputs.unicorn_contracts_schema_contractstatuschanged }}
-
-      unicorn_approvals: ${{ steps.filter.outputs.unicorn_approvals }}
-      unicorn_approvals_domain: ${{ steps.filter.outputs.unicorn_approvals_domain }}
-      unicorn_approvals_service: ${{ steps.filter.outputs.unicorn_approvals_service }}
-      unicorn_approvals_schema_publicationevaluationcompleted: ${{ steps.filter.outputs.unicorn_approvals_schema_publicationevaluationcompleted }}
-      unicorn_approvals_subscriptions-contracts: ${{ steps.filter.outputs.unicorn_approvals_subscriptions-contracts }}
-      unicorn_approvals_subscriptions-web: ${{ steps.filter.outputs.unicorn_approvals_subscriptions-web }}
-
-      unicorn_web: ${{ steps.filter.outputs.unicorn_web }}
-      unicorn_web_domain: ${{ steps.filter.outputs.unicorn_web_domain }}
-      unicorn_web_service: ${{ steps.filter.outputs.unicorn_web_service }}
-      unicorn_web_schema_publicationapprovalrequested: ${{ steps.filter.outputs.unicorn_web_schema_publicationapprovalrequested }}
-      unicorn_web_subscriptions-approvals: ${{ steps.filter.outputs.unicorn_web_subscriptions-approvals }}
+    env:
+      PYTHON_VERSION: "3.12"
+      DOTNET_VERSION: "10.0.x"
     steps:
       - uses: actions/checkout@v5
-      - uses: dorny/paths-filter@v3
-        id: filter
+
+      # This general runner must not expose AWS deployment credentials. Native
+      # SAM Terraform-hook builds are intentionally absent from PR validation.
+      - name: Configure .NET, Python, AWS SAM, and validation tools
+        uses: ./.gitea/actions/configure
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Test solution
+        run: dotnet test UnicornProperties.sln --configuration Release
+
+      - name: Validate all 15 Terraform roots with backends disabled
+        run: python3 scripts/validate_infrastructure.py
+
+  deployment_plan:
+    name: Plan manual deployment
+    if: ${{ gitea.event_name == 'workflow_dispatch' }}
+    needs: validate
+    # Register a dedicated runner with read/plan-only, stage-scoped AWS access.
+    # It must not be available to push or pull-request validation jobs.
+    runs-on: [self-hosted, deployment-plan]
+    env:
+      PYTHON_VERSION: "3.12"
+      DOTNET_VERSION: "10.0.x"
+      TF_IN_AUTOMATION: "true"
+      STAGE: ${{ inputs.stage }}
+      DEPLOYMENT_TARGET: ${{ inputs.deployment_target }}
+      REGION: ${{ inputs.region }}
+      TERRAFORM_STATE_BUCKET: ${{ inputs.terraform_state_bucket }}
+    steps:
+      - uses: actions/checkout@v5
+
+      # The runner supplies least-privilege credentials. Terraform initialization,
+      # data sources, and native SAM Terraform-hook builds read AWS SSM parameters.
+      - name: Configure .NET, Python, AWS CLI, and AWS SAM
+        uses: ./.gitea/actions/configure
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Plan selected Terraform root
+        shell: bash
+        run: |
+          set -euo pipefail
+          make_target() {
+            # Skip the Makefile's backend bootstrap recipe. CI requires a
+            # pre-provisioned state backend and fails closed when it is absent.
+            make -C "$1" -o ensure-state-backend "$2" \
+              STAGE="$STAGE" \
+              REGION="$REGION" \
+              TERRAFORM_STATE_BUCKET="$TERRAFORM_STATE_BUCKET"
+          }
+
+          case "$DEPLOYMENT_TARGET" in
+            shared-namespaces)
+              make_target Unicorn.Shared plan-namespaces
+              ;;
+            shared-images)
+              # Plan only the selected stage; never fan out across image stages.
+              make_target Unicorn.Shared "plan-images-$STAGE"
+              ;;
+            contracts-domain)
+              make_target Unicorn.Contracts plan-domain
+              ;;
+            approvals-domain)
+              make_target Unicorn.Approvals plan-domain
+              ;;
+            web-domain)
+              make_target Unicorn.Web plan-domain
+              ;;
+            contracts-schema)
+              make_target Unicorn.Contracts plan-schema
+              ;;
+            approvals-schema)
+              make_target Unicorn.Approvals plan-schema
+              ;;
+            web-schema)
+              make_target Unicorn.Web plan-schema
+              ;;
+            contracts-service)
+              # Packages the deterministic Contracts ZIP before planning it.
+              make_target Unicorn.Contracts plan-service
+              ;;
+            approvals-service)
+              # Packages the deterministic Approvals ZIP before planning it.
+              make_target Unicorn.Approvals plan-service
+              ;;
+            web-service)
+              # Packages the deterministic Web ZIPs before planning them.
+              make_target Unicorn.Web plan-service
+              ;;
+            approvals-contracts-subscriptions)
+              make_target Unicorn.Approvals plan-sub-contracts
+              ;;
+            approvals-web-subscriptions)
+              make_target Unicorn.Approvals plan-sub-web
+              ;;
+            web-approvals-subscriptions)
+              make_target Unicorn.Web plan-sub-approvals
+              ;;
+            shared-api-gateway-account)
+              make_target Unicorn.Shared plan-api-gateway-account
+              ;;
+            *)
+              echo "Unsupported deployment target: $DEPLOYMENT_TARGET" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Upload saved production plan and deployment packages
+        if: ${{ inputs.stage == 'prod' && inputs.deployment_target != 'shared-namespaces' && inputs.deployment_target != 'shared-api-gateway-account' }}
+        uses: actions/upload-artifact@v4
         with:
-          filters: |
-            unicorn_contracts:
-              - 'Unicorn.Contracts/**'
-            unicorn_contracts_domain:
-              - 'Unicorn.Contracts/Infrastructure/domain.yaml'
-            unicorn_contracts_service:
-              - 'Unicorn.Contracts/Infrastructure/web-service/**'
-              - 'Unicorn.Contracts/src/**'
-            unicorn_contracts_schema_contractstatuschanged:
-              - 'Unicorn.Contracts/Infrastructure/schema-registry/ContractStatusChanged-schema.yaml'
-            
-            unicorn_approvals:
-              - 'Unicorn.Approvals/**'
-            unicorn_approvals_domain:
-              - 'Unicorn.Approvals/Infrastructure/domain.yaml'
-            unicorn_approvals_service:
-              - 'Unicorn.Approvals/Infrastructure/approvals-service/**'
-              - 'Unicorn.Approvals/src/**'
-            unicorn_approvals_schema_publicationevaluationcompleted:
-              - 'Unicorn.Approvals/Infrastructure/schema-registry/PublicationEvaluationCompleted-schema.yaml'
-            unicorn_approvals_subscriptions-contracts:
-              - 'Unicorn.Approvals/Infrastructure/subscriptions/unicorn-contracts-subscriptions.yaml'
-            unicorn_approvals_subscriptions-web:
-              - 'Unicorn.Approvals/Infrastructure/subscriptions/unicorn-web-subscriptions.yaml'
+          name: production-${{ inputs.deployment_target }}-plan
+          path: |
+            Unicorn.*/Infrastructure/**/.terraform/prod.tfplan
+            Unicorn.*/Infrastructure/*-service/.terraform/*.zip
+          if-no-files-found: error
+          include-hidden-files: true
 
-            unicorn_web:
-              - 'Unicorn.Web/**'
-            unicorn_web_domain:
-              - 'Unicorn.Web/Infrastructure/domain.yaml'
-            unicorn_web_service:
-              - 'Unicorn.Web/Infrastructure/web-service/**'
-              - 'Unicorn.Web/src/**'
-            unicorn_web_schema_publicationapprovalrequested:
-              - 'Unicorn.Web/Infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml'
-            unicorn_web_subscriptions-approvals:
-              - 'Unicorn.Web/Infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml'
-
-  deploy_contracts_domain:
-    name: Deploy Contracts Domain
-    needs:
-     - changes
-    if: ${{ needs.changes.outputs.unicorn_contracts_domain == 'true' }}
-    runs-on: ubuntu-latest
+  deploy_dev:
+    name: Apply manual development deployment
+    if: ${{ gitea.event_name == 'workflow_dispatch' && inputs.stage == 'dev' && inputs.deployment_target != 'shared-namespaces' && inputs.deployment_target != 'shared-api-gateway-account' }}
+    needs: deployment_plan
+    # Register this runner with only development apply permissions.
+    runs-on: [self-hosted, deployment-dev]
+    environment:
+      name: development
     env:
-      SERVICE_FOLDER: "Unicorn.Contracts"
       PYTHON_VERSION: "3.12"
-      DOTNET_VERSION: "8.0.x"
+      DOTNET_VERSION: "10.0.x"
+      TF_IN_AUTOMATION: "true"
+      STAGE: dev
+      DEPLOYMENT_TARGET: ${{ inputs.deployment_target }}
+      REGION: ${{ inputs.region }}
+      TERRAFORM_STATE_BUCKET: ${{ inputs.terraform_state_bucket }}
     steps:
       - uses: actions/checkout@v5
 
-      - name: Configure build environment (composite action)
+      - name: Configure .NET, Python, AWS CLI, and AWS SAM
         uses: ./.gitea/actions/configure
 
-      - name: Deploy Dev Domain Resources
-        run: |
-          sam deploy \
-            --template-file domain.yaml \
-            --stack-name uni-prop-dev-contracts-domain \
-            --parameter-overrides Stage=dev \
-            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-            --resolve-s3 \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      - name: Deploy Prod Domain Resources
+      - name: Apply selected development root
+        shell: bash
         run: |
-          sam deploy \
-            --template-file domain.yaml \
-            --stack-name uni-prop-prod-contracts-domain \
-            --parameter-overrides Stage=prod \
-            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-            --resolve-s3 \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
+          set -euo pipefail
+          make_target() {
+            make -C "$1" -o ensure-state-backend "$2" \
+              STAGE="$STAGE" \
+              REGION="$REGION" \
+              TERRAFORM_STATE_BUCKET="$TERRAFORM_STATE_BUCKET"
+          }
 
-  deploy_approvals_domain:
-    name: Deploy Approvals Domain
-    needs:
-     - changes
-    if: ${{ needs.changes.outputs.unicorn_approvals_domain == 'true' }}
-    runs-on: ubuntu-latest
+          case "$DEPLOYMENT_TARGET" in
+            shared-images)
+              make_target Unicorn.Shared deploy-images-dev
+              ;;
+            contracts-domain)
+              make_target Unicorn.Contracts deploy-domain
+              ;;
+            approvals-domain)
+              make_target Unicorn.Approvals deploy-domain
+              ;;
+            web-domain)
+              make_target Unicorn.Web deploy-domain
+              ;;
+            contracts-schema)
+              make_target Unicorn.Contracts deploy-schema
+              ;;
+            approvals-schema)
+              make_target Unicorn.Approvals deploy-schema
+              ;;
+            web-schema)
+              make_target Unicorn.Web deploy-schema
+              ;;
+            contracts-service)
+              make_target Unicorn.Contracts deploy-service
+              ;;
+            approvals-service)
+              make_target Unicorn.Approvals deploy-service
+              ;;
+            web-service)
+              make_target Unicorn.Web deploy-service
+              ;;
+            approvals-contracts-subscriptions)
+              make_target Unicorn.Approvals deploy-contracts-subscriptions
+              ;;
+            approvals-web-subscriptions)
+              make_target Unicorn.Approvals deploy-web-subscriptions
+              ;;
+            web-approvals-subscriptions)
+              make_target Unicorn.Web deploy-subscriptions
+              ;;
+            *)
+              echo "Unsupported development deployment target: $DEPLOYMENT_TARGET" >&2
+              exit 1
+              ;;
+          esac
+
+  deploy_prod:
+    name: Apply approved production saved plan
+    if: ${{ gitea.event_name == 'workflow_dispatch' && inputs.stage == 'prod' && inputs.deployment_target != 'shared-namespaces' && inputs.deployment_target != 'shared-api-gateway-account' }}
+    needs: deployment_plan
+    # Register this runner with only production apply permissions.
+    runs-on: [self-hosted, deployment-prod]
+    environment:
+      # Configure this protected environment to require human approval.
+      name: production
     env:
-      SERVICE_FOLDER: "Unicorn.Approvals"
       PYTHON_VERSION: "3.12"
-      DOTNET_VERSION: "8.0.x"
+      DOTNET_VERSION: "10.0.x"
+      TF_IN_AUTOMATION: "true"
+      STAGE: prod
+      DEPLOYMENT_TARGET: ${{ inputs.deployment_target }}
+      REGION: ${{ inputs.region }}
+      TERRAFORM_STATE_BUCKET: ${{ inputs.terraform_state_bucket }}
+      CONFIRM_PROD: APPLY
     steps:
       - uses: actions/checkout@v5
 
-      - name: Configure build environment (composite action)
+      - name: Download reviewed production plan
+        uses: actions/download-artifact@v4
+        with:
+          name: production-${{ inputs.deployment_target }}-plan
+          path: .
+
+      - name: Configure .NET, Python, AWS CLI, and AWS SAM
         uses: ./.gitea/actions/configure
 
-      - name: Deploy Dev Domain Resources
-        run: |
-          sam deploy \
-            --template-file domain.yaml \
-            --stack-name uni-prop-dev-approvals-domain \
-            --parameter-overrides Stage=dev \
-            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-            --resolve-s3 \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      - name: Deploy Prod Domain Resources
+      - name: Apply selected production saved plan
+        shell: bash
         run: |
-          sam deploy \
-            --template-file domain.yaml \
-            --stack-name uni-prop-prod-approvals-domain \
-            --parameter-overrides Stage=prod \
-            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-            --resolve-s3 \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-    
-  deploy_web_domain:
-    name: Deploy Web Domain
-    needs:
-     - changes
-    if: ${{ needs.changes.outputs.unicorn_web_domain == 'true' }}
-    runs-on: ubuntu-latest
+          set -euo pipefail
+          make_target() {
+            make -C "$1" -o ensure-state-backend "$2" \
+              STAGE="$STAGE" \
+              REGION="$REGION" \
+              TERRAFORM_STATE_BUCKET="$TERRAFORM_STATE_BUCKET" \
+              CONFIRM_PROD="$CONFIRM_PROD"
+          }
+
+          case "$DEPLOYMENT_TARGET" in
+            shared-images)
+              make_target Unicorn.Shared deploy-images-prod
+              ;;
+            contracts-domain)
+              make_target Unicorn.Contracts deploy-domain
+              ;;
+            approvals-domain)
+              make_target Unicorn.Approvals deploy-domain
+              ;;
+            web-domain)
+              make_target Unicorn.Web deploy-domain
+              ;;
+            contracts-schema)
+              make_target Unicorn.Contracts deploy-schema
+              ;;
+            approvals-schema)
+              make_target Unicorn.Approvals deploy-schema
+              ;;
+            web-schema)
+              make_target Unicorn.Web deploy-schema
+              ;;
+            contracts-service)
+              make_target Unicorn.Contracts deploy-service
+              ;;
+            approvals-service)
+              make_target Unicorn.Approvals deploy-service
+              ;;
+            web-service)
+              make_target Unicorn.Web deploy-service
+              ;;
+            approvals-contracts-subscriptions)
+              make_target Unicorn.Approvals deploy-contracts-subscriptions
+              ;;
+            approvals-web-subscriptions)
+              make_target Unicorn.Approvals deploy-web-subscriptions
+              ;;
+            web-approvals-subscriptions)
+              make_target Unicorn.Web deploy-subscriptions
+              ;;
+            *)
+              echo "Unsupported production deployment target: $DEPLOYMENT_TARGET" >&2
+              exit 1
+              ;;
+          esac
+
+  deploy_account_global:
+    name: Apply explicit account-global Shared target
+    if: ${{ gitea.event_name == 'workflow_dispatch' && (inputs.deployment_target == 'shared-namespaces' || inputs.deployment_target == 'shared-api-gateway-account') }}
+    needs: deployment_plan
+    # Register this runner with narrowly scoped account-global permissions.
+    runs-on: [self-hosted, deployment-account-global]
+    environment:
+      # Account-global changes are isolated from stage deployments and should
+      # use a separately protected environment approval.
+      name: account-global
     env:
-      SERVICE_FOLDER: "Unicorn.Web"
       PYTHON_VERSION: "3.12"
-      DOTNET_VERSION: "8.0.x"
+      DOTNET_VERSION: "10.0.x"
+      TF_IN_AUTOMATION: "true"
+      DEPLOYMENT_TARGET: ${{ inputs.deployment_target }}
+      REGION: ${{ inputs.region }}
+      TERRAFORM_STATE_BUCKET: ${{ inputs.terraform_state_bucket }}
     steps:
       - uses: actions/checkout@v5
 
-      - name: Configure build environment (composite action)
+      - name: Configure .NET, Python, AWS CLI, and AWS SAM
         uses: ./.gitea/actions/configure
 
-      - name: Deploy Dev Domain Resources
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Apply selected account-global root
+        shell: bash
         run: |
-          sam deploy \
-            --template-file domain.yaml \
-            --stack-name uni-prop-dev-web-domain \
-            --parameter-overrides Stage=dev \
-            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-            --resolve-s3 \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
+          set -euo pipefail
+          make_target() {
+            make -C "$1" -o ensure-state-backend "$2" \
+              REGION="$REGION" \
+              TERRAFORM_STATE_BUCKET="$TERRAFORM_STATE_BUCKET"
+          }
 
-      - name: Deploy Prod Domain Resources
-        run: |
-          sam deploy \
-            --template-file domain.yaml \
-            --stack-name uni-prop-prod-web-domain \
-            --parameter-overrides Stage=prod \
-            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-            --resolve-s3 \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-  build_contracts:
-    name: Build & Deploy Unicorn Contracts
-    needs: 
-     - changes
-     - deploy_contracts_domain
-    if: ${{ always() && needs.changes.outputs.unicorn_contracts == 'true' }}
-    runs-on: ubuntu-latest
-    env:
-      SERVICE_FOLDER: "Unicorn.Contracts"
-      PYTHON_VERSION: "3.12"
-      DOTNET_VERSION: "8.0.x"
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Configure build environment (composite action)
-        uses: ./.gitea/actions/configure
-
-      - name: Install .NET Lambda Tools
-        run: |
-          dotnet tool install -g Amazon.Lambda.Tools
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-        
-      - name: Verify Dev Contracts Eventbus exists
-        run: |
-          # Verify SSM parameter exists and retrieve eventbus arn
-          SSM_PARAMETER="/uni-prop/dev/ContractsEventBus"
-          BUS_NAME=$(aws ssm get-parameter --name $SSM_PARAMETER --query 'Parameter.Value' --output text 2>/dev/null || echo "")
-          if [ -z "$BUS_NAME" ]; then
-            echo "SSM Parameter '$SSM_PARAMETER' not found"
-            exit 1
-          fi
-          # Verify Eventbridge bus exists
-          if ! aws events describe-event-bus --name "$BUS_NAME" >/dev/null 2>&1; then
-            echo "EventBridge bus '$BUS_NAME' does not exist"
-            exit 1
-          fi
-          echo "EventBridge bus verified: $BUS_NAME"
-      
-      - name: Verify Prod Contracts Eventbus exists
-        run: |
-          # Verify SSM parameter exists and retrieve eventbus arn
-          SSM_PARAMETER="/uni-prop/prod/ContractsEventBus"
-          BUS_NAME=$(aws ssm get-parameter --name $SSM_PARAMETER --query 'Parameter.Value' --output text 2>/dev/null || echo "")
-          if [ -z "$BUS_NAME" ]; then
-            echo "SSM Parameter '$SSM_PARAMETER' not found"
-            exit 1
-          fi
-          # Verify Eventbridge bus exists
-          if ! aws events describe-event-bus --name "$BUS_NAME" >/dev/null 2>&1; then
-            echo "EventBridge bus '$BUS_NAME' does not exist"
-            exit 1
-          fi
-          echo "EventBridge bus verified: $BUS_NAME"
-
-      - name: Run cfn-lint with Serverless Rules
-        if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
-        run: cfn-lint template.yaml -a cfn_lint_serverless.rules
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/web-service
-
-      - name: Build
-        if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
-        run: |
-          dotnet restore ContractsService/ContractsService.csproj
-          dotnet build ContractsService/ContractsService.csproj
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Run Unit Tests
-        if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
-        run: dotnet test ContractsService.Test
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Build and Package Contracts Service
-        if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
-        run: |
-          sam build
-          sam package \
-            --config-env dev \
-            --output-template-file ".aws-sam/packaged-dev-contracts-service.yaml"
-          sam package \
-            --config-env prod \
-            --output-template-file ".aws-sam/packaged-prod-contracts-service.yaml"
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/web-service
-
-      - name: Deploy Dev Contracts Service environment
-        if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}  
-        run: |
-          sam deploy --config-env dev
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/web-service
-
-      - name: Deploy Prod Contracts Service environment
-        if: ${{ needs.changes.outputs.unicorn_contracts_service == 'true' }}
-        run: |
-          sam deploy --config-env prod
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/web-service
-
-      - name: Deploy Dev ContractsStatusChanged schema
-        if: ${{ needs.changes.outputs.unicorn_contracts_schema_contractstatuschanged == 'true' }}
-        run: |
-          sam deploy \
-            --template-file schema-registry/ContractStatusChanged-schema.yaml \
-            --stack-name uni-prop-dev-contracts-schema-ContractStatusChanged \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Prod ContractsStatusChanged schema
-        if: ${{ needs.changes.outputs.unicorn_contracts_schema_contractstatuschanged == 'true' }}
-        run: |
-          sam deploy \
-            --template-file schema-registry/ContractStatusChanged-schema.yaml \
-            --stack-name uni-prop-prod-contracts-schema-ContractStatusChanged \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-  build_approvals:
-    name: Build & Deploy Unicorn Approvals
-    needs: 
-     - changes
-     - deploy_approvals_domain
-    if: ${{ always() && needs.changes.outputs.unicorn_approvals == 'true' }}
-    runs-on: ubuntu-latest
-    env:
-      SERVICE_FOLDER: "Unicorn.Approvals"
-      PYTHON_VERSION: "3.12"
-      DOTNET_VERSION: "8.0.x"
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Configure build environment (composite action)
-        uses: ./.gitea/actions/configure
-
-      - name: Install .NET Lambda Tools
-        run: |
-          dotnet tool install -g Amazon.Lambda.Tools
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-
-      - name: Verify Dev Approvals Eventbus exists
-        run: |
-          # Verify SSM parameter exists and retrieve eventbus arn
-          SSM_PARAMETER="/uni-prop/dev/ApprovalsEventBus"
-          BUS_NAME=$(aws ssm get-parameter --name $SSM_PARAMETER --query 'Parameter.Value' --output text 2>/dev/null || echo "")
-          if [ -z "$BUS_NAME" ]; then
-            echo "SSM Parameter '$SSM_PARAMETER' not found"
-            exit 1
-          fi
-          # Verify Eventbridge bus exists
-          if ! aws events describe-event-bus --name "$BUS_NAME" >/dev/null 2>&1; then
-            echo "EventBridge bus '$BUS_NAME' does not exist"
-            exit 1
-          fi
-          echo "EventBridge bus verified: $BUS_NAME"
-      
-      - name: Verify Prod Approvals Eventbus exists
-        run: |
-          # Verify SSM parameter exists and retrieve eventbus arn
-          SSM_PARAMETER="/uni-prop/prod/ApprovalsEventBus"
-          BUS_NAME=$(aws ssm get-parameter --name $SSM_PARAMETER --query 'Parameter.Value' --output text 2>/dev/null || echo "")
-          if [ -z "$BUS_NAME" ]; then
-            echo "SSM Parameter '$SSM_PARAMETER' not found"
-            exit 1
-          fi
-          # Verify Eventbridge bus exists
-          if ! aws events describe-event-bus --name "$BUS_NAME" >/dev/null 2>&1; then
-            echo "EventBridge bus '$BUS_NAME' does not exist"
-            exit 1
-          fi
-          echo "EventBridge bus verified: $BUS_NAME"
-
-      - name: Run cfn-lint with Serverless Rules
-        if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
-        run: cfn-lint template.yaml -a cfn_lint_serverless.rules
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/approvals-service
-
-      - name: Build
-        if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
-        run: |
-          dotnet restore ApprovalsService/ApprovalsService.csproj
-          dotnet build ApprovalsService/ApprovalsService.csproj
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Run Unit Tests
-        if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
-        run: dotnet test ApprovalsService.Tests
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Build and Package Approvals Service
-        if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
-        run: |
-          sam build
-          sam package \
-            --config-env dev \
-            --output-template-file ".aws-sam/packaged-dev-approvals-service.yaml"
-          sam package \
-            --config-env prod \
-            --output-template-file ".aws-sam/packaged-prod-approvals-service.yaml"
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/approvals-service
-
-      - name: Deploy Dev Approvals Service environment
-        if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
-        run: |
-          sam deploy --config-env dev
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/approvals-service
-
-      - name: Deploy Prod Approvals Service environment
-        if: ${{ needs.changes.outputs.unicorn_approvals_service == 'true' }}
-        run: |
-          sam deploy --config-env prod
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/approvals-service
-
-      - name: Deploy Dev PublicationEvaluationCompleted schema
-        if: ${{ needs.changes.outputs.unicorn_approvals_schema_publicationevaluationcompleted == 'true' }}
-        run: |
-          sam deploy \
-            --template-file schema-registry/PublicationEvaluationCompleted-schema.yaml \
-            --stack-name uni-prop-dev-approvals-schema-PublicationEvaluationCompleted \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Prod PublicationEvaluationCompleted schema
-        if: ${{ needs.changes.outputs.unicorn_approvals_schema_publicationevaluationcompleted == 'true' }}
-        run: |
-          sam deploy \
-            --template-file schema-registry/PublicationEvaluationCompleted-schema.yaml \
-            --stack-name uni-prop-prod-approvals-schema-PublicationEvaluationCompleted \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Dev Approvals-Contracts Subscription Rules
-        if: ${{ needs.changes.outputs.unicorn_approvals_subscriptions-contracts == 'true' }}
-        run: |
-          sam deploy \
-            --template-file subscriptions/unicorn-contracts-subscriptions.yaml \
-            --stack-name uni-prop-dev-approvals-contracts-subscriptions \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Prod Approvals-Contracts Subscription Rules
-        if: ${{ needs.changes.outputs.unicorn_approvals_subscriptions-contracts == 'true' }}
-        run: |
-          sam deploy \
-            --template-file subscriptions/unicorn-contracts-subscriptions.yaml \
-            --stack-name uni-prop-prod-approvals-contracts-subscriptions \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Dev Approvals-Web Subscription Rules
-        if: ${{ needs.changes.outputs.unicorn_approvals_subscriptions-web == 'true' }}
-        run: |
-          sam deploy \
-            --template-file subscriptions/unicorn-web-subscriptions.yaml \
-            --stack-name uni-prop-dev-approvals-web-subscriptions \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Prod Approvals-Web Subscription Rules
-        if: ${{ needs.changes.outputs.unicorn_approvals_subscriptions-web == 'true' }}
-        run: |
-          sam deploy \
-            --template-file subscriptions/unicorn-web-subscriptions.yaml \
-            --stack-name uni-prop-prod-approvals-web-subscriptions \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-  build_web:
-    name: Build & Deploy Unicorn Web
-    needs:
-     - changes
-     - deploy_web_domain
-    if: ${{ always() && needs.changes.outputs.unicorn_web == 'true' }}
-    runs-on: ubuntu-latest
-    env:
-      SERVICE_FOLDER: "Unicorn.Web"
-      PYTHON_VERSION: "3.12"
-      DOTNET_VERSION: "8.0.x"
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Configure build environment (composite action)
-        uses: ./.gitea/actions/configure
-
-      - name: Install .NET Lambda Tools
-        run: |
-          dotnet tool install -g Amazon.Lambda.Tools
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-
-      - name: Verify Dev Web Eventbus exists
-        run: |
-          # Verify SSM parameter exists and retrieve eventbus arn
-          SSM_PARAMETER="/uni-prop/dev/WebEventBus"
-          BUS_NAME=$(aws ssm get-parameter --name $SSM_PARAMETER --query 'Parameter.Value' --output text 2>/dev/null || echo "")
-          if [ -z "$BUS_NAME" ]; then
-            echo "SSM Parameter '$SSM_PARAMETER' not found"
-            exit 1
-          fi
-          # Verify Eventbridge bus exists
-          if ! aws events describe-event-bus --name "$BUS_NAME" >/dev/null 2>&1; then
-            echo "EventBridge bus '$BUS_NAME' does not exist"
-            exit 1
-          fi
-          echo "EventBridge bus verified: $BUS_NAME"
-      
-      - name: Verify Prod Web Eventbus exists
-        run: |
-          # Verify SSM parameter exists and retrieve eventbus arn
-          SSM_PARAMETER="/uni-prop/prod/WebEventBus"
-          BUS_NAME=$(aws ssm get-parameter --name $SSM_PARAMETER --query 'Parameter.Value' --output text 2>/dev/null || echo "")
-          if [ -z "$BUS_NAME" ]; then
-            echo "SSM Parameter '$SSM_PARAMETER' not found"
-            exit 1
-          fi
-          # Verify Eventbridge bus exists
-          if ! aws events describe-event-bus --name "$BUS_NAME" >/dev/null 2>&1; then
-            echo "EventBridge bus '$BUS_NAME' does not exist"
-            exit 1
-          fi
-          echo "EventBridge bus verified: $BUS_NAME"
-
-      - name: Run cfn-lint and cfn-lint-serverless
-        if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: cfn-lint template.yaml -a cfn_lint_serverless.rules
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/web-service
-
-      - name: Build Publication Manager Service
-        if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: |
-          dotnet restore PublicationManagerService/PublicationManagerService.csproj
-          dotnet build PublicationManagerService/PublicationManagerService.csproj
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Build Search Service
-        if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: |
-          dotnet restore SearchService/SearchService.csproj
-          dotnet build SearchService/SearchService.csproj
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Run Publication Manager Service Unit Tests
-        if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: dotnet test PublicationManagerService.Tests
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Run Search Service Unit Tests
-        if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: dotnet test SearchService.Tests
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Build and Package Web Service
-        if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: |
-          dotnet clean Common/Common.csproj
-          dotnet clean SearchService/SearchService.csproj
-          dotnet clean PublicationManagerService/PublicationManagerService.csproj
-          cd Infrastructure/web-service
-          sam build
-          sam package \
-            --config-env dev \
-            --output-template-file ".aws-sam/packaged-dev-web-service.yaml"
-          sam package \
-            --config-env prod \
-            --output-template-file ".aws-sam/packaged-prod-web-service.yaml"
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}
-
-      - name: Deploy Dev Web Service environment
-        if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: |
-          sam deploy --config-env dev
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/web-service
-
-      - name: Deploy Prod Web Service environment
-        if: ${{ needs.changes.outputs.unicorn_web_service == 'true' }}
-        run: |
-          sam deploy --config-env prod
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure/web-service
-
-      - name: Deploy Dev PublicationApprovalRequested schema
-        if: ${{ needs.changes.outputs.unicorn_web_schema_publicationapprovalrequested == 'true' }}
-        run: |
-          sam deploy \
-            --template-file schema-registry/PublicationApprovalRequested-schema.yaml \
-            --stack-name uni-prop-dev-web-schema-PublicationApprovalRequested \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Prod PublicationApprovalRequested schema
-        if: ${{ needs.changes.outputs.unicorn_web_schema_publicationapprovalrequested == 'true' }}
-        run: |
-          sam deploy \
-            --template-file schema-registry/PublicationApprovalRequested-schema.yaml \
-            --stack-name uni-prop-prod-web-schema-PublicationApprovalRequested \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Dev Web-Approvals Subscription Rules
-        if: ${{ needs.changes.outputs.unicorn_web_subscriptions-approvals == 'true' }}
-        run: |
-          sam deploy \
-            --template-file subscriptions/unicorn-approvals-subscriptions.yaml \
-            --stack-name uni-prop-dev-web-approvals-subscriptions \
-            --parameter-overrides Stage=dev \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
-
-      - name: Deploy Prod Web-Approvals Subscription Rules
-        if: ${{ needs.changes.outputs.unicorn_web_subscriptions-approvals == 'true' }}
-        run: |
-          sam deploy \
-            --template-file subscriptions/unicorn-approvals-subscriptions.yaml \
-            --stack-name uni-prop-prod-web-approvals-subscriptions \
-            --parameter-overrides Stage=prod \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
-        working-directory: ${{ gitea.workspace }}/${{ env.SERVICE_FOLDER }}/Infrastructure
+          case "$DEPLOYMENT_TARGET" in
+            shared-namespaces)
+              make_target Unicorn.Shared deploy-namespaces
+              ;;
+            shared-api-gateway-account)
+              make_target Unicorn.Shared deploy-api-gateway-account
+              ;;
+            *)
+              echo "Unsupported account-global target: $DEPLOYMENT_TARGET" >&2
+              exit 1
+              ;;
+          esac
