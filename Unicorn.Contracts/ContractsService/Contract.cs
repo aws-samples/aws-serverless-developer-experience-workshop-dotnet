@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using Amazon.DynamoDBv2.Model;
 
 namespace Unicorn.Contracts.ContractService;
@@ -62,10 +61,8 @@ public class Address
 /// </summary>
 public class CreateContractRequest
 {
-    [JsonPropertyName("property_id")]
     public string? PropertyId { get; set; }
     public Address? Address { get; set; }
-    [JsonPropertyName("seller_name")]
     public string? SellerName { get; set; }
 }
 
@@ -74,6 +71,5 @@ public class CreateContractRequest
 /// </summary>
 public class UpdateContractRequest
 {
-    [JsonPropertyName("property_id")]
     public string? PropertyId { get; set; }
 }
