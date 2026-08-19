@@ -8,7 +8,7 @@ resolve_image_repositories = true
 
 [default.build.parameters]
 cached = true
-parallel = true
+parallel = false
 
 [default.deploy.parameters]
 disable_rollback = true
