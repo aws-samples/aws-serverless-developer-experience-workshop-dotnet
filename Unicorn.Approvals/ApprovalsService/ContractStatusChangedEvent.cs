@@ -1,6 +1,8 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
+using Amazon.DynamoDBv2.DataModel;
+
 namespace Unicorn.Approvals.ApprovalsService;
 
 /// <summary>
@@ -9,6 +11,7 @@ namespace Unicorn.Approvals.ApprovalsService;
 [Serializable]
 public class ContractStatusChangedEvent : IEvent
 {
+    [DynamoDBHashKey]
     public string PropertyId { get; set; } = null!;
     public Guid ContractId { get; set; }
     public string ContractStatus { get; set; } = null!;
