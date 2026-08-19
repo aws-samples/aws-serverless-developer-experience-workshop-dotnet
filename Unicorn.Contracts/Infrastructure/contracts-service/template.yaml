@@ -320,7 +320,7 @@ Resources:
         FilterCriteria:
           Filters:
             - Pattern: >-
-                {"eventName":["INSERT","MODIFY"],"dynamodb":{"NewImage":{"contract_status":{"S":["DRAFT","APPROVED"]}}}}
+                {"eventName":["INSERT","MODIFY"],"dynamodb":{"NewImage":{"ContractStatus":{"S":["DRAFT","APPROVED"]}}}}
       LogConfiguration:
         CloudwatchLogsLogDestination:
           LogGroupArn: !GetAtt ContractsTableStreamToEventPipeLogGroup.Arn

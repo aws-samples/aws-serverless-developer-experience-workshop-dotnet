@@ -87,64 +87,52 @@ Resources:
               "PublicationApprovalRequested": {
                 "type": "object",
                 "required": [
-                  "images",
-                  "address",
-                  "listprice",
-                  "contract",
-                  "description",
-                  "currency",
-                  "property_id",
-                  "status"
+                  "PropertyId",
+                  "Status",
+                  "Description",
+                  "Images",
+                  "Address"
                 ],
                 "properties": {
-                  "address": {
-                    "$ref": "#/components/schemas/Address"
-                  },
-                  "contract": {
+                  "PropertyId": {
                     "type": "string"
                   },
-                  "currency": {
+                  "Status": {
                     "type": "string"
                   },
-                  "description": {
+                  "Description": {
                     "type": "string"
                   },
-                  "images": {
+                  "Images": {
                     "type": "array",
                     "items": {
                       "type": "string"
                     }
                   },
-                  "listprice": {
-                    "type": "string"
-                  },
-                  "property_id": {
-                    "type": "string"
-                  },
-                  "status": {
-                    "type": "string"
+                  "Address": {
+                    "$ref": "#/components/schemas/Address"
                   }
                 }
               },
               "Address": {
                 "type": "object",
                 "required": [
-                  "country",
-                  "number",
-                  "city",
-                  "street"
+                  "Country",
+                  "City",
+                  "Street",
+                  "Number"
                 ],
                 "properties": {
-                  "city": {
+                  "Country": {
                     "type": "string"
                   },
-                  "country": {
+                  "City": {
                     "type": "string"
                   },
-                  "number": {
+                  "Street": {
                     "type": "string"
                   },
-                  "street": {
+                  "Number": {
                     "type": "string"
                   }
                 }

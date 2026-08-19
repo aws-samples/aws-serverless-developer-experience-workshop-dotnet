@@ -90,28 +90,25 @@ Resources:
               "ContractStatusChanged": {
                 "type": "object",
                 "required": [
-                  "contract_last_modified_on",
-                  "contract_last_modified_by",
-                  "contract_id",
-                  "contract_status",
-                  "property_id"
+                  "PropertyId",
+                  "ContractId",
+                  "ContractStatus",
+                  "ContractLastModifiedOn"
                 ],
                 "properties": {
-                  "contract_id": {
+                  "PropertyId": {
                     "type": "string"
                   },
-                  "contract_last_modified_by": {
+                  "ContractId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "ContractStatus": {
                     "type": "string"
                   },
-                  "contract_last_modified_on": {
+                  "ContractLastModifiedOn": {
                     "type": "string",
                     "format": "date-time"
-                  },
-                  "contract_status": {
-                    "type": "string"
-                  },
-                  "property_id": {
-                    "type": "string"
                   }
                 }
               }
