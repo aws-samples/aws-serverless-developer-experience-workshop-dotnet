@@ -9,6 +9,6 @@
   "resources": [],
   "detail": {
     "PropertyId": "usa/anytown/main-street/123",
-    "evaluation_result": "APPROVED|DECLINED"
+    "EvaluationResult": "APPROVED|DECLINED"
   }
 }
