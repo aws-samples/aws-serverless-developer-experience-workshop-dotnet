@@ -49,49 +49,33 @@ terraform.rc
 !**/envs/*.tfvars
 
 ### AI Tools ###
-# Kiro
-.kiro/
+# Kiro: track steering + the mcp placeholder, keep everything else local
+.kiro/*
+!.kiro/steering/
+!.kiro/settings/
+.kiro/settings/*
+!.kiro/settings/mcp.json
 
-# Claude
+# Other AI assistants stay local
 .claude/
-
-# Cursor
 .cursor/
 .cursorignore
 .cursorindexingignore
 .cursorrules
-
-# GitHub Copilot
 .copilot/
 .github/copilot-instructions.md
-
-# Windsurf / Codeium
 .windsurf/
 .codeium/
-
-# Aider
 .aider*
 .aider.tags.cache.v3/
-
-# Amazon Q Developer
 .amazonq/
 .qdeveloper/
-
-# Cline
 .cline/
 .clinerules
-
-# Roo Code
 .roo/
 .rooignore
-
-# Augment
 .augment/
 .augmentignore
-
-# Tabnine
 .tabnine_root
-
-# Continue
 .continue/
 .continuerc.json

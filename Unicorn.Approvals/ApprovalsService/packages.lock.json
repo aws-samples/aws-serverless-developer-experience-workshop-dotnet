@@ -4,29 +4,29 @@
     "net10.0": {
       "Amazon.Lambda.CloudWatchEvents": {
         "type": "Direct",
-        "requested": "[4.4.1, )",
-        "resolved": "4.4.1",
-        "contentHash": "4ePRyn9XVfAiIIZ6UU+QdJKTgxmQNP9OUmJPtfaKjyVO462/M1f0C6NLX72YNOgGCUQ+SIOQ7Si3PhiprJSfWw=="
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "yguApqRkkczjyjaoBYyTkf2jb0CFDCc/WkUlmmY7F6DPylDiweJLPIqHZG73bF3MKxpn7GN4BMvXxFmgpXxfqg=="
       },
       "Amazon.Lambda.Core": {
         "type": "Direct",
-        "requested": "[2.8.1, )",
-        "resolved": "2.8.1",
-        "contentHash": "wLrBdUXY1jn12o3+sar5c5ApMJPGEMye+1rnyDjwCKA2rcPNMZbNsKLQ76bV+DGnx5CN8bArB26SKB/rEuxIxQ=="
+        "requested": "[3.3.0, )",
+        "resolved": "3.3.0",
+        "contentHash": "CZKlX8ZDMi6aKPo5lPAjmsJFDXNJHX00aiiYeRQOEszP8cjx6qklBvTPj4qpr4dlp3YYQjmB87CqAiWV7vk2fA=="
       },
       "Amazon.Lambda.DynamoDBEvents": {
         "type": "Direct",
-        "requested": "[3.1.2, )",
-        "resolved": "3.1.2",
-        "contentHash": "YakGSnNDyDC9Vt3icHdJqAOzBd5KlaS5vrHtHP82Ap8MOprak6hbDwSCgufZOQTnu3IfRH8eIEHQB6ZuQa1MlA=="
+        "requested": "[4.0.0, )",
+        "resolved": "4.0.0",
+        "contentHash": "D1ND+XYyQ4fgZqITcxVE/BekVKOXAb65pxslCHY3wG4Vof9p0hoie/B/CscfzUJFndU+82vO4X3Pf1QZiNHpEA=="
       },
       "Amazon.Lambda.Serialization.SystemTextJson": {
         "type": "Direct",
-        "requested": "[2.4.5, )",
-        "resolved": "2.4.5",
-        "contentHash": "5A/uFtcGBbRP7yA2dAaG6H67Sb0HKvzy8tscHj8b4QiYsZ3fFykBdfqcYuLgIlTHJIutz6JzF8gOvlYH9/5s7g==",
+        "requested": "[3.0.1, )",
+        "resolved": "3.0.1",
+        "contentHash": "QsHygaMyxQdgh5NPs5GGyBjK6mqQr5nv8rpqlrWC5+e1k7sVx+2xwDHv493S5IMw461S/PyHfjkUDjIQU5ArSA==",
         "dependencies": {
-          "Amazon.Lambda.Core": "2.8.0"
+          "Amazon.Lambda.Core": "3.3.0"
         }
       },
       "AWS.Lambda.Powertools.Logging": {
@@ -68,29 +68,29 @@
       },
       "AWSSDK.DynamoDBv2": {
         "type": "Direct",
-        "requested": "[4.0.100.2, )",
-        "resolved": "4.0.100.2",
-        "contentHash": "fAqKkTLdwSX075GStxoP36cAiffoeL83aiVSdb01vAyPS2EVDc7xZkODni1DGm1iLK52N4TkKfwN0FjlcgeD8A==",
+        "requested": "[4.0.103.3, )",
+        "resolved": "4.0.103.3",
+        "contentHash": "VSDAka/4hlIqfMF/AhLVO3ApCPOXFDsnkhnV0arOMJ2eDVc8j7FE32wxqXP1/MaANE0pzKkscgCNM29gXNb4Yg==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.100.2, 5.0.0)"
+          "AWSSDK.Core": "[4.0.101.1, 5.0.0)"
         }
       },
       "AWSSDK.StepFunctions": {
         "type": "Direct",
-        "requested": "[4.0.100.2, )",
-        "resolved": "4.0.100.2",
-        "contentHash": "aHXe3Uka7dMo+1VVkvEBZ/Cr4iaZznX3X0YmEosfzzvgbqxiynrJAQ1S7pd+CZHtv+i5JbcdHccF9b/5lrz/7g==",
+        "requested": "[4.0.100.9, )",
+        "resolved": "4.0.100.9",
+        "contentHash": "P60OluR3Mz6iv5FKAnr7YuXTucn/jS/3GB+U0/+eJJPHmq6A6mk7zeZ4DyMtQI1zd1CAcEqu6v7N99sgiIIdPw==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.100.2, 5.0.0)"
+          "AWSSDK.Core": "[4.0.101.1, 5.0.0)"
         }
       },
       "AWSSDK.XRay": {
         "type": "Direct",
-        "requested": "[4.0.100.2, )",
-        "resolved": "4.0.100.2",
-        "contentHash": "PBoHyuOpD9AQIl3cEQ3UHxhFqRCCgXCwlQ0WZ84UyNfP/XdqNeLouU2byPKzeivUZ4Jk2Dub+YPHh+HtfScvuw==",
+        "requested": "[4.0.100.9, )",
+        "resolved": "4.0.100.9",
+        "contentHash": "hE402MuflWSNHlGlD2KhXY6Up8zyYKAqJe59x0TAzt94Vfqo2dZjGgReHf/IutOZvk5RAw4HlIIKOyUiUqAfzg==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.100.2, 5.0.0)"
+          "AWSSDK.Core": "[4.0.101.1, 5.0.0)"
         }
       },
       "AWSXRayRecorder.Handlers.AwsSdk": {
@@ -114,8 +114,8 @@
       },
       "AWSSDK.Core": {
         "type": "Transitive",
-        "resolved": "4.0.100.2",
-        "contentHash": "1hz6lB2Meymkv9rdOy30p5pIbGpYLK0H4O8XUMGwEMmXUB4FJhyTNk69dLWIFdDUrY66h0NyKy9maHKXMRTwJA=="
+        "resolved": "4.0.101.1",
+        "contentHash": "NtMRfAGDrdb5PVnTL4vIrnPuPSXbBw0j9+voVMYmgsH5Ep5H4tuNMkPJZCOO9q99mh0L9ClOwVkQHCliR5uOLA=="
       },
       "AWSXRayRecorder.Core": {
         "type": "Transitive",
