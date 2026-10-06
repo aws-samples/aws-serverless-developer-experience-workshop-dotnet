@@ -1,11 +1,11 @@
 output "base_url" {
   description = "Web service API endpoint"
-  value       = "https://${aws_api_gateway_rest_api.unicorn_contracts_api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com"
+  value       = "https://${aws_api_gateway_rest_api.unicorn_contracts_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
 }
 
 output "api_url" {
   description = "Contract service API endpoint"
-  value       = "https://${aws_api_gateway_rest_api.unicorn_contracts_api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com/${var.stage}/"
+  value       = "https://${aws_api_gateway_rest_api.unicorn_contracts_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${var.stage}/"
 }
 
 output "ingest_queue_url" {

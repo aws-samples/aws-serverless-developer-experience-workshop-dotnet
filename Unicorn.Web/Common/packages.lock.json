@@ -95,6 +95,7 @@
           "Microsoft.TestPlatform.ObjectModel": "18.9.0"
         }
       }
-    }
+    },
+    "net10.0/linux-x64": {}
   }
 }

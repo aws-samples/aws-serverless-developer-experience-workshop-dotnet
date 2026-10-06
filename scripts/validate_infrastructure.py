@@ -36,6 +36,51 @@ SERVICE_ROOTS = {
     Path("Unicorn.Web/Infrastructure/web-service"): 3,
 }
 
+LAMBDA_LOG_GROUP_PAIRS = (
+    (
+        Path("Unicorn.Contracts/Infrastructure/contracts-service"),
+        "contract_event_handler",
+        "contract_event_handler",
+        "/aws/lambda/uni-prop-${var.stage}-contract-event-handler",
+    ),
+    (
+        Path("Unicorn.Approvals/Infrastructure/approvals-service"),
+        "contract_status_changed_handler",
+        "contract_status_changed_handler",
+        "/aws/lambda/uni-prop-${var.stage}-contract-status-changed-handler",
+    ),
+    (
+        Path("Unicorn.Approvals/Infrastructure/approvals-service"),
+        "properties_approval_sync",
+        "properties_approval_sync",
+        "/aws/lambda/uni-prop-${var.stage}-properties-approval-sync",
+    ),
+    (
+        Path("Unicorn.Approvals/Infrastructure/approvals-service"),
+        "wait_for_contract_approval",
+        "wait_for_contract_approval",
+        "/aws/lambda/uni-prop-${var.stage}-wait-for-contract-approval",
+    ),
+    (
+        Path("Unicorn.Web/Infrastructure/web-service"),
+        "search_function",
+        "search_function",
+        "/aws/lambda/uni-prop-${var.stage}-search-function",
+    ),
+    (
+        Path("Unicorn.Web/Infrastructure/web-service"),
+        "request_approval_function",
+        "request_approval_function",
+        "/aws/lambda/uni-prop-${var.stage}-request-approval-function",
+    ),
+    (
+        Path("Unicorn.Web/Infrastructure/web-service"),
+        "publication_evaluation_event_handler",
+        "publication_evaluation_event_handler",
+        "/aws/lambda/uni-prop-${var.stage}-pub-eval-event-handler",
+    ),
+)
+
 REQUIRED_ROOT_FILES = (
     ".terraform.lock.hcl",
     "backend.tf",
@@ -63,6 +108,28 @@ def require_text(text: str, expected: str, context: str) -> None:
     require(expected in text, f"{context}: expected {expected!r}")
 
 
+def resource_blocks(text: str, resource_type: str) -> dict[str, str]:
+    blocks: dict[str, str] = {}
+    pattern = re.compile(
+        rf'resource\s+"{re.escape(resource_type)}"\s+"([^"]+)"\s*\{{'
+    )
+    for match in pattern.finditer(text):
+        depth = 0
+        for index in range(match.end() - 1, len(text)):
+            if text[index] == "{":
+                depth += 1
+            elif text[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    blocks[match.group(1)] = text[match.start() : index + 1]
+                    break
+        else:
+            raise ValidationFailure(
+                f"Unterminated {resource_type}.{match.group(1)} resource block"
+            )
+    return blocks
+
+
 def discover_roots() -> set[Path]:
     roots: set[Path] = set()
     for provider_file in REPOSITORY_ROOT.glob("Unicorn.*/Infrastructure/**/providers.tf"):
@@ -85,7 +152,7 @@ def validate_inventory() -> None:
         require(not missing, f"{root}: missing standard root files: {', '.join(missing)}")
 
         providers = read(root / "providers.tf")
-        require_text(providers, 'required_version = ">= 1.6, < 2.0"', str(root))
+        require_text(providers, 'required_version = ">= 1.11, < 2.0"', str(root))
         require(
             re.search(r'aws\s*=\s*\{.*?version\s*=\s*"~> 6\.0"', providers, re.DOTALL) is not None,
             f"{root}: AWS provider must be constrained to ~> 6.0",
@@ -159,6 +226,47 @@ def validate_lambda_packaging_and_parity() -> None:
     require_text(web, 'resource "aws_lambda_function_event_invoke_config" "publication_evaluation_event_handler"', "Web async failure destination")
 
 
+def validate_lambda_log_group_ordering() -> None:
+    for root in SERVICE_ROOTS:
+        main = read(root / "main.tf")
+        for name, log_group in resource_blocks(
+            main, "aws_cloudwatch_log_group"
+        ).items():
+            require(
+                "aws_lambda_function." not in log_group,
+                f"{root}: aws_cloudwatch_log_group.{name} must not derive its name from a Lambda function attribute",
+            )
+
+    for root, lambda_name, log_group_name, expected_log_group_name in LAMBDA_LOG_GROUP_PAIRS:
+        main = read(root / "main.tf")
+        lambda_blocks = resource_blocks(main, "aws_lambda_function")
+        log_group_blocks = resource_blocks(main, "aws_cloudwatch_log_group")
+        require(
+            lambda_name in lambda_blocks,
+            f"{root}: missing aws_lambda_function.{lambda_name}",
+        )
+        require(
+            log_group_name in log_group_blocks,
+            f"{root}: missing aws_cloudwatch_log_group.{log_group_name}",
+        )
+
+        lambda_block = lambda_blocks[lambda_name]
+        log_group_block = log_group_blocks[log_group_name]
+        require(
+            re.search(
+                rf'name\s*=\s*"{re.escape(expected_log_group_name)}"',
+                log_group_block,
+            )
+            is not None,
+            f"{root}: aws_cloudwatch_log_group.{log_group_name} must use static name {expected_log_group_name}",
+        )
+        require(
+            "depends_on" in lambda_block
+            and f"aws_cloudwatch_log_group.{log_group_name}" in lambda_block,
+            f"{root}: aws_lambda_function.{lambda_name} must depend on aws_cloudwatch_log_group.{log_group_name}",
+        )
+
+
 def validate_contracts_and_production_safety() -> None:
     contracts_schema = read("Unicorn.Contracts/Infrastructure/schema-registry/ContractStatusChanged/locals.tf")
     web_schema = read("Unicorn.Web/Infrastructure/schema-registry/PublicationApprovalRequested/locals.tf")
@@ -168,6 +276,21 @@ def validate_contracts_and_production_safety() -> None:
         require_text(contracts_schema, property_name, "ContractStatusChanged schema")
     require("contract_status" not in contracts_service, "Contracts Pipe must filter and transform PascalCase ContractStatus")
     require_text(contracts_service, "ContractStatus", "Contracts Pipe")
+    require(
+        "input_template = jsonencode" not in contracts_service,
+        "Contracts Pipe input template must preserve literal dynamic placeholders instead of using jsonencode",
+    )
+    require(
+        "\\u003c" not in contracts_service and "\\u003e" not in contracts_service,
+        "Contracts Pipe input template must not contain encoded dynamic-placeholder delimiters",
+    )
+    for placeholder in (
+        "<$.dynamodb.Keys.PropertyId.S>",
+        "<$.dynamodb.NewImage.ContractId.S>",
+        "<$.dynamodb.NewImage.ContractStatus.S>",
+        "<$.dynamodb.NewImage.ContractLastModifiedOn.S>",
+    ):
+        require_text(contracts_service, placeholder, "Contracts Pipe input template")
 
     for property_name in (
         "PropertyId",
@@ -186,11 +309,12 @@ def validate_contracts_and_production_safety() -> None:
     for root, main in zip(SERVICE_ROOTS, service_mains, strict=True):
         require_text(main, "deletion_protection_enabled = local.is_prod", f"{root} DynamoDB")
         require_text(main, "enabled = local.is_prod", f"{root} point-in-time recovery")
-        require_text(main, 'local.is_prod ? "DISABLED" : "ENABLED"', f"{root} catch-all rule")
+        require_text(main, 'state          = "ENABLED"', f"{root} catch-all rule")
 
     approvals = read("Unicorn.Approvals/Infrastructure/approvals-service/main.tf")
-    require_text(approvals, "include_execution_data = !local.is_prod", "Approvals Step Functions logging")
-    require_text(approvals, 'level                  = local.is_prod ? "ERROR" : "ALL"', "Approvals Step Functions logging")
+    require_text(approvals, '${local.unicorn_approvals_namespace}-CatchAllEvents', "Approvals catch-all rule name")
+    require_text(approvals, "include_execution_data = true", "Approvals Step Functions logging")
+    require_text(approvals, 'level                  = "ALL"', "Approvals Step Functions logging")
     for invoke_config in (
         '"aws_lambda_function_event_invoke_config" "contract_status_changed_handler"',
         '"aws_lambda_function_event_invoke_config" "properties_approval_sync"',
@@ -217,11 +341,32 @@ def validate_ssm_contracts() -> None:
         require_text(all_main_files, parameter, "Operational SSM contracts")
 
 
+def validate_backend_locking() -> None:
+    common_make = read("common.mk")
+    require_text(
+        common_make,
+        '-backend-config="use_lockfile=true"',
+        "S3 backend locking",
+    )
+    for deprecated in (
+        "dynamodb_table",
+        "TERRAFORM_LOCK_TABLE",
+        "aws dynamodb create-table",
+        "aws dynamodb describe-table",
+    ):
+        require(
+            deprecated not in common_make,
+            f"common.mk must not use deprecated DynamoDB state locking: {deprecated}",
+        )
+
+
 def validate_repository_invariants() -> None:
     validate_inventory()
     validate_terraform_style()
+    validate_backend_locking()
     validate_singleton_ownership()
     validate_lambda_packaging_and_parity()
+    validate_lambda_log_group_ordering()
     validate_contracts_and_production_safety()
     validate_ssm_contracts()
 

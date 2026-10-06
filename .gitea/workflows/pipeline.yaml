@@ -47,6 +47,9 @@ on:
 permissions:
   contents: read
 
+env:
+  TERRAFORM_VERSION: "1.16.4"
+
 jobs:
   validate:
     name: Validate solution and Terraform roots
@@ -64,12 +67,14 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Test solution
         run: dotnet test UnicornProperties.sln --configuration Release
 
       - name: Validate all 15 Terraform roots with backends disabled
-        run: python3 scripts/validate_infrastructure.py
+        run: python3 scripts/validate_infrastructure.py --checkov
 
   deployment_plan:
     name: Plan manual deployment
@@ -96,6 +101,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Plan selected Terraform root
         shell: bash
@@ -173,7 +180,9 @@ jobs:
           name: production-${{ inputs.deployment_target }}-plan
           path: |
             Unicorn.*/Infrastructure/**/.terraform/prod.tfplan
+            Unicorn.*/Infrastructure/**/.terraform/prod.tfplan.manifest.json
             Unicorn.*/Infrastructure/*-service/.terraform/*.zip
+            Unicorn.*/Infrastructure/*-service/.terraform/*.zip.manifest.json
           if-no-files-found: error
           include-hidden-files: true
 
@@ -201,6 +210,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Apply selected development root
         shell: bash
@@ -291,6 +302,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Apply selected production saved plan
         shell: bash
@@ -375,6 +388,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Apply selected account-global root
         shell: bash

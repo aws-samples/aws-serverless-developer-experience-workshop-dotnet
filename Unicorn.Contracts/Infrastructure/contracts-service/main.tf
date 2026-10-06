@@ -74,9 +74,27 @@ resource "aws_sqs_queue" "contracts_table_stream_to_event_pipe_dlq" {
 #### LAMBDA FUNCTION
 #################################################################################################
 
+data "external" "lambda_package_freshness" {
+  count   = var.sam_build ? 0 : 1
+  program = ["python3", local.package_freshness_script_path]
+
+  query = {
+    repo_root     = local.repository_root_path
+    package_path  = local.lambda_package_path
+    manifest_path = local.lambda_package_manifest_path
+  }
+}
+
 resource "null_resource" "build_contract_event_handler" {
   triggers = {
     source_hash = local.lambda_source_hash
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.sam_build ? true : data.external.lambda_package_freshness[0].result.fresh == "true"
+      error_message = "Lambda deployment package is missing or stale. Run `make package-service` from Unicorn.Contracts and retry."
+    }
   }
 
   provisioner "local-exec" {
@@ -175,7 +193,8 @@ resource "aws_lambda_function" "contract_event_handler" {
     null_resource.build_contract_event_handler,
     aws_iam_role_policy.contract_event_handler_dynamodb_policy,
     aws_iam_role_policy.contract_event_handler_runtime_policy,
-    aws_iam_role_policy_attachment.contract_event_handler_xray
+    aws_iam_role_policy_attachment.contract_event_handler_xray,
+    aws_cloudwatch_log_group.contract_event_handler
   ]
 
   filename         = local.lambda_package_path
@@ -209,7 +228,7 @@ resource "aws_lambda_function" "contract_event_handler" {
 }
 
 resource "aws_cloudwatch_log_group" "contract_event_handler" {
-  name              = "/aws/lambda/${aws_lambda_function.contract_event_handler.function_name}"
+  name              = "/aws/lambda/uni-prop-${var.stage}-contract-event-handler"
   retention_in_days = local.logs_retention_days
 }
 
@@ -320,6 +339,8 @@ resource "aws_api_gateway_stage" "unicorn_contracts_api" {
   xray_tracing_enabled = true
 }
 
+# API Gateway execution logging depends on the account-level CloudWatch role in
+# Unicorn.Shared/Infrastructure/api-gateway-account.
 resource "aws_api_gateway_method_settings" "unicorn_contracts_api" {
   rest_api_id = aws_api_gateway_rest_api.unicorn_contracts_api.id
   stage_name  = aws_api_gateway_stage.unicorn_contracts_api.stage_name
@@ -346,7 +367,7 @@ resource "aws_cloudwatch_event_rule" "unicorn_contracts_catch_all" {
   name           = "${local.unicorn_contracts_namespace}-CatchAllEvents"
   description    = "Catch all events published by the Contracts service."
   event_bus_name = local.contracts_event_bus_name
-  state          = local.is_prod ? "DISABLED" : "ENABLED"
+  state          = "ENABLED"
 
   event_pattern = jsonencode({
     account = [local.aws_account_id]
@@ -491,12 +512,14 @@ resource "aws_pipes_pipe" "contracts_table_stream_to_event_pipe" {
       source      = local.unicorn_contracts_namespace
     }
 
-    input_template = jsonencode({
-      PropertyId             = "<$.dynamodb.Keys.PropertyId.S>"
-      ContractId             = "<$.dynamodb.NewImage.ContractId.S>"
-      ContractStatus         = "<$.dynamodb.NewImage.ContractStatus.S>"
-      ContractLastModifiedOn = "<$.dynamodb.NewImage.ContractLastModifiedOn.S>"
-    })
+    input_template = <<-JSON
+      {
+        "PropertyId": <$.dynamodb.Keys.PropertyId.S>,
+        "ContractId": <$.dynamodb.NewImage.ContractId.S>,
+        "ContractStatus": <$.dynamodb.NewImage.ContractStatus.S>,
+        "ContractLastModifiedOn": <$.dynamodb.NewImage.ContractLastModifiedOn.S>
+      }
+    JSON
   }
 
   log_configuration {

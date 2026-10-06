@@ -1,31 +1,31 @@
 output "base_url" {
   description = "Web service API endpoint"
-  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com"
+  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
 }
 
 output "api_url" {
   description = "Web service API endpoint"
-  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com/${var.stage}/"
+  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${var.stage}/"
 }
 
 output "api_search_properties_by_city" {
   description = "GET request to list all properties in a given city"
-  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com/${var.stage}/search/{country}/{city}"
+  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${var.stage}/search/{country}/{city}"
 }
 
 output "api_search_properties_by_street" {
   description = "GET request to list all properties in a given street"
-  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com/${var.stage}/search/{country}/{city}/{street}"
+  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${var.stage}/search/{country}/{city}/{street}"
 }
 
 output "api_property_approval" {
   description = "POST request approval to allow property to be searchable"
-  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com/${var.stage}/request_approval"
+  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${var.stage}/request_approval"
 }
 
 output "api_property_details" {
   description = "GET request to get the full details of a single property"
-  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.amazonaws.com/${var.stage}/properties/{country}/{city}/{street}/{number}"
+  value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${var.stage}/properties/{country}/{city}/{street}/{number}"
 }
 
 output "ingest_queue_url" {

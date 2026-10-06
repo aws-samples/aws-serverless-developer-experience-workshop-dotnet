@@ -4,17 +4,14 @@
 STAGE ?= local
 REGION ?= ap-southeast-2
 TERRAFORM_STATE_BUCKET ?=
-TERRAFORM_LOCK_TABLE = uni-prop-terraform-locks
+TERRAFORM_NAMESPACE = contracts
 SAM_CMD ?= sam
-CONFIRM_PROD ?=
-AWS_ACCOUNT_ID = $(shell aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
-TF_VARS = -var="stage=$(STAGE)" -var="region=$(REGION)"
 
 TERRAFORM_DIR_DOMAIN = Infrastructure/domain
 TERRAFORM_DIR_SCHEMA = Infrastructure/schema-registry/ContractStatusChanged
 TERRAFORM_DIR_SERVICE = Infrastructure/contracts-service
 
-.PHONY: help build local-invoke deploy deploy-domain deploy-schema deploy-service test lint clean delete init-domain init-schema init-service init plan plan-domain plan-schema plan-service ensure-state-backend
+.PHONY: help build local-invoke deploy deploy-domain deploy-schema deploy-service test lint clean delete delete-domain delete-schema delete-service init-domain init-schema init-service init plan plan-domain plan-schema plan-service ensure-state-backend
 
 help: ## Show available commands
 	@echo "Unicorn Contracts Service Infrastructure"
@@ -23,100 +20,7 @@ help: ## Show available commands
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
 
-ensure-state-backend: ## Ensure state bucket and lock table exist
-	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
-		BUCKET_NAME="uni-prop-terraform-state-$(AWS_ACCOUNT_ID)-$(REGION)"; \
-	else \
-		BUCKET_NAME="$(TERRAFORM_STATE_BUCKET)"; \
-	fi; \
-	echo "Checking state bucket: $$BUCKET_NAME"; \
-	if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
-		echo "Creating state bucket: $$BUCKET_NAME"; \
-		if [ "$(REGION)" = "us-east-1" ]; then \
-			aws s3api create-bucket \
-				--bucket "$$BUCKET_NAME" \
-				--region $(REGION); \
-		else \
-			aws s3api create-bucket \
-				--bucket "$$BUCKET_NAME" \
-				--region $(REGION) \
-				--create-bucket-configuration LocationConstraint=$(REGION); \
-		fi; \
-		aws s3api put-bucket-versioning \
-			--bucket "$$BUCKET_NAME" \
-			--versioning-configuration Status=Enabled \
-			--region $(REGION); \
-		echo "Created state bucket: $$BUCKET_NAME"; \
-	else \
-		echo "State bucket already exists: $$BUCKET_NAME"; \
-	fi; \
-	echo "Checking lock table: $(TERRAFORM_LOCK_TABLE)"; \
-	if ! aws dynamodb describe-table --table-name "$(TERRAFORM_LOCK_TABLE)" --region $(REGION) >/dev/null 2>&1; then \
-		echo "Creating DynamoDB lock table: $(TERRAFORM_LOCK_TABLE)"; \
-		aws dynamodb create-table \
-			--table-name "$(TERRAFORM_LOCK_TABLE)" \
-			--attribute-definitions AttributeName=LockID,AttributeType=S \
-			--key-schema AttributeName=LockID,KeyType=HASH \
-			--billing-mode PAY_PER_REQUEST \
-			--region $(REGION); \
-		aws dynamodb wait table-exists \
-			--table-name "$(TERRAFORM_LOCK_TABLE)" \
-			--region $(REGION); \
-		echo "Created lock table: $(TERRAFORM_LOCK_TABLE)"; \
-	else \
-		echo "Lock table already exists: $(TERRAFORM_LOCK_TABLE)"; \
-	fi
-
-define tf_init
-	@echo "Initializing for $(1)..."
-	@if [ -z "$(TERRAFORM_STATE_BUCKET)" ]; then \
-		BUCKET_NAME="uni-prop-terraform-state-$(AWS_ACCOUNT_ID)-$(REGION)"; \
-	else \
-		BUCKET_NAME="$(TERRAFORM_STATE_BUCKET)"; \
-	fi; \
-	if ! aws s3api head-bucket --bucket "$$BUCKET_NAME" --region $(REGION) 2>/dev/null; then \
-		echo "State bucket not found. Run 'make ensure-state-backend' first."; \
-		exit 1; \
-	fi; \
-	cd $(2) && terraform init \
-		-reconfigure \
-		-backend-config="bucket=$$BUCKET_NAME" \
-		-backend-config="key=uni-prop-$(STAGE)-contracts-$(1).tfstate" \
-		-backend-config="region=$(REGION)" \
-		-backend-config="dynamodb_table=$(TERRAFORM_LOCK_TABLE)"
-endef
-
-define tf_plan
-	@if [ "$(STAGE)" = "prod" ]; then \
-		cd $(1) && terraform plan $(TF_VARS) -out=.terraform/prod.tfplan; \
-	else \
-		cd $(1) && terraform plan $(TF_VARS); \
-	fi
-endef
-
-define tf_apply
-	@if [ "$(STAGE)" = "prod" ]; then \
-		if [ "$(CONFIRM_PROD)" != "APPLY" ]; then \
-			echo "Production apply blocked. Run the prod plan first, review it, then set CONFIRM_PROD=APPLY."; \
-			exit 1; \
-		fi; \
-		if [ ! -f "$(1)/.terraform/prod.tfplan" ]; then \
-			echo "Production apply blocked: $(1)/.terraform/prod.tfplan does not exist."; \
-			exit 1; \
-		fi; \
-		cd $(1) && terraform apply .terraform/prod.tfplan; \
-	else \
-		cd $(1) && terraform apply $(TF_VARS) -auto-approve; \
-	fi
-endef
-
-define tf_destroy
-	@if [ "$(STAGE)" = "prod" ] && [ "$(CONFIRM_PROD)" != "DESTROY" ]; then \
-		echo "Production destroy blocked. Review the impact, then set CONFIRM_PROD=DESTROY."; \
-		exit 1; \
-	fi; \
-	cd $(1) && terraform destroy $(TF_VARS) -auto-approve
-endef
+include ../common.mk
 
 init-domain: ensure-state-backend ## Initialize for domain
 	$(call tf_init,domain,$(TERRAFORM_DIR_DOMAIN))
@@ -146,13 +50,21 @@ package-service: ## Create the deterministic Lambda ZIP used by Terraform plans
 	@python3 ../scripts/package_dotnet_lambda.py \
 		--project ContractsService/ContractsService.csproj \
 		--build-dir $(TERRAFORM_DIR_SERVICE)/.terraform/build/contract-event-handler \
-		--output $(TERRAFORM_DIR_SERVICE)/.terraform/contract-event-handler.zip
+		--output $(TERRAFORM_DIR_SERVICE)/.terraform/contract-event-handler.zip \
+		--repo-root .. \
+		--source ContractsService \
+		--source ../Directory.Build.props \
+		--source ../global.json \
+		--source ../scripts/package_dotnet_lambda.py
 
-check-service-package: ## Verify the reviewed Lambda ZIP is available for a saved production plan
-	@if [ ! -f "$(TERRAFORM_DIR_SERVICE)/.terraform/contract-event-handler.zip" ]; then \
-		echo "Production apply blocked: reviewed Contracts Lambda ZIP is missing."; \
-		exit 1; \
-	fi
+check-service-package: ## Verify the reviewed Lambda ZIP and build inputs match the saved production plan
+	@python3 ../scripts/check_lambda_package.py \
+		--repo-root .. \
+		--package-path $(TERRAFORM_DIR_SERVICE)/.terraform/contract-event-handler.zip \
+		--manifest-path $(TERRAFORM_DIR_SERVICE)/.terraform/contract-event-handler.zip.manifest.json || { \
+			echo "Production apply blocked: reviewed Contracts Lambda package is missing or stale. Run 'make package-service' and create a new production plan." >&2; \
+			exit 1; \
+		}
 
 local-invoke: build ## Invoke a Terraform-defined Lambda locally (FUNCTION may override the default)
 	@cd $(TERRAFORM_DIR_SERVICE) && \
@@ -174,7 +86,7 @@ deploy-service: init-service ## Deploy service resources (Lambda, API Gateway, D
 		$(MAKE) package-service; \
 	fi
 	@echo "Deploying service resources..."
-	$(call tf_apply,$(TERRAFORM_DIR_SERVICE))
+	$(call tf_apply,$(TERRAFORM_DIR_SERVICE),$(TERRAFORM_DIR_SERVICE)/.terraform/contract-event-handler.zip.manifest.json)
 
 deploy: deploy-domain deploy-schema deploy-service ## Deploy all infrastructure and application
 
@@ -185,7 +97,7 @@ plan-schema: init-schema ## Plan event schema
 	$(call tf_plan,$(TERRAFORM_DIR_SCHEMA))
 
 plan-service: init-service package-service ## Plan service resources with the exact deployment ZIP
-	$(call tf_plan,$(TERRAFORM_DIR_SERVICE))
+	$(call tf_plan,$(TERRAFORM_DIR_SERVICE),$(TERRAFORM_DIR_SERVICE)/.terraform/contract-event-handler.zip.manifest.json)
 
 plan: plan-domain plan-schema plan-service ## Plan all infrastructure
 
@@ -203,9 +115,21 @@ clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
 	@dotnet clean
 
+delete-service: init-service ## Destroy contracts service resources
+	@echo "Destroying contracts service resources..."
+	$(call tf_destroy,$(TERRAFORM_DIR_SERVICE))
+
+delete-schema: init-schema ## Destroy the contracts event schema
+	@echo "Destroying contracts event schema..."
+	$(call tf_destroy,$(TERRAFORM_DIR_SCHEMA))
+
+delete-domain: init-domain ## Destroy contracts domain resources
+	@echo "Destroying contracts domain resources..."
+	$(call tf_destroy,$(TERRAFORM_DIR_DOMAIN))
+
 delete: ## Destroy all infrastructure in reverse order
 	@echo "Destroying infrastructure in reverse order..."
-	$(call tf_destroy,$(TERRAFORM_DIR_SERVICE))
-	$(call tf_destroy,$(TERRAFORM_DIR_SCHEMA))
-	$(call tf_destroy,$(TERRAFORM_DIR_DOMAIN))
+	+$(MAKE) delete-service
+	+$(MAKE) delete-schema
+	+$(MAKE) delete-domain
 	@echo "All infrastructure destroyed"

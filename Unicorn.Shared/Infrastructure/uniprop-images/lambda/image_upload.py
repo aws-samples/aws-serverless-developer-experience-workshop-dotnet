@@ -35,22 +35,11 @@ def create(event, context):
       print(f"s3 bucket: {image_bucket_name}")
       bucket.upload_file(os.path.join(root, file), f"property_images/{file}")
 
-def delete(event, context):
-  image_bucket_name = event.get('ResourceProperties', {}).get('DestinationBucket', event.get('DestinationBucket'))
-  if not image_bucket_name:
-    return
-  
-  img_bucket = s3.Bucket(image_bucket_name)
-  img_bucket.objects.delete()
-  img_bucket.delete()
-
 def lambda_handler(event, context):
   try:
     request_type = event.get('RequestType', 'Create')
     if request_type in ['Create', 'Update']:
       create(event, context)
-    elif request_type == 'Delete':
-      delete(event, context)
     return {
       'statusCode': 200,
       'body': json.dumps('Success')

@@ -77,9 +77,27 @@ resource "aws_sqs_queue" "approvals_service_dlq" {
 #### LAMBDA FUNCTIONS
 #################################################################################################
 
+data "external" "lambda_package_freshness" {
+  count   = var.sam_build ? 0 : 1
+  program = ["python3", local.package_freshness_script_path]
+
+  query = {
+    repo_root     = local.repository_root_path
+    package_path  = local.lambda_package_path
+    manifest_path = local.lambda_package_manifest_path
+  }
+}
+
 resource "null_resource" "build_approvals_service" {
   triggers = {
     source_hash = local.lambda_source_hash
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.sam_build ? true : data.external.lambda_package_freshness[0].result.fresh == "true"
+      error_message = "Lambda deployment package is missing or stale. Run `make package-service` from Unicorn.Approvals and retry."
+    }
   }
 
   provisioner "local-exec" {
@@ -195,7 +213,8 @@ resource "aws_lambda_function" "contract_status_changed_handler" {
     null_resource.build_approvals_service,
     aws_iam_role_policy.contract_status_changed_handler_policy,
     aws_iam_role_policy.contract_status_changed_handler_runtime_policy,
-    aws_iam_role_policy_attachment.contract_status_changed_handler_xray
+    aws_iam_role_policy_attachment.contract_status_changed_handler_xray,
+    aws_cloudwatch_log_group.contract_status_changed_handler
   ]
 
   filename         = local.lambda_package_path
@@ -230,7 +249,7 @@ resource "aws_lambda_function" "contract_status_changed_handler" {
 }
 
 resource "aws_cloudwatch_log_group" "contract_status_changed_handler" {
-  name              = "/aws/lambda/${aws_lambda_function.contract_status_changed_handler.function_name}"
+  name              = "/aws/lambda/uni-prop-${var.stage}-contract-status-changed-handler"
   retention_in_days = local.logs_retention_days
 }
 
@@ -385,7 +404,8 @@ resource "aws_lambda_function" "properties_approval_sync" {
     null_resource.build_approvals_service,
     aws_iam_role_policy.properties_approval_sync_policy,
     aws_iam_role_policy.properties_approval_sync_runtime_policy,
-    aws_iam_role_policy_attachment.properties_approval_sync_xray
+    aws_iam_role_policy_attachment.properties_approval_sync_xray,
+    aws_cloudwatch_log_group.properties_approval_sync
   ]
 
   filename         = local.lambda_package_path
@@ -420,7 +440,7 @@ resource "aws_lambda_function" "properties_approval_sync" {
 }
 
 resource "aws_cloudwatch_log_group" "properties_approval_sync" {
-  name              = "/aws/lambda/${aws_lambda_function.properties_approval_sync.function_name}"
+  name              = "/aws/lambda/uni-prop-${var.stage}-properties-approval-sync"
   retention_in_days = local.logs_retention_days
 }
 
@@ -519,7 +539,8 @@ resource "aws_lambda_function" "wait_for_contract_approval" {
     null_resource.build_approvals_service,
     aws_iam_role_policy.wait_for_contract_approval_policy,
     aws_iam_role_policy.wait_for_contract_approval_runtime_policy,
-    aws_iam_role_policy_attachment.wait_for_contract_approval_xray
+    aws_iam_role_policy_attachment.wait_for_contract_approval_xray,
+    aws_cloudwatch_log_group.wait_for_contract_approval
   ]
 
   filename         = local.lambda_package_path
@@ -554,7 +575,7 @@ resource "aws_lambda_function" "wait_for_contract_approval" {
 }
 
 resource "aws_cloudwatch_log_group" "wait_for_contract_approval" {
-  name              = "/aws/lambda/${aws_lambda_function.wait_for_contract_approval.function_name}"
+  name              = "/aws/lambda/uni-prop-${var.stage}-wait-for-contract-approval"
   retention_in_days = local.logs_retention_days
 }
 
@@ -671,8 +692,8 @@ resource "aws_sfn_state_machine" "approval_state_machine" {
 
   logging_configuration {
     log_destination        = "${aws_cloudwatch_log_group.approval_state_machine.arn}:*"
-    include_execution_data = !local.is_prod
-    level                  = local.is_prod ? "ERROR" : "ALL"
+    include_execution_data = true
+    level                  = "ALL"
   }
 }
 
@@ -770,10 +791,10 @@ resource "aws_cloudwatch_log_group" "unicorn_approvals_catch_all" {
 }
 
 resource "aws_cloudwatch_event_rule" "unicorn_approvals_catch_all" {
-  name           = "approvals.catchall"
+  name           = "${local.unicorn_approvals_namespace}-CatchAllEvents"
   description    = "Catchall rule used for development purposes."
   event_bus_name = local.approvals_event_bus_name
-  state          = local.is_prod ? "DISABLED" : "ENABLED"
+  state          = "ENABLED"
 
   event_pattern = jsonencode({
     account = [local.aws_account_id]

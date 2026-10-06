@@ -27,7 +27,7 @@ Domain, service, schema, and subscription roots read these values. The images ro
 3. Apply `uniprop-images` for each needed stage.
 4. Apply service domains, schemas, workloads, and subscriptions in their documented order.
 
-On teardown, remove subscriptions, workloads, schemas, and domains before Shared parameters. `make delete` removes images and namespaces but deliberately does not remove the API Gateway account singleton.
+On teardown, remove subscriptions, workloads, schemas, and domains before Shared parameters. `make delete` removes images and account-global namespaces but deliberately does not remove the API Gateway account singleton. It requires `CONFIRM_PROD=DESTROY` for production images and the independent `CONFIRM_ACCOUNT_GLOBAL=DESTROY` token for namespace removal because those parameters are used by every stage.
 
 ## Commands
 
@@ -36,21 +36,28 @@ Run from `Unicorn.Shared`:
 ```bash
 make init
 make plan
-# Applies singleton roots plus local/dev/prod image roots; the prod saved plan must be reviewed first
+# Applies the account singleton, global namespaces, and local/dev/prod image roots;
+# review the production saved plan before applying it
 make deploy CONFIRM_PROD=APPLY
 make describe
 
+# Aggregate deletion requires separate production and account-global confirmations
+make delete CONFIRM_PROD=DESTROY CONFIRM_ACCOUNT_GLOBAL=DESTROY
+
 # Component and stage examples are preferable for a narrower scope
+make init-images-local
 make plan-api-gateway-account
 make plan-namespaces
 make plan-images-local
 make deploy-images-dev
 ```
 
-`local`, `dev`, and `prod` are separate states for `uniprop-images`. Production image planning saves `Infrastructure/uniprop-images/.terraform/prod.tfplan`; review it immediately and use `CONFIRM_PROD=APPLY` to apply that exact plan. Production image deletion requires `CONFIRM_PROD=DESTROY`. Singleton API Gateway and namespace roots use `shared` scope rather than a stage and are not covered by the production-stage gate.
+`local`, `dev`, and `prod` are separate states for `uniprop-images`, but they share one Terraform working directory. Use the matching `init-images-local`, `init-images-dev`, or `init-images-prod` target before direct Terraform work so the directory points to the intended backend key. Aggregate `make init` runs sequentially and re-initializes `local` last, leaving the working directory on the safe local state.
+
+Production image planning saves `Infrastructure/uniprop-images/.terraform/prod.tfplan`; review it immediately and use `CONFIRM_PROD=APPLY` to apply that exact plan. Production image deletion requires `CONFIRM_PROD=DESTROY`. The API Gateway account singleton and global namespace root use `shared` scope rather than a stage and are not covered by the production-stage gate. Deleting namespaces directly or through aggregate deletion requires `CONFIRM_ACCOUNT_GLOBAL=DESTROY`.
 
 Every root has a committed `.terraform.lock.hcl`. Validate all 15 repository roots from the repository root:
 
 ```bash
-python3 scripts/validate_infrastructure.py
+python3 scripts/validate_infrastructure.py --checkov
 ```

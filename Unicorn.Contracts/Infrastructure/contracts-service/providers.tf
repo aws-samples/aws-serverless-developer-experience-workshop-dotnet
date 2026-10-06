@@ -2,11 +2,15 @@
 # SPDX-License-Identifier: MIT-0
 
 terraform {
-  required_version = ">= 1.6, < 2.0"
+  required_version = ">= 1.11, < 2.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 6.0"
+    }
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3"
     }
     null = {
       source  = "hashicorp/null"
@@ -24,8 +28,9 @@ provider "aws" {
 
   default_tags {
     tags = {
-      stage     = var.stage
-      project   = "AWS Serverless Developer Experience"
+      stage   = var.stage
+      project = "AWS Serverless Developer Experience"
+      # Keep this operational-contract value synchronized with the Shared namespaces SSM parameters.
       namespace = "unicorn-contracts"
     }
   }

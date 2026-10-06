@@ -19,24 +19,24 @@ data "aws_ssm_parameter" "approvals_eventbridge_role_arn" {
 }
 
 resource "aws_cloudwatch_event_rule" "contract_status_changed_subscription" {
-  name           = "${data.aws_ssm_parameter.unicorn_approvals_namespace.value}-ContractStatusChanged"
+  name           = "${local.unicorn_approvals_namespace}-ContractStatusChanged"
   description    = "Subscription rule for ContractStatusChanged event targeting the Unicorn Approvals event bus for processing approval workflows."
-  event_bus_name = data.aws_ssm_parameter.contracts_event_bus_arn.value
+  event_bus_name = local.contracts_event_bus_arn
 
   event_pattern = jsonencode({
-    source      = [data.aws_ssm_parameter.unicorn_contracts_namespace.value]
+    source      = [local.unicorn_contracts_namespace]
     detail-type = ["ContractStatusChanged"]
   })
 
   tags = {
-    "rule-owner-service-namespace" = data.aws_ssm_parameter.unicorn_approvals_namespace.value
+    "rule-owner-service-namespace" = local.unicorn_approvals_namespace
   }
 }
 
 resource "aws_cloudwatch_event_target" "contract_status_changed_subscription" {
   rule           = aws_cloudwatch_event_rule.contract_status_changed_subscription.name
-  event_bus_name = data.aws_ssm_parameter.contracts_event_bus_arn.value
+  event_bus_name = local.contracts_event_bus_arn
   target_id      = "SendEventTo"
-  arn            = data.aws_ssm_parameter.approvals_event_bus_arn.value
-  role_arn       = data.aws_ssm_parameter.approvals_eventbridge_role_arn.value
+  arn            = local.approvals_event_bus_arn
+  role_arn       = local.approvals_eventbridge_role_arn
 }

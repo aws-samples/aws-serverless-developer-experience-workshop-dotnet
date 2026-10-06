@@ -82,9 +82,38 @@ resource "aws_sqs_queue" "publication_evaluation_event_handler_dlq" {
 #### LAMBDA FUNCTIONS
 #################################################################################################
 
+data "external" "search_package_freshness" {
+  count   = var.sam_build ? 0 : 1
+  program = ["python3", local.package_freshness_script_path]
+
+  query = {
+    repo_root     = local.repository_root_path
+    package_path  = local.search_package_path
+    manifest_path = local.search_package_manifest_path
+  }
+}
+
+data "external" "publication_manager_package_freshness" {
+  count   = var.sam_build ? 0 : 1
+  program = ["python3", local.package_freshness_script_path]
+
+  query = {
+    repo_root     = local.repository_root_path
+    package_path  = local.publication_manager_package_path
+    manifest_path = local.publication_manager_package_manifest_path
+  }
+}
+
 resource "null_resource" "build_search_service" {
   triggers = {
     source_hash = local.search_source_hash
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.sam_build ? true : data.external.search_package_freshness[0].result.fresh == "true"
+      error_message = "Search Lambda deployment package is missing or stale. Run `make package-service` from Unicorn.Web and retry."
+    }
   }
 
   provisioner "local-exec" {
@@ -95,6 +124,13 @@ resource "null_resource" "build_search_service" {
 resource "null_resource" "build_publication_manager_service" {
   triggers = {
     source_hash = local.publication_manager_source_hash
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.sam_build ? true : data.external.publication_manager_package_freshness[0].result.fresh == "true"
+      error_message = "Publication Manager Lambda deployment package is missing or stale. Run `make package-service` from Unicorn.Web and retry."
+    }
   }
 
   provisioner "local-exec" {
@@ -168,8 +204,7 @@ resource "aws_iam_role_policy" "search_function_dynamodb_policy" {
           "dynamodb:Scan"
         ]
         Resource = [
-          aws_dynamodb_table.properties_table.arn,
-          "${aws_dynamodb_table.properties_table.arn}/index/*"
+          aws_dynamodb_table.properties_table.arn
         ]
       }
     ]
@@ -203,7 +238,8 @@ resource "aws_lambda_function" "search_function" {
     null_resource.build_search_service,
     aws_iam_role_policy.search_function_dynamodb_policy,
     aws_iam_role_policy.search_function_runtime_policy,
-    aws_iam_role_policy_attachment.search_function_xray
+    aws_iam_role_policy_attachment.search_function_xray,
+    aws_cloudwatch_log_group.search_function
   ]
 
   filename         = local.search_package_path
@@ -238,7 +274,7 @@ resource "aws_lambda_function" "search_function" {
 }
 
 resource "aws_cloudwatch_log_group" "search_function" {
-  name              = "/aws/lambda/${aws_lambda_function.search_function.function_name}"
+  name              = "/aws/lambda/uni-prop-${var.stage}-search-function"
   retention_in_days = local.logs_retention_days
 }
 
@@ -280,8 +316,7 @@ resource "aws_iam_role_policy" "request_approval_function_policy" {
           "dynamodb:Scan"
         ]
         Resource = [
-          aws_dynamodb_table.properties_table.arn,
-          "${aws_dynamodb_table.properties_table.arn}/index/*"
+          aws_dynamodb_table.properties_table.arn
         ]
       }
     ]
@@ -326,7 +361,8 @@ resource "aws_lambda_function" "request_approval_function" {
     null_resource.build_publication_manager_service,
     aws_iam_role_policy.request_approval_function_policy,
     aws_iam_role_policy.request_approval_function_runtime_policy,
-    aws_iam_role_policy_attachment.request_approval_function_xray
+    aws_iam_role_policy_attachment.request_approval_function_xray,
+    aws_cloudwatch_log_group.request_approval_function
   ]
 
   filename         = local.publication_manager_package_path
@@ -361,7 +397,7 @@ resource "aws_lambda_function" "request_approval_function" {
 }
 
 resource "aws_cloudwatch_log_group" "request_approval_function" {
-  name              = "/aws/lambda/${aws_lambda_function.request_approval_function.function_name}"
+  name              = "/aws/lambda/uni-prop-${var.stage}-request-approval-function"
   retention_in_days = local.logs_retention_days
 }
 
@@ -412,8 +448,7 @@ resource "aws_iam_role_policy" "publication_evaluation_event_handler_policy" {
           "dynamodb:Scan"
         ]
         Resource = [
-          aws_dynamodb_table.properties_table.arn,
-          "${aws_dynamodb_table.properties_table.arn}/index/*"
+          aws_dynamodb_table.properties_table.arn
         ]
       },
       {
@@ -452,7 +487,8 @@ resource "aws_lambda_function" "publication_evaluation_event_handler" {
     null_resource.build_publication_manager_service,
     aws_iam_role_policy.publication_evaluation_event_handler_policy,
     aws_iam_role_policy.publication_evaluation_event_handler_runtime_policy,
-    aws_iam_role_policy_attachment.publication_evaluation_event_handler_xray
+    aws_iam_role_policy_attachment.publication_evaluation_event_handler_xray,
+    aws_cloudwatch_log_group.publication_evaluation_event_handler
   ]
 
   filename         = local.publication_manager_package_path
@@ -487,7 +523,7 @@ resource "aws_lambda_function" "publication_evaluation_event_handler" {
 }
 
 resource "aws_cloudwatch_log_group" "publication_evaluation_event_handler" {
-  name              = "/aws/lambda/${aws_lambda_function.publication_evaluation_event_handler.function_name}"
+  name              = "/aws/lambda/uni-prop-${var.stage}-pub-eval-event-handler"
   retention_in_days = local.logs_retention_days
 }
 
@@ -638,6 +674,8 @@ resource "aws_api_gateway_stage" "unicorn_web_api" {
   xray_tracing_enabled = true
 }
 
+# API Gateway execution logging depends on the account-level CloudWatch role in
+# Unicorn.Shared/Infrastructure/api-gateway-account.
 resource "aws_api_gateway_method_settings" "unicorn_web_api" {
   rest_api_id = aws_api_gateway_rest_api.unicorn_web_api.id
   stage_name  = aws_api_gateway_stage.unicorn_web_api.stage_name
@@ -664,7 +702,7 @@ resource "aws_cloudwatch_event_rule" "unicorn_web_catch_all" {
   name           = "${local.unicorn_web_namespace}-CatchAllEvents"
   description    = "Catch all events published by the Web service."
   event_bus_name = local.web_event_bus_name
-  state          = local.is_prod ? "DISABLED" : "ENABLED"
+  state          = "ENABLED"
 
   event_pattern = jsonencode({
     account = [local.aws_account_id]

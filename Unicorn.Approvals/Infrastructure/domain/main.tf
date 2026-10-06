@@ -42,7 +42,7 @@ data "aws_iam_policy_document" "approvals_event_bus_policy" {
     condition {
       test     = "StringEquals"
       variable = "events:source"
-      values   = [data.aws_ssm_parameter.unicorn_approvals_namespace.value]
+      values   = [local.unicorn_approvals_namespace]
     }
   }
 
@@ -68,13 +68,13 @@ data "aws_iam_policy_document" "approvals_event_bus_policy" {
     condition {
       test     = "StringEqualsIfExists"
       variable = "events:creatorAccount"
-      values   = [data.aws_caller_identity.current.account_id]
+      values   = ["$${aws:PrincipalAccount}"]
     }
 
     condition {
       test     = "StringEquals"
       variable = "events:source"
-      values   = [data.aws_ssm_parameter.unicorn_approvals_namespace.value]
+      values   = [local.unicorn_approvals_namespace]
     }
 
     condition {

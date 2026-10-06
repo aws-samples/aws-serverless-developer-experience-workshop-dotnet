@@ -21,7 +21,6 @@ output "event_bus_log_group_arn" {
 output "schema_registry_name" {
   description = "Name of the Unicorn Web Schema Registry"
   value       = aws_schemas_registry.web_schema_registry.name
-  sensitive   = true
 }
 
 output "schema_registry_arn" {

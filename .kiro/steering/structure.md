@@ -2,18 +2,24 @@
 
 ## Repository Layout
 
-Multi-service monorepo with three services plus shared infrastructure:
+This repository is a multi-service .NET monorepo with Terraform-owned infrastructure:
 
 ```text
-├── Unicorn.Contracts/      # Contracts Service - property contracts
-├── Unicorn.Approvals/      # Approvals Service - approval workflow
-├── Unicorn.Web/            # Web Service - property listings and search
-├── Unicorn.Shared/         # Global namespaces and shared images stacks
+├── Unicorn.Contracts/      # Contracts service and owned Terraform roots
+├── Unicorn.Approvals/      # Approval workflow and owned Terraform roots
+├── Unicorn.Web/            # Property listing/search service and owned Terraform roots
+├── Unicorn.Shared/         # Account/Region and cross-service Terraform roots
+├── scripts/                # Packaging and infrastructure validation tools
 ├── docs/                   # Documentation and architecture diagrams
+├── Makefile                # Five-phase full-system Terraform orchestration
+├── common.mk               # Shared Terraform backend and lifecycle helpers
+├── PARITY.md               # SAM-to-Terraform mirror contract
 ├── UnicornProperties.sln   # Solution referencing all projects
 ├── Directory.Build.props   # Shared MSBuild settings
 └── global.json             # .NET SDK version pin
 ```
+
+Terraform is the deployment and state owner. AWS SAM is retained only for build and local invocation of Terraform-defined Lambda functions through the native Terraform hook.
 
 ## Service Structure Pattern
 
@@ -21,77 +27,105 @@ Each service follows this structure. Maintain it when adding or modifying servic
 
 ```text
 Unicorn.<Service>/
-├── Makefile                     # Canonical build/deploy/test interface
+├── Makefile                     # Canonical build, Terraform lifecycle, and test interface
 ├── <Name>Service/               # Lambda project (PascalCase)
-│   ├── <Name>Service.csproj     # Dependencies (packages.lock.json committed)
+│   ├── <Name>Service.csproj     # Dependencies; packages.lock.json is committed
 │   └── *.cs                     # Handlers and domain types
 ├── <Name>Service.Test(s)/       # xUnit test project
 │   ├── *.cs                     # Tests and helpers
 │   └── events/                  # Sample event payloads
-└── Infrastructure/              # All IaC for the service (see below)
+└── Infrastructure/              # Independent Terraform roots owned by the service
 ```
 
-`Unicorn.Web` contains multiple projects (`PublicationManagerService`, `SearchService`, plus `Common` and `Data`). Step Functions ASL definitions live next to the service template (e.g., `Unicorn.Approvals/Infrastructure/approvals-service/PropertyApproval.asl.yaml`).
+`Unicorn.Web` contains multiple projects: `PublicationManagerService`, `SearchService`, `Common`, and `Data`. Approvals keeps the Step Functions definition at `Unicorn.Approvals/Infrastructure/approvals-service/PropertyApproval.asl.json`; Terraform renders this JSON ASL file into the state machine definition.
 
-## Infrastructure Layout
+## Fifteen Terraform Roots
 
-Every service owns its infrastructure under `Infrastructure/`:
+Every directory below is an independent Terraform root with its own backend key and committed `.terraform.lock.hcl`:
 
-```text
-Infrastructure/
-├── domain.yaml                     # Event bus, bus policies, schema registry,
-│                                   #   catch-all rule, SSM exports
-├── <service>-service/
-│   ├── template.yaml               # Lambda, API Gateway, DynamoDB, queues
-│   ├── samconfig.toml              # SAM build/deploy configuration
-│   └── api.yaml                    # OpenAPI specification (REST services)
-├── schema-registry/
-│   └── <EventName>-schema.yaml     # One stack per published event schema
-└── subscriptions/
-    └── <producer>-subscriptions.yaml  # Rules on producer buses feeding this service
-```
+| Owner | Terraform root | Responsibility |
+| --- | --- | --- |
+| Contracts | `Unicorn.Contracts/Infrastructure/domain` | Event bus, policies, forwarding role, logging, registry, and SSM contracts |
+| Contracts | `Unicorn.Contracts/Infrastructure/contracts-service` | API, queue, Lambda, DynamoDB, pipe, IAM, and logs |
+| Contracts | `Unicorn.Contracts/Infrastructure/schema-registry/ContractStatusChanged` | `ContractStatusChanged` schema |
+| Approvals | `Unicorn.Approvals/Infrastructure/domain` | Event bus, policies, forwarding role, logging, registry, and SSM contracts |
+| Approvals | `Unicorn.Approvals/Infrastructure/approvals-service` | Lambdas, DynamoDB, Step Functions, IAM, queues, and logs |
+| Approvals | `Unicorn.Approvals/Infrastructure/schema-registry/PublicationEvaluationCompleted` | `PublicationEvaluationCompleted` schema |
+| Approvals | `Unicorn.Approvals/Infrastructure/subscriptions/unicorn-contracts` | Consumer-owned Contracts-to-Approvals rule |
+| Approvals | `Unicorn.Approvals/Infrastructure/subscriptions/unicorn-web` | Consumer-owned Web-to-Approvals rule |
+| Web | `Unicorn.Web/Infrastructure/domain` | Event bus, policies, forwarding role, logging, registry, and SSM contracts |
+| Web | `Unicorn.Web/Infrastructure/web-service` | API, Lambdas, DynamoDB, queues, IAM, and logs |
+| Web | `Unicorn.Web/Infrastructure/schema-registry/PublicationApprovalRequested` | `PublicationApprovalRequested` schema |
+| Web | `Unicorn.Web/Infrastructure/subscriptions/approvals` | Consumer-owned Approvals-to-Web rule |
+| Shared | `Unicorn.Shared/Infrastructure/api-gateway-account` | Sole account/Region owner of API Gateway account logging configuration |
+| Shared | `Unicorn.Shared/Infrastructure/namespaces` | Global namespace SSM parameters |
+| Shared | `Unicorn.Shared/Infrastructure/uniprop-images` | Stage image bucket and initialization resources |
 
-Deploy order: shared namespaces first, then per service `domain -> schema -> service`; subscriptions reference both participating domains. `make deploy` and `make delete` encode the correct (reverse) order.
+Each root contains `backend.tf`, `main.tf`, `outputs.tf`, `providers.tf`, and `variables.tf`. Keep its lock file committed. Do not combine roots or introduce cross-root `terraform_remote_state` references; use the SSM operational contracts.
 
-## Code Conventions
+## Infrastructure Files
 
-- Projects and directories are PascalCase (`ContractsService`, `PublicationManagerService`, `SearchService`)
-- Handler classes describe the trigger (`ContractEventHandler.cs`); domain types live beside them (`Contract.cs`, `ContractStatus.cs`)
-- Nullable reference types are enabled; keep new code warning-free
-- Shared Web utilities live in `Unicorn.Web/Common` and `Unicorn.Web/Data`
-- Restore/build through the Makefile or solution so `Directory.Build.props` settings apply
+- Contracts and Web REST API definitions live in their service roots as `api.yaml.tpl`. Terraform supplies resource names and ARNs to `templatefile(...)` and assigns the rendered OpenAPI document to API Gateway.
+- Approvals workflow definition lives in `PropertyApproval.asl.json`. Terraform supplies table, bucket, bus, service, and Lambda values when rendering it.
+- Schema directories are Terraform roots, not deployable schema YAML stacks.
+- Subscription directories are Terraform roots owned by the consuming service.
+- Service `samconfig.toml` files contain build settings only. They do not contain SAM deployment configuration. Web keeps `parallel = false` because its projects share build output.
+- Terraform service roots expose `sam_metadata_*` resources for the native SAM Terraform hook.
 
-## Resource Naming & Events
+## SSM Operational Contracts
 
-- Stack names: `uni-prop-{stage}-{service}` (e.g., `uni-prop-local-contracts`); schema stacks append `-schema-<EventName>`
-- Event buses: `unicorn-{service}-eventbus-${Stage}` (e.g., `unicorn-contracts-eventbus-local`), exported via SSM
-- Event sources use the service namespace value (e.g., `unicorn-contracts`), resolved from the SSM namespace parameters — never hardcode it
-- Canonical event detail types: `ContractStatusChanged` (Contracts), `PublicationApprovalRequested` (Web), `PublicationEvaluationCompleted` (Approvals)
-- SSM parameter contracts:
-  - Global namespaces: `/uni-prop/Unicorn{Service}Namespace`
-  - Stage-scoped: `/uni-prop/${Stage}/{Service}EventBus`, `...EventBusArn`, `...SchemaRegistryName`
-- Each domain template includes a catch-all rule logging all bus events to CloudWatch for debugging
+Roots exchange names and ARNs through SSM Parameter Store:
+
+- Global namespaces: `/uni-prop/UnicornContractsNamespace`, `/uni-prop/UnicornApprovalsNamespace`, and `/uni-prop/UnicornWebNamespace`.
+- Stage-scoped domain contracts under `/uni-prop/${stage}/`: `{Service}EventBus`, `{Service}EventBusArn`, `{Service}SchemaRegistryName`, and `{Service}EventBridgeRoleArn`.
+- Shared images: `/uni-prop/${stage}/ImagesBucket`.
+
+These values are deployment contracts, not secrets. Renaming or removing a parameter is a cross-root and cross-IaC breaking change. Keep provider `namespace` default tags and event source values aligned with the global namespace parameters.
+
+## Dependency Order and Ownership
+
+The root `Makefile` implements the required five phases:
+
+1. Bootstrap the versioned S3 state bucket; Terraform coordinates writers with S3-native `.tflock` objects.
+2. Apply Shared `api-gateway-account`, `namespaces`, and the selected stage's `uniprop-images` root.
+3. Apply Contracts, Approvals, and Web domain roots.
+4. Apply all schema roots, then all workload roots.
+5. Apply the three consumer-owned subscription roots.
+
+`make delete-all STAGE=<stage>` destroys stage resources in reverse dependency order. It preserves the account/Region API Gateway singleton and the state backend. The four namespace Makefiles include `common.mk` and retain component-specific targets for narrower work.
+
+## Code and Resource Conventions
+
+- Projects and directories are PascalCase (`ContractsService`, `PublicationManagerService`, `SearchService`).
+- Handler classes describe their trigger; domain types live beside them.
+- Nullable reference types are enabled; keep new code warning-free.
+- Shared Web utilities live in `Unicorn.Web/Common` and `Unicorn.Web/Data`.
+- Restore and build through the Makefile or solution so `Directory.Build.props` settings apply.
+- Event sources use the namespace resolved from SSM; do not hardcode a different value.
+- Canonical event detail types are `ContractStatusChanged`, `PublicationApprovalRequested`, and `PublicationEvaluationCompleted`.
+- Catch-all EventBridge rules live in the three workload roots and remain enabled in every stage. Domain roots own event-bus service logging.
+- Explicit resource, IAM role, and log-group names are intentional Terraform conventions documented in `PARITY.md`.
 
 ## Testing Conventions
 
 ```text
 <Name>Service.Test(s)/
-├── <Handler>Test.cs         # xUnit tests, NSubstitute mocks
-├── TestHelpers.cs           # Shared fixtures/helpers
-└── events/                  # Sample event payloads (e.g., create_contract_valid_1.json)
+├── <Handler>Test.cs         # xUnit tests with NSubstitute mocks
+├── TestHelpers.cs           # Shared fixtures and helpers
+└── events/                  # Sample event payloads
 ```
 
-- Test event naming: `[action]_[entity]_[condition]_[n].json` (e.g., `create_contract_valid_1.json`)
-- Run tests with `make test` (wraps `dotnet test`); coverage collected via coverlet
+Use `[action]_[entity]_[condition]_[n].json` for test event names. Run service tests with `make test`; coverage is collected through coverlet.
 
 ## Development Workflow
 
 When adding a feature:
 
-1. Implement the handler in the service's Lambda project following existing patterns
-2. Add or update SAM resources in `Infrastructure/<service>-service/template.yaml` using the naming conventions above
-3. Add sample event payloads under the test project's `events/` and tests beside existing ones
-4. If the change publishes or consumes a new event: update `Infrastructure/schema-registry/` and the consumer's `Infrastructure/subscriptions/`
-5. Run `make lint` and `make test` before deploying with `make deploy STAGE=local`
+1. Implement the handler in the owning Lambda project following existing patterns.
+2. Add or update resources in the owning Terraform root. Do not recreate deleted SAM deployment templates.
+3. For REST changes, update the owning `api.yaml.tpl`; for approval workflow changes, update `PropertyApproval.asl.json`.
+4. Add sample event payloads and tests beside the existing tests.
+5. If the change publishes or consumes an event, update the owning schema and consumer subscription roots while preserving SSM contracts and deployment order.
+6. Run `make lint`, `make test`, and `python3 scripts/validate_infrastructure.py --checkov` before deployment. Use `make deploy-all STAGE=dev` for a full ordered development deployment.
 
-When modifying services, preserve the existing structure — do not reorganize directories without a documented reason.
+Preserve the 15-root structure unless a separately reviewed change updates state ownership, validation, orchestration, and `PARITY.md` together.
