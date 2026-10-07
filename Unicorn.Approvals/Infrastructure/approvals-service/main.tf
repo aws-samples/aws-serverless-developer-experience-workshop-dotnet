@@ -670,12 +670,12 @@ resource "aws_iam_role_policy_attachment" "approval_state_machine_xray" {
 }
 
 resource "aws_cloudwatch_log_group" "approval_state_machine" {
-  name              = "/aws/states/uni-prop-${var.stage}-ApprovalStateMachine"
+  name              = "/aws/states/${local.stack_name}-ApprovalStateMachine"
   retention_in_days = local.logs_retention_days
 }
 
 resource "aws_sfn_state_machine" "approval_state_machine" {
-  name     = "uni-prop-${var.stage}-ApprovalStateMachine"
+  name     = "${local.stack_name}-ApprovalStateMachine"
   role_arn = aws_iam_role.approval_state_machine_role.arn
 
   definition = templatefile("${path.module}/PropertyApproval.asl.json", {
@@ -813,7 +813,7 @@ resource "aws_cloudwatch_event_target" "unicorn_approvals_catch_all" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "eventbridge_cloudwatch_log_group_policy" {
-  policy_name = "EvBToCWLogs-${var.stage}-approvals-catchall"
+  policy_name = "EvBToCWLogs-${local.stack_name}"
 
   policy_document = jsonencode({
     Version = "2012-10-17"

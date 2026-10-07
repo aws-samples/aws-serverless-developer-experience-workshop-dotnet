@@ -77,11 +77,13 @@ The current logging behavior is also must-match:
 
 A difference on one of these surfaces that is not in the register is drift.
 
+Because both tracks deploy the same names, a SAM deployment and a Terraform deployment cannot run the same stage in the same account and Region. Use a separate account, Region, or stage for each track when demonstrating both.
+
 ## Accepted-divergence register
 
 | Surface | SAM behavior | Terraform behavior | Rationale |
 | --- | --- | --- | --- |
-| Explicit resource, IAM role, and log-group names | CloudFormation and SAM can generate physical names and implicit execution roles or log groups. | Terraform declares stable participant-visible names, explicit IAM roles and policies, and static Lambda log-group names created before the functions use them. | Explicit ownership avoids generated-name drift, supports cross-root references, and prevents first-invocation log-group races while preserving required external names. |
+| Explicit resource, IAM role, and log-group names | Where a SAM resource declares no name, CloudFormation generates its physical name. SAM can also create implicit execution roles and log groups. | Terraform assigns stable explicit names only to resources whose SAM names are CloudFormation-generated, and declares explicit IAM roles and policies and static Lambda log-group names created before the functions use them. Where SAM sets a name or derives it from a literal, `${Stage}`, `${AWS::StackName}`, or an OpenAPI `info.title`, Terraform reproduces the resolved value, and `scripts/validate_infrastructure.py` pins it. | Explicit ownership avoids generated-name drift, supports cross-root references, and prevents first-invocation log-group races while preserving required external names. |
 | SSM parameters instead of CloudFormation exports | SAM stacks can compose resources through CloudFormation outputs and exports. | Independent Terraform roots publish and consume the equivalent operational names and ARNs through SSM; they do not read another root's state. | SSM keeps the existing cross-IaC contract, avoids remote-state coupling, and lets roots retain separate lifecycles. SSM parameter names and values still must match. |
 | Terraform state backend | CloudFormation owns SAM stack state. | Terraform uses a versioned S3 state bucket, S3-native `.tflock` objects, and a separate backend key for every root and stage where applicable. | Terraform requires durable state and locking. Separate keys limit blast radius and prevent roots from co-owning resources. |
 | Production DynamoDB point-in-time recovery and deletion protection | The SAM workshop baseline does not add Terraform lifecycle protections. | Terraform enables point-in-time recovery and deletion protection for service tables in `prod`. | These controls protect production data from Terraform lifecycle and destroy mistakes without changing table APIs or participant workflows. |
@@ -110,6 +112,7 @@ From the repository root, `make deploy-all STAGE=<local|dev|prod>` applies the r
 - [ ] Inventory every changed SAM resource, output, API definition, event schema, ASL definition, Make target, and participant workflow.
 - [ ] Map each infrastructure change to one or more of the 15 Terraform roots. Add no new root without updating the validator, directory map, deployment order, backend ownership, and review contract.
 - [ ] Compare every must-match surface above, including names, outputs, SSM values, schemas, APIs, event flows, IAM effects, catch-all rules, and logging behavior.
+- [ ] Resolve every SAM-determined name before comparing it: `${AWS::StackName}` is the `stack_name` in the `develop` `samconfig.toml` (`uni-prop-<stage>-<service>`, mirrored by each service root's `stack_name` local), and a REST API with no SAM `Name` takes its OpenAPI `info.title`. When a SAM-determined name changes, update the pins in `validate_sam_name_parity()` in `scripts/validate_infrastructure.py`.
 - [ ] Preserve the SSM contract and five-phase dependency order. Treat a parameter rename or removal as a cross-root and cross-IaC breaking change.
 - [ ] Render REST API changes through the owning `api.yaml.tpl` and workflow changes through `PropertyApproval.asl.json`; do not recreate deleted SAM deployment templates in the Terraform mirror.
 - [ ] Classify every observed difference as must-match, an existing accepted divergence, or drift. Review and document any proposed new divergence before implementation.

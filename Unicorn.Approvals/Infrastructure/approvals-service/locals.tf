@@ -1,4 +1,7 @@
 locals {
+  # Mirrors SAM's ${AWS::StackName} (stack_name in the develop samconfig.toml).
+  # SAM derives the state machine and Logs resource policy names from it.
+  stack_name          = "uni-prop-${var.stage}-approvals"
   logs_retention_days = var.stage == "prod" ? 14 : 3
   is_prod             = var.stage == "prod"
   aws_account_id      = var.sam_build ? "000000000000" : data.aws_caller_identity.current[0].account_id

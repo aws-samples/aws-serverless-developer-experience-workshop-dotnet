@@ -1,4 +1,7 @@
 locals {
+  # Mirrors SAM's ${AWS::StackName} (stack_name in the develop samconfig.toml).
+  # SAM derives the Logs resource policy name from it.
+  stack_name                  = "uni-prop-${var.stage}-contracts"
   logs_retention_days         = var.stage == "prod" ? 14 : 3
   is_prod                     = var.stage == "prod"
   log_level                   = var.stage == "prod" ? "ERROR" : "INFO"

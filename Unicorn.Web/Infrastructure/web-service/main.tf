@@ -624,7 +624,9 @@ resource "aws_cloudwatch_log_group" "unicorn_web_api" {
 }
 
 resource "aws_api_gateway_rest_api" "unicorn_web_api" {
-  name        = "uni-prop-${var.stage}-web-api"
+  # SAM sets no Name, so API Gateway names the API from the OpenAPI info.title.
+  # Terraform's name argument overrides the title, so it repeats it here.
+  name        = "Unicorn Web API"
   description = "Unicorn Web API"
   body        = local.api_openapi_spec
 
@@ -718,7 +720,7 @@ resource "aws_cloudwatch_event_target" "unicorn_web_catch_all" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "eventbridge_cloudwatch_log_group_policy" {
-  policy_name = "EvBToCWLogs-${var.stage}-web-catchall"
+  policy_name = "EvBToCWLogs-${local.stack_name}"
 
   policy_document = jsonencode({
     Version = "2012-10-17"

@@ -81,6 +81,67 @@ LAMBDA_LOG_GROUP_PAIRS = (
     ),
 )
 
+APPROVALS_SERVICE_ROOT = Path("Unicorn.Approvals/Infrastructure/approvals-service")
+CONTRACTS_SERVICE_ROOT = Path("Unicorn.Contracts/Infrastructure/contracts-service")
+WEB_SERVICE_ROOT = Path("Unicorn.Web/Infrastructure/web-service")
+
+# Physical names that SAM on develop sets or derives deterministically, and that
+# Terraform must reproduce exactly (see PARITY.md). SAM's ${AWS::StackName}
+# resolves to the samconfig.toml stack_name, uni-prop-<stage>-<service>; each
+# service root mirrors it with a stack_name local. Update these pins during a
+# SAM-to-Terraform sync whenever a SAM-determined name changes.
+SAM_STACK_NAME_LOCALS = {
+    APPROVALS_SERVICE_ROOT: "uni-prop-${var.stage}-approvals",
+    CONTRACTS_SERVICE_ROOT: "uni-prop-${var.stage}-contracts",
+    WEB_SERVICE_ROOT: "uni-prop-${var.stage}-web",
+}
+
+# (root, resource type, resource name, name attribute, expected expression)
+SAM_NAME_PINS = (
+    (
+        APPROVALS_SERVICE_ROOT,
+        "aws_sfn_state_machine",
+        "approval_state_machine",
+        "name",
+        "${local.stack_name}-ApprovalStateMachine",
+    ),
+    (
+        APPROVALS_SERVICE_ROOT,
+        "aws_cloudwatch_log_group",
+        "approval_state_machine",
+        "name",
+        "/aws/states/${local.stack_name}-ApprovalStateMachine",
+    ),
+    (
+        APPROVALS_SERVICE_ROOT,
+        "aws_cloudwatch_log_resource_policy",
+        "eventbridge_cloudwatch_log_group_policy",
+        "policy_name",
+        "EvBToCWLogs-${local.stack_name}",
+    ),
+    (
+        CONTRACTS_SERVICE_ROOT,
+        "aws_cloudwatch_log_resource_policy",
+        "eventbridge_cloudwatch_log_group_policy",
+        "policy_name",
+        "EvBToCWLogs-${local.stack_name}",
+    ),
+    (
+        WEB_SERVICE_ROOT,
+        "aws_cloudwatch_log_resource_policy",
+        "eventbridge_cloudwatch_log_group_policy",
+        "policy_name",
+        "EvBToCWLogs-${local.stack_name}",
+    ),
+)
+
+# SAM sets no Name on these REST APIs, so API Gateway names them from the
+# OpenAPI info.title. (root, aws_api_gateway_rest_api name, expected API name)
+SAM_REST_API_TITLE_PINS = (
+    (CONTRACTS_SERVICE_ROOT, "unicorn_contracts_api", "Unicorn Contracts API"),
+    (WEB_SERVICE_ROOT, "unicorn_web_api", "Unicorn Web API"),
+)
+
 REQUIRED_ROOT_FILES = (
     ".terraform.lock.hcl",
     "backend.tf",
@@ -341,6 +402,70 @@ def validate_ssm_contracts() -> None:
         require_text(all_main_files, parameter, "Operational SSM contracts")
 
 
+def top_level_string_attribute(block: str, attribute: str) -> str | None:
+    """Return a quoted string attribute declared directly in a resource block."""
+    depth = 0
+    pattern = re.compile(rf'^\s*{re.escape(attribute)}\s*=\s*"([^"\n]*)"\s*$')
+    for line in block.splitlines():
+        if depth == 1:
+            match = pattern.match(line)
+            if match:
+                return match.group(1)
+        depth += line.count("{") - line.count("}")
+    return None
+
+
+def openapi_info_title(spec: str) -> str | None:
+    """Return the top-level info.title of an OpenAPI YAML document."""
+    in_info = False
+    for line in spec.splitlines():
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if not line.startswith((" ", "\t")):
+            in_info = line.rstrip() == "info:"
+            continue
+        if in_info:
+            match = re.match(r'^\s+title:\s*["\']?(.*?)["\']?\s*$', line)
+            if match:
+                return match.group(1)
+    return None
+
+
+def validate_sam_name_parity() -> None:
+    for root, expected in SAM_STACK_NAME_LOCALS.items():
+        match = re.search(r'^\s*stack_name\s*=\s*"([^"\n]*)"', read(root / "locals.tf"), re.MULTILINE)
+        actual = match.group(1) if match else None
+        require(
+            actual == expected,
+            f"{root}: local.stack_name must be {expected!r} to mirror the SAM stack name; found {actual!r}",
+        )
+
+    for root, resource_type, resource_name, attribute, expected in SAM_NAME_PINS:
+        blocks = resource_blocks(read(root / "main.tf"), resource_type)
+        address = f"{resource_type}.{resource_name}"
+        require(resource_name in blocks, f"{root}: missing {address}")
+        actual = top_level_string_attribute(blocks[resource_name], attribute)
+        require(
+            actual == expected,
+            f"{root}: {address} {attribute} must be {expected!r} to match SAM; found {actual!r}",
+        )
+
+    for root, resource_name, expected in SAM_REST_API_TITLE_PINS:
+        blocks = resource_blocks(read(root / "main.tf"), "aws_api_gateway_rest_api")
+        address = f"aws_api_gateway_rest_api.{resource_name}"
+        require(resource_name in blocks, f"{root}: missing {address}")
+        actual = top_level_string_attribute(blocks[resource_name], "name")
+        require(
+            actual == expected,
+            f"{root}: {address} name must be {expected!r} to match SAM; found {actual!r}",
+        )
+        title = openapi_info_title(read(root / "api.yaml.tpl"))
+        require(
+            title == expected,
+            f"{root}: api.yaml.tpl info.title must be {expected!r} to match {address} name; found {title!r}",
+        )
+
+
 def validate_backend_locking() -> None:
     common_make = read("common.mk")
     require_text(
@@ -369,6 +494,7 @@ def validate_repository_invariants() -> None:
     validate_lambda_log_group_ordering()
     validate_contracts_and_production_safety()
     validate_ssm_contracts()
+    validate_sam_name_parity()
 
 
 def run(command: list[str], cwd: Path = REPOSITORY_ROOT) -> None:
