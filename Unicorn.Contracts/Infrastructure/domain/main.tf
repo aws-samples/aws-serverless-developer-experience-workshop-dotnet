@@ -1,3 +1,21 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Unicorn Contracts domain root (deployment phase 3: domains).
+#
+# Owns the Contracts event bus and its resource policy, event bus logging, the
+# EventBridge forwarding role that consumer subscription roots use to deliver
+# events to this bus, and the Contracts schema registry. Other roots discover these
+# resources only through the SSM parameters published at the end of this file.
+#
+# Reads:     /uni-prop/UnicornContractsNamespace (Shared namespaces root)
+# Publishes: /uni-prop/<stage>/ContractsEventBus, ContractsEventBusArn,
+#            ContractsSchemaRegistryName, ContractsEventBridgeRoleArn
+
+#################################################################################################
+#### DATA SOURCES
+#################################################################################################
+
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
@@ -5,6 +23,10 @@ data "aws_partition" "current" {}
 data "aws_ssm_parameter" "unicorn_contracts_namespace" {
   name = "/uni-prop/UnicornContractsNamespace"
 }
+
+#################################################################################################
+#### EVENT BUS
+#################################################################################################
 
 resource "aws_cloudwatch_event_bus" "contracts_event_bus" {
   name = local.event_bus_name
@@ -15,18 +37,10 @@ resource "aws_cloudwatch_event_bus" "contracts_event_bus" {
   }
 }
 
-resource "aws_ssm_parameter" "contracts_event_bus_name" {
-  name  = "/uni-prop/${var.stage}/ContractsEventBus"
-  type  = "String"
-  value = aws_cloudwatch_event_bus.contracts_event_bus.name
-}
-
-resource "aws_ssm_parameter" "contracts_event_bus_arn" {
-  name  = "/uni-prop/${var.stage}/ContractsEventBusArn"
-  type  = "String"
-  value = aws_cloudwatch_event_bus.contracts_event_bus.arn
-}
-
+# Principals in this account may publish only events whose source is the Contracts
+# namespace, and may manage only rules that filter on that source.
+# `$${aws:PrincipalAccount}` escapes Terraform interpolation so IAM receives the
+# literal policy variable.
 data "aws_iam_policy_document" "contracts_event_bus_policy" {
   statement {
     sid       = "OnlyContactsServiceCanPublishToEventBus-${var.stage}"
@@ -90,6 +104,54 @@ resource "aws_cloudwatch_event_bus_policy" "contracts_event_bus_policy" {
   policy         = data.aws_iam_policy_document.contracts_event_bus_policy.json
 }
 
+#################################################################################################
+#### EVENT BUS LOGGING (INFO and ERROR logs delivered to CloudWatch Logs)
+#################################################################################################
+
+# The "-logs" suffix (Approvals and Web use "-<stage>") and the resource address
+# mirror the SAM Contracts domain template; renaming either would drift from SAM.
+resource "aws_cloudwatch_log_group" "event_handler_function_log_group" {
+  name              = "/aws/vendedlogs/events/event-bus/${aws_cloudwatch_event_bus.contracts_event_bus.name}-logs"
+  retention_in_days = local.logs_retention_days
+}
+
+resource "aws_cloudwatch_log_delivery_source" "event_bus_error_delivery_source" {
+  name         = "${aws_cloudwatch_event_bus.contracts_event_bus.name}-ERROR-LOGS-${var.stage}"
+  log_type     = "ERROR_LOGS"
+  resource_arn = aws_cloudwatch_event_bus.contracts_event_bus.arn
+}
+
+resource "aws_cloudwatch_log_delivery_source" "event_bus_info_delivery_source" {
+  name         = "${aws_cloudwatch_event_bus.contracts_event_bus.name}-INFO-LOGS-${var.stage}"
+  log_type     = "INFO_LOGS"
+  resource_arn = aws_cloudwatch_event_bus.contracts_event_bus.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "event_bus_delivery_destination" {
+  name = "${aws_cloudwatch_event_bus.contracts_event_bus.name}-DeliveryDestination-${var.stage}"
+  delivery_destination_configuration {
+    destination_resource_arn = aws_cloudwatch_log_group.event_handler_function_log_group.arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "event_bus_info_logging_delivery" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.event_bus_info_delivery_source.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.event_bus_delivery_destination.arn
+}
+
+# Created after the INFO delivery so the two deliveries to the shared
+# destination are never created concurrently.
+resource "aws_cloudwatch_log_delivery" "event_bus_error_logging_delivery" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.event_bus_error_delivery_source.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.event_bus_delivery_destination.arn
+
+  depends_on = [aws_cloudwatch_log_delivery.event_bus_info_logging_delivery]
+}
+
+#################################################################################################
+#### EVENTBRIDGE FORWARDING ROLE (assumed by subscription rules that target this bus)
+#################################################################################################
+
 resource "aws_iam_role" "contracts_eventbridge_role" {
   name = "uni-prop-${var.stage}-contracts-eventbridge-role"
 
@@ -123,57 +185,13 @@ resource "aws_iam_role_policy" "contracts_eventbridge_role_policy" {
   })
 }
 
-resource "aws_cloudwatch_log_group" "event_handler_function_log_group" {
-  name              = "/aws/vendedlogs/events/event-bus/${aws_cloudwatch_event_bus.contracts_event_bus.name}-logs"
-  retention_in_days = local.logs_retention_days
-}
-
-resource "aws_cloudwatch_log_delivery_source" "event_bus_error_delivery_source" {
-  name         = "${aws_cloudwatch_event_bus.contracts_event_bus.name}-ERROR-LOGS-${var.stage}"
-  log_type     = "ERROR_LOGS"
-  resource_arn = aws_cloudwatch_event_bus.contracts_event_bus.arn
-}
-
-resource "aws_cloudwatch_log_delivery_source" "event_bus_info_delivery_source" {
-  name         = "${aws_cloudwatch_event_bus.contracts_event_bus.name}-INFO-LOGS-${var.stage}"
-  log_type     = "INFO_LOGS"
-  resource_arn = aws_cloudwatch_event_bus.contracts_event_bus.arn
-}
-
-resource "aws_cloudwatch_log_delivery_destination" "event_bus_delivery_destination" {
-  name = "${aws_cloudwatch_event_bus.contracts_event_bus.name}-DeliveryDestination-${var.stage}"
-  delivery_destination_configuration {
-    destination_resource_arn = aws_cloudwatch_log_group.event_handler_function_log_group.arn
-  }
-}
-
-resource "aws_cloudwatch_log_delivery" "event_bus_info_logging_delivery" {
-  delivery_source_name     = aws_cloudwatch_log_delivery_source.event_bus_info_delivery_source.name
-  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.event_bus_delivery_destination.arn
-}
-
-resource "aws_cloudwatch_log_delivery" "event_bus_error_logging_delivery" {
-  delivery_source_name     = aws_cloudwatch_log_delivery_source.event_bus_error_delivery_source.name
-  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.event_bus_delivery_destination.arn
-
-  depends_on = [aws_cloudwatch_log_delivery.event_bus_info_logging_delivery]
-}
+#################################################################################################
+#### SCHEMA REGISTRY
+#################################################################################################
 
 resource "aws_schemas_registry" "contracts_schema_registry" {
   name        = local.registry_name
   description = "Event schemas for Unicorn Contracts"
-}
-
-resource "aws_ssm_parameter" "contracts_schema_registry_name" {
-  name  = "/uni-prop/${var.stage}/ContractsSchemaRegistryName"
-  type  = "String"
-  value = aws_schemas_registry.contracts_schema_registry.name
-}
-
-resource "aws_ssm_parameter" "contracts_eventbridge_role_arn" {
-  name  = "/uni-prop/${var.stage}/ContractsEventBridgeRoleArn"
-  type  = "String"
-  value = aws_iam_role.contracts_eventbridge_role.arn
 }
 
 resource "aws_schemas_registry_policy" "event_registry_policy" {
@@ -204,4 +222,32 @@ resource "aws_schemas_registry_policy" "event_registry_policy" {
       }
     ]
   })
+}
+
+#################################################################################################
+#### SSM OPERATIONAL CONTRACTS (consumed by schema, service, and subscription roots)
+#################################################################################################
+
+resource "aws_ssm_parameter" "contracts_event_bus_name" {
+  name  = "/uni-prop/${var.stage}/ContractsEventBus"
+  type  = "String"
+  value = aws_cloudwatch_event_bus.contracts_event_bus.name
+}
+
+resource "aws_ssm_parameter" "contracts_event_bus_arn" {
+  name  = "/uni-prop/${var.stage}/ContractsEventBusArn"
+  type  = "String"
+  value = aws_cloudwatch_event_bus.contracts_event_bus.arn
+}
+
+resource "aws_ssm_parameter" "contracts_schema_registry_name" {
+  name  = "/uni-prop/${var.stage}/ContractsSchemaRegistryName"
+  type  = "String"
+  value = aws_schemas_registry.contracts_schema_registry.name
+}
+
+resource "aws_ssm_parameter" "contracts_eventbridge_role_arn" {
+  name  = "/uni-prop/${var.stage}/ContractsEventBridgeRoleArn"
+  type  = "String"
+  value = aws_iam_role.contracts_eventbridge_role.arn
 }

@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 output "approvals_event_bus_name" {
   description = "Name of the Unicorn Approvals Event Bus"
   value       = aws_cloudwatch_event_bus.approvals_event_bus.name

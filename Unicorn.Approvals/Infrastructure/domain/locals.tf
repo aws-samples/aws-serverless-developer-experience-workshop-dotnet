@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 locals {
   # SSM parameter values are marked sensitive by the AWS provider; the namespace
   # values are public workshop constants, so unwrap them for use in names/outputs.

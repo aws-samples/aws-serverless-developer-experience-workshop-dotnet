@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 output "contracts_event_bus_name" {
   description = "Name of the Unicorn Contracts Event Bus"
   value       = aws_cloudwatch_event_bus.contracts_event_bus.name
@@ -9,12 +12,12 @@ output "contracts_event_bus_arn" {
 }
 
 output "event_handler_function_log_group_name" {
-  description = "Name of the Contracts Event Handler Function Log Group"
+  description = "Name of the Contracts event bus log group"
   value       = aws_cloudwatch_log_group.event_handler_function_log_group.name
 }
 
 output "event_handler_function_log_group_arn" {
-  description = "ARN of the Contracts Event Handler Function Log Group"
+  description = "ARN of the Contracts event bus log group"
   value       = aws_cloudwatch_log_group.event_handler_function_log_group.arn
 }
 
@@ -32,11 +35,3 @@ output "contracts_eventbridge_role_arn" {
   description = "ARN of the Unicorn Contracts EventBridge Role"
   value       = aws_iam_role.contracts_eventbridge_role.arn
 }
-
-
-
-
-
-
-
-

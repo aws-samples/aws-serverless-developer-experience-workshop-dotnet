@@ -1,3 +1,13 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Stage-scoped property image bucket (deployment phase 2: shared).
+#
+# Creates the hardened image bucket, publishes its name to
+# /uni-prop/<stage>/ImagesBucket for the Approvals workflow, and invokes a one-off
+# Lambda function (lambda/image_upload.py) that seeds the bucket with sample
+# property images, mirroring the SAM custom resource.
+
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
@@ -135,11 +145,3 @@ resource "aws_lambda_invocation" "image_upload" {
     aws_cloudwatch_log_group.image_upload_lambda
   ]
 }
-
-
-
-
-
-
-
-

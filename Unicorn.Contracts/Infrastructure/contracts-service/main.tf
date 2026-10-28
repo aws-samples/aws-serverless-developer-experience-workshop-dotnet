@@ -1,3 +1,22 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Unicorn Contracts service workload root (deployment phase 4: workloads).
+#
+# Request flow: API Gateway -> ingest SQS queue -> contract event handler Lambda
+# -> ContractsTable. Table changes then flow through an EventBridge pipe to the
+# Contracts event bus as ContractStatusChanged events.
+#
+# Reads:  /uni-prop/UnicornContractsNamespace,
+#         /uni-prop/<stage>/{ContractsEventBus, ContractsEventBusArn}
+# Needs:  the Shared api-gateway-account root for API execution logging.
+# Layout: locals.tf holds naming, sam_build placeholders, and packaging inputs;
+#         api.yaml.tpl is the OpenAPI body rendered into the REST API.
+
+#################################################################################################
+#### DATA SOURCES (skipped when sam_build = true; locals.tf supplies placeholders)
+#################################################################################################
+
 data "aws_caller_identity" "current" {
   count = var.sam_build ? 0 : 1
 }
@@ -74,6 +93,12 @@ resource "aws_sqs_queue" "contracts_table_stream_to_event_pipe_dlq" {
 #### LAMBDA FUNCTION
 #################################################################################################
 
+# Lambda packaging. `make package-service` writes a deterministic ZIP and manifest
+# under .terraform/. On a normal plan or apply, the external data source checks
+# that the package matches the current source and the precondition stops the run
+# if it is missing or stale. During `make build` (sam_build = true) the
+# null_resource builds the package instead, and the sam_metadata_* resources tell
+# the SAM Terraform hook where each function's source and built ZIP live.
 data "external" "lambda_package_freshness" {
   count   = var.sam_build ? 0 : 1
   program = ["python3", local.package_freshness_script_path]
@@ -232,6 +257,9 @@ resource "aws_cloudwatch_log_group" "contract_event_handler" {
   retention_in_days = local.logs_retention_days
 }
 
+# SQS event sources do not support destination_config. Failed messages move to
+# the queue's redrive DLQ instead; SAM excludes the matching rule (ES1001).
+# tflint-ignore: aws_lambda_event_source_mapping_failure_destination
 resource "aws_lambda_event_source_mapping" "contract_event_handler_sqs" {
   event_source_arn = aws_sqs_queue.unicorn_contracts_ingest_queue.arn
   function_name    = aws_lambda_function.contract_event_handler.arn
@@ -247,6 +275,8 @@ resource "aws_lambda_event_source_mapping" "contract_event_handler_sqs" {
 #### API GATEWAY
 #################################################################################################
 
+# The REST API (api.yaml.tpl) validates requests and sends them straight to the
+# ingest queue through this role; the contract event handler consumes the queue.
 resource "aws_iam_role" "unicorn_contracts_api_integration_role" {
   name = "uni-prop-${var.stage}-contracts-api-integration-role"
 
@@ -357,7 +387,7 @@ resource "aws_api_gateway_method_settings" "unicorn_contracts_api" {
 }
 
 #################################################################################################
-#### EVENTBRIDGE
+#### EVENTBRIDGE CATCHALL
 #################################################################################################
 
 resource "aws_cloudwatch_log_group" "unicorn_contracts_catch_all" {
@@ -377,6 +407,9 @@ resource "aws_cloudwatch_event_rule" "unicorn_contracts_catch_all" {
   })
 }
 
+# The catch-all rule exists for debugging and writes to a log group; SAM excludes
+# the matching serverless rule (ES4000), so this target has no DLQ either.
+# tflint-ignore: aws_cloudwatch_event_target_no_dlq
 resource "aws_cloudwatch_event_target" "unicorn_contracts_catch_all" {
   rule           = aws_cloudwatch_event_rule.unicorn_contracts_catch_all.name
   event_bus_name = local.contracts_event_bus_name
@@ -417,6 +450,10 @@ resource "aws_cloudwatch_log_group" "contracts_table_stream_to_event_pipe" {
   retention_in_days = local.logs_retention_days
 }
 
+# The pipe reads the contracts table stream, keeps only DRAFT and APPROVED
+# contracts, and publishes them to the Contracts event bus as
+# ContractStatusChanged events. The input template's <$...> placeholders are
+# Pipes dynamic paths, so the template is a heredoc rather than jsonencode().
 resource "aws_iam_role" "contracts_table_stream_to_event_pipe_role" {
   name = "uni-prop-${var.stage}-contracts-table-stream-to-event-pipe-role"
 

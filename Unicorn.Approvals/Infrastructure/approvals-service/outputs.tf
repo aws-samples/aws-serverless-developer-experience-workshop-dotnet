@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 output "contract_status_table_name" {
   description = "DynamoDB table storing contract status information"
   value       = aws_dynamodb_table.contract_status_table.name
@@ -44,10 +47,9 @@ output "approval_state_machine_arn" {
 }
 
 output "unicorn_approvals_catch_all_log_group_arn" {
-  description = "Log all events on the service's EventBridge Bus"
+  description = "ARN of the log group that receives every event matched by the Approvals catch-all rule"
   value       = aws_cloudwatch_log_group.unicorn_approvals_catch_all.arn
 }
-
 
 output "approval_state_machine_log_group_name" {
   description = "Approval state machine log group name"

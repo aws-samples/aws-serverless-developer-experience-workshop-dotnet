@@ -1,3 +1,13 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# API Gateway account settings for this account and Region (deployment phase 2: shared).
+#
+# aws_api_gateway_account is an account/Region singleton, so this root is its only
+# owner; scripts/validate_infrastructure.py enforces that. The Contracts and Web
+# stage method settings need this CloudWatch Logs role for execution logging.
+# make delete-all deliberately preserves this root.
+
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "api_gateway_cloudwatch_logs" {

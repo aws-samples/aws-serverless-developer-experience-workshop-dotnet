@@ -1,3 +1,23 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Unicorn Web service workload root (deployment phase 4: workloads).
+#
+# Serves property search through API Gateway and SearchFunction, accepts
+# publication requests through API Gateway -> ingest SQS queue ->
+# RequestApprovalFunction, and applies approval results from
+# PublicationEvaluationCompleted events. PropertiesTable stores the listings.
+#
+# Reads:  /uni-prop/{UnicornWebNamespace, UnicornApprovalsNamespace},
+#         /uni-prop/<stage>/{WebEventBus, WebEventBusArn}
+# Needs:  the Shared api-gateway-account root for API execution logging.
+# Layout: locals.tf holds naming, sam_build placeholders, and packaging inputs;
+#         api.yaml.tpl is the OpenAPI body rendered into the REST API.
+
+#################################################################################################
+#### DATA SOURCES (skipped when sam_build = true; locals.tf supplies placeholders)
+#################################################################################################
+
 data "aws_caller_identity" "current" {
   count = var.sam_build ? 0 : 1
 }
@@ -82,6 +102,12 @@ resource "aws_sqs_queue" "publication_evaluation_event_handler_dlq" {
 #### LAMBDA FUNCTIONS
 #################################################################################################
 
+# Lambda packaging. `make package-service` writes a deterministic ZIP and manifest
+# under .terraform/. On a normal plan or apply, the external data source checks
+# that the package matches the current source and the precondition stops the run
+# if it is missing or stale. During `make build` (sam_build = true) the
+# null_resource builds the package instead, and the sam_metadata_* resources tell
+# the SAM Terraform hook where each function's source and built ZIP live.
 data "external" "search_package_freshness" {
   count   = var.sam_build ? 0 : 1
   program = ["python3", local.package_freshness_script_path]
@@ -171,7 +197,7 @@ resource "null_resource" "sam_metadata_publication_evaluation_event_handler" {
   depends_on = [null_resource.build_publication_manager_service]
 }
 
-# SearchFunction
+# SearchFunction: serves the read-only /search and /properties API routes.
 resource "aws_iam_role" "search_function_role" {
   name = "uni-prop-${var.stage}-search-function-role"
 
@@ -278,7 +304,8 @@ resource "aws_cloudwatch_log_group" "search_function" {
   retention_in_days = local.logs_retention_days
 }
 
-# RequestApprovalFunction
+# RequestApprovalFunction: consumes /request_approval messages from the ingest
+# queue and publishes PublicationApprovalRequested to the Web event bus.
 resource "aws_iam_role" "request_approval_function_role" {
   name = "uni-prop-${var.stage}-request-approval-function-role"
 
@@ -401,6 +428,9 @@ resource "aws_cloudwatch_log_group" "request_approval_function" {
   retention_in_days = local.logs_retention_days
 }
 
+# SQS event sources do not support destination_config. Failed messages move to
+# the queue's redrive DLQ instead; SAM excludes the matching rule (ES1001).
+# tflint-ignore: aws_lambda_event_source_mapping_failure_destination
 resource "aws_lambda_event_source_mapping" "request_approval_function_sqs" {
   event_source_arn = aws_sqs_queue.unicorn_web_ingest_queue.arn
   function_name    = aws_lambda_function.request_approval_function.arn
@@ -412,7 +442,8 @@ resource "aws_lambda_event_source_mapping" "request_approval_function_sqs" {
   }
 }
 
-# PublicationEvaluationEventHandlerFunction
+# PublicationEvaluationEventHandlerFunction: applies PublicationEvaluationCompleted
+# results (forwarded from Approvals) to the property record.
 resource "aws_iam_role" "publication_evaluation_event_handler_role" {
   name = "uni-prop-${var.stage}-pub-eval-event-handler-role"
 
@@ -527,6 +558,7 @@ resource "aws_cloudwatch_log_group" "publication_evaluation_event_handler" {
   retention_in_days = local.logs_retention_days
 }
 
+# The literal rule name mirrors the SAM RuleName.
 resource "aws_cloudwatch_event_rule" "publication_evaluation_completed" {
   name           = "unicorn-web-PublicationEvaluationCompleted"
   event_bus_name = local.web_event_bus_name
@@ -537,6 +569,10 @@ resource "aws_cloudwatch_event_rule" "publication_evaluation_completed" {
   })
 }
 
+# EventBridge invokes the function asynchronously, so failed invocations go to
+# the function's on-failure destination (event invoke config below). SAM
+# defines no target DLQ here either.
+# tflint-ignore: aws_cloudwatch_event_target_no_dlq
 resource "aws_cloudwatch_event_target" "publication_evaluation_completed" {
   rule           = aws_cloudwatch_event_rule.publication_evaluation_completed.name
   event_bus_name = local.web_event_bus_name
@@ -566,6 +602,8 @@ resource "aws_lambda_function_event_invoke_config" "publication_evaluation_event
 #### API GATEWAY
 #################################################################################################
 
+# The REST API (api.yaml.tpl) sends /request_approval to the ingest queue and
+# proxies search routes to SearchFunction, both through this role.
 resource "aws_iam_role" "unicorn_web_api_integration_role" {
   name = "uni-prop-${var.stage}-web-api-integration-role"
 
@@ -712,6 +750,9 @@ resource "aws_cloudwatch_event_rule" "unicorn_web_catch_all" {
   })
 }
 
+# The catch-all rule exists for debugging and writes to a log group; SAM excludes
+# the matching serverless rule (ES4000), so this target has no DLQ either.
+# tflint-ignore: aws_cloudwatch_event_target_no_dlq
 resource "aws_cloudwatch_event_target" "unicorn_web_catch_all" {
   rule           = aws_cloudwatch_event_rule.unicorn_web_catch_all.name
   event_bus_name = local.web_event_bus_name

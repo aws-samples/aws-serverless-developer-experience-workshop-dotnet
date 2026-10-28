@@ -102,6 +102,9 @@ Validate all roots from the repository root:
 
 ```bash
 python3 scripts/validate_infrastructure.py --checkov
+python3 scripts/validate_infrastructure.py --skip-init --tflint   # requires tflint
 ```
 
-The validator checks the exact 15-root inventory, formatting, root validity, provider and lock-file conventions, singleton ownership, SAM metadata parity, production protections, SSM contracts, and PascalCase event schemas. With `--checkov`, it also scans every Terraform root and honors the 21 intentional exceptions documented in `.checkov.yml`. It initializes providers with backends disabled and does not apply infrastructure.
+The validator checks the exact 15-root inventory, formatting, root validity, provider and lock-file conventions, singleton ownership, SAM metadata parity, production protections, SSM contracts, and PascalCase event schemas. With `--checkov`, it also scans every Terraform root and honors the 21 intentional exceptions documented in `.checkov.yml`. With `--tflint`, it runs [TFLint](https://github.com/terraform-linters/tflint) in every root using the shared `.tflint.hcl`, which enables the Terraform recommended preset and [Serverless Rules](https://awslabs.github.io/serverless-rules/). Findings that mirror an intentional SAM design are suppressed inline with a `tflint-ignore` comment that states the reason. The validator initializes providers with backends disabled and does not apply infrastructure.
+
+Each Terraform root's `main.tf` opens with a comment that states its deployment phase, what it owns, and the SSM parameters it reads and publishes.

@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+TFLINT_CONFIG = REPOSITORY_ROOT / ".tflint.hcl"
 
 EXPECTED_ROOTS = (
     Path("Unicorn.Contracts/Infrastructure/domain"),
@@ -510,9 +511,24 @@ def resolve_terraform_command() -> str:
     return "terraform"
 
 
+def tflint_command(root: Path) -> list[str]:
+    """Return the tflint invocation for one root using the shared repository config."""
+    command = ["tflint", "--chdir", str(REPOSITORY_ROOT / root), "--config", str(TFLINT_CONFIG)]
+    # Service roots resolve account IDs and SSM values at plan time. The sam_build
+    # placeholders make those values known, because the serverless-rules plugin
+    # stops with "unknown value found" when an IAM policy contains unknown values.
+    if root in SERVICE_ROOTS:
+        command.append("--var=sam_build=true")
+    return command
+
+
 def validate_with_tools(args: argparse.Namespace) -> None:
     terraform_command = resolve_terraform_command()
     run([terraform_command, "fmt", "-check", "-recursive"])
+
+    if args.tflint:
+        require(shutil.which("tflint") is not None, "TFLint command not found: tflint")
+        run(["tflint", "--init", "--config", str(TFLINT_CONFIG)])
 
     for root in EXPECTED_ROOTS:
         root_path = REPOSITORY_ROOT / root
@@ -523,7 +539,7 @@ def validate_with_tools(args: argparse.Namespace) -> None:
             )
         run([terraform_command, "validate", "-no-color"], root_path)
         if args.tflint:
-            run(["tflint", "--chdir", str(root_path)])
+            run(tflint_command(root))
 
     if args.checkov:
         run(["checkov", "--directory", str(REPOSITORY_ROOT), "--framework", "terraform", "--quiet"])
@@ -533,7 +549,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--skip-init", action="store_true", help="Skip backend-disabled provider initialization")
     parser.add_argument("--static-only", action="store_true", help="Run repository invariant checks without external tools")
-    parser.add_argument("--tflint", action="store_true", help="Run tflint in every Terraform root")
+    parser.add_argument("--tflint", action="store_true", help="Run tflint with .tflint.hcl in every Terraform root")
     parser.add_argument("--checkov", action="store_true", help="Run Checkov across the repository after root validation")
     return parser.parse_args()
 

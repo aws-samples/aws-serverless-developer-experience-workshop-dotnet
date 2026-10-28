@@ -1,10 +1,13 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 output "base_url" {
-  description = "Web service API endpoint"
+  description = "Web service API base URL, without the stage path"
   value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
 }
 
 output "api_url" {
-  description = "Web service API endpoint"
+  description = "Web service API endpoint for the deployed stage"
   value       = "https://${aws_api_gateway_rest_api.unicorn_web_api.id}.execute-api.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${var.stage}/"
 }
 
@@ -54,6 +57,6 @@ output "publication_evaluation_event_handler_function_arn" {
 }
 
 output "unicorn_web_catch_all_log_group_arn" {
-  description = "Log all events on the service's EventBridge Bus"
+  description = "ARN of the log group that receives every event matched by the Web catch-all rule"
   value       = aws_cloudwatch_log_group.unicorn_web_catch_all.arn
 }

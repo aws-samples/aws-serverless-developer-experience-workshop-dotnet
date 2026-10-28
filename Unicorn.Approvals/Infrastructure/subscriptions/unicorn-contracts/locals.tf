@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 locals {
   # SSM marks parameter values sensitive. These namespaces and ARNs are public
   # operational contracts, so unwrap each once before using it in resources.

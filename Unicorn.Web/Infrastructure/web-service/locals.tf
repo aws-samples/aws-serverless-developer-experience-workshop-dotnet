@@ -1,13 +1,27 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 locals {
   # Mirrors SAM's ${AWS::StackName} (stack_name in the develop samconfig.toml).
   # SAM derives the Logs resource policy name from it.
-  stack_name                                = "uni-prop-${var.stage}-web"
-  logs_retention_days                       = var.stage == "prod" ? 14 : 3
-  is_prod                                   = var.stage == "prod"
-  log_level                                 = var.stage == "prod" ? "ERROR" : "INFO"
-  aws_account_id                            = var.sam_build ? "000000000000" : data.aws_caller_identity.current[0].account_id
-  unicorn_web_namespace                     = var.sam_build ? "unicorn-web" : data.aws_ssm_parameter.unicorn_web_namespace[0].value
-  unicorn_approvals_namespace               = var.sam_build ? "unicorn-approvals" : data.aws_ssm_parameter.unicorn_approvals_namespace[0].value
+  stack_name          = "uni-prop-${var.stage}-web"
+  logs_retention_days = var.stage == "prod" ? 14 : 3
+  is_prod             = var.stage == "prod"
+  log_level           = var.stage == "prod" ? "ERROR" : "INFO"
+  aws_account_id      = var.sam_build ? "000000000000" : data.aws_caller_identity.current[0].account_id
+
+  # SSM parameter values are marked sensitive by the AWS provider; the namespace
+  # values are public workshop constants, so unwrap them for use in names/outputs.
+  unicorn_web_namespace       = var.sam_build ? "unicorn-web" : nonsensitive(data.aws_ssm_parameter.unicorn_web_namespace[0].value)
+  unicorn_approvals_namespace = var.sam_build ? "unicorn-approvals" : nonsensitive(data.aws_ssm_parameter.unicorn_approvals_namespace[0].value)
+  web_event_bus_name          = var.sam_build ? "unicorn-web-eventbus-${var.stage}" : data.aws_ssm_parameter.web_event_bus_name[0].value
+
+  # Hand-built ARNs keep sam_build deterministic without live AWS lookups.
+  web_event_bus_arn = var.sam_build ? "arn:${data.aws_partition.current.partition}:events:${data.aws_region.current.region}:${local.aws_account_id}:event-bus/${local.web_event_bus_name}" : data.aws_ssm_parameter.web_event_bus_arn[0].value
+
+  # Lambda packaging inputs. SearchService and PublicationManagerService each get
+  # their own package; both include the shared Common project, so a Common change
+  # marks both packages stale.
   search_project_path                       = abspath("${var.search_service_code_path}/SearchService.csproj")
   search_build_path                         = abspath("${path.module}/.terraform/build/search-service")
   search_package_path                       = "${path.module}/.terraform/search-service.zip"
@@ -22,6 +36,7 @@ locals {
   global_json_path                          = "${local.repository_root_path}/global.json"
   package_script_path                       = "${local.repository_root_path}/scripts/package_dotnet_lambda.py"
   package_freshness_script_path             = "${local.repository_root_path}/scripts/check_lambda_package.py"
+
   search_source_files = sort([
     for file in fileset(var.search_service_code_path, "**") : file
     if !startswith(file, "bin/") && !startswith(file, "obj/") && !startswith(file, ".aws-sam/")
@@ -53,9 +68,7 @@ locals {
   ))
   publication_manager_source_hash  = sha256(jsonencode(local.publication_manager_source_records))
   publication_manager_package_hash = fileexists(local.publication_manager_package_path) ? filebase64sha256(local.publication_manager_package_path) : base64sha256(local.publication_manager_source_hash)
-  web_event_bus_name               = var.sam_build ? "unicorn-web-eventbus-${var.stage}" : data.aws_ssm_parameter.web_event_bus_name[0].value
-  # Hand-built ARNs keep sam_build deterministic without live AWS lookups.
-  web_event_bus_arn = var.sam_build ? "arn:${data.aws_partition.current.partition}:events:${data.aws_region.current.region}:${local.aws_account_id}:event-bus/${local.web_event_bus_name}" : data.aws_ssm_parameter.web_event_bus_arn[0].value
+
   # These ARNs are assembled for deterministic api.yaml.tpl rendering during sam_build.
   web_api_integration_role_arn = "arn:${data.aws_partition.current.partition}:iam::${local.aws_account_id}:role/${aws_iam_role.unicorn_web_api_integration_role.name}"
   search_function_arn          = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${local.aws_account_id}:function:${aws_lambda_function.search_function.function_name}"

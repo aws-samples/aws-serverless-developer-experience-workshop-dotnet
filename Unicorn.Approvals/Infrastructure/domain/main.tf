@@ -1,3 +1,21 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Unicorn Approvals domain root (deployment phase 3: domains).
+#
+# Owns the Approvals event bus and its resource policy, event bus logging, the
+# EventBridge forwarding role that consumer subscription roots use to deliver
+# events to this bus, and the Approvals schema registry. Other roots discover these
+# resources only through the SSM parameters published at the end of this file.
+#
+# Reads:     /uni-prop/UnicornApprovalsNamespace (Shared namespaces root)
+# Publishes: /uni-prop/<stage>/ApprovalsEventBus, ApprovalsEventBusArn,
+#            ApprovalsSchemaRegistryName, ApprovalsEventBridgeRoleArn
+
+#################################################################################################
+#### DATA SOURCES
+#################################################################################################
+
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
@@ -5,6 +23,10 @@ data "aws_partition" "current" {}
 data "aws_ssm_parameter" "unicorn_approvals_namespace" {
   name = "/uni-prop/UnicornApprovalsNamespace"
 }
+
+#################################################################################################
+#### EVENT BUS
+#################################################################################################
 
 resource "aws_cloudwatch_event_bus" "approvals_event_bus" {
   name = local.event_bus_name
@@ -15,18 +37,10 @@ resource "aws_cloudwatch_event_bus" "approvals_event_bus" {
   }
 }
 
-resource "aws_ssm_parameter" "approvals_event_bus_name" {
-  name  = "/uni-prop/${var.stage}/ApprovalsEventBus"
-  type  = "String"
-  value = aws_cloudwatch_event_bus.approvals_event_bus.name
-}
-
-resource "aws_ssm_parameter" "approvals_event_bus_arn" {
-  name  = "/uni-prop/${var.stage}/ApprovalsEventBusArn"
-  type  = "String"
-  value = aws_cloudwatch_event_bus.approvals_event_bus.arn
-}
-
+# Principals in this account may publish only events whose source is the Approvals
+# namespace, and may manage only rules that filter on that source.
+# `$${aws:PrincipalAccount}` escapes Terraform interpolation so IAM receives the
+# literal policy variable.
 data "aws_iam_policy_document" "approvals_event_bus_policy" {
   statement {
     sid       = "OnlyApprovalsServiceCanPublishToEventBus-${var.stage}"
@@ -90,6 +104,52 @@ resource "aws_cloudwatch_event_bus_policy" "approvals_event_bus_policy" {
   policy         = data.aws_iam_policy_document.approvals_event_bus_policy.json
 }
 
+#################################################################################################
+#### EVENT BUS LOGGING (INFO and ERROR logs delivered to CloudWatch Logs)
+#################################################################################################
+
+resource "aws_cloudwatch_log_group" "event_bus_log_group" {
+  name              = "/aws/vendedlogs/events/event-bus/${aws_cloudwatch_event_bus.approvals_event_bus.name}-${var.stage}"
+  retention_in_days = local.logs_retention_days
+}
+
+resource "aws_cloudwatch_log_delivery_source" "event_bus_error_delivery_source" {
+  name         = "${aws_cloudwatch_event_bus.approvals_event_bus.name}-ERROR-LOGS-${var.stage}"
+  log_type     = "ERROR_LOGS"
+  resource_arn = aws_cloudwatch_event_bus.approvals_event_bus.arn
+}
+
+resource "aws_cloudwatch_log_delivery_source" "event_bus_info_delivery_source" {
+  name         = "${aws_cloudwatch_event_bus.approvals_event_bus.name}-INFO-LOGS-${var.stage}"
+  log_type     = "INFO_LOGS"
+  resource_arn = aws_cloudwatch_event_bus.approvals_event_bus.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "event_bus_delivery_destination" {
+  name = "${aws_cloudwatch_event_bus.approvals_event_bus.name}-DeliveryDestination-${var.stage}"
+  delivery_destination_configuration {
+    destination_resource_arn = aws_cloudwatch_log_group.event_bus_log_group.arn
+  }
+}
+
+resource "aws_cloudwatch_log_delivery" "event_bus_info_logging_delivery" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.event_bus_info_delivery_source.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.event_bus_delivery_destination.arn
+}
+
+# Created after the INFO delivery so the two deliveries to the shared
+# destination are never created concurrently.
+resource "aws_cloudwatch_log_delivery" "event_bus_error_logging_delivery" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.event_bus_error_delivery_source.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.event_bus_delivery_destination.arn
+
+  depends_on = [aws_cloudwatch_log_delivery.event_bus_info_logging_delivery]
+}
+
+#################################################################################################
+#### EVENTBRIDGE FORWARDING ROLE (assumed by subscription rules that target this bus)
+#################################################################################################
+
 resource "aws_iam_role" "approvals_eventbridge_role" {
   name = "uni-prop-${var.stage}-approvals-eventbridge-role"
 
@@ -123,57 +183,13 @@ resource "aws_iam_role_policy" "approvals_eventbridge_role_policy" {
   })
 }
 
-resource "aws_cloudwatch_log_group" "event_bus_log_group" {
-  name              = "/aws/vendedlogs/events/event-bus/${aws_cloudwatch_event_bus.approvals_event_bus.name}-${var.stage}"
-  retention_in_days = local.logs_retention_days
-}
-
-resource "aws_cloudwatch_log_delivery_source" "event_bus_error_delivery_source" {
-  name         = "${aws_cloudwatch_event_bus.approvals_event_bus.name}-ERROR-LOGS-${var.stage}"
-  log_type     = "ERROR_LOGS"
-  resource_arn = aws_cloudwatch_event_bus.approvals_event_bus.arn
-}
-
-resource "aws_cloudwatch_log_delivery_source" "event_bus_info_delivery_source" {
-  name         = "${aws_cloudwatch_event_bus.approvals_event_bus.name}-INFO-LOGS-${var.stage}"
-  log_type     = "INFO_LOGS"
-  resource_arn = aws_cloudwatch_event_bus.approvals_event_bus.arn
-}
-
-resource "aws_cloudwatch_log_delivery_destination" "event_bus_delivery_destination" {
-  name = "${aws_cloudwatch_event_bus.approvals_event_bus.name}-DeliveryDestination-${var.stage}"
-  delivery_destination_configuration {
-    destination_resource_arn = aws_cloudwatch_log_group.event_bus_log_group.arn
-  }
-}
-
-resource "aws_cloudwatch_log_delivery" "event_bus_info_logging_delivery" {
-  delivery_source_name     = aws_cloudwatch_log_delivery_source.event_bus_info_delivery_source.name
-  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.event_bus_delivery_destination.arn
-}
-
-resource "aws_cloudwatch_log_delivery" "event_bus_error_logging_delivery" {
-  delivery_source_name     = aws_cloudwatch_log_delivery_source.event_bus_error_delivery_source.name
-  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.event_bus_delivery_destination.arn
-
-  depends_on = [aws_cloudwatch_log_delivery.event_bus_info_logging_delivery]
-}
+#################################################################################################
+#### SCHEMA REGISTRY
+#################################################################################################
 
 resource "aws_schemas_registry" "approvals_schema_registry" {
   name        = local.registry_name
   description = "Event schemas for Unicorn Approvals"
-}
-
-resource "aws_ssm_parameter" "approvals_schema_registry_name" {
-  name  = "/uni-prop/${var.stage}/ApprovalsSchemaRegistryName"
-  type  = "String"
-  value = aws_schemas_registry.approvals_schema_registry.name
-}
-
-resource "aws_ssm_parameter" "approvals_eventbridge_role_arn" {
-  name  = "/uni-prop/${var.stage}/ApprovalsEventBridgeRoleArn"
-  type  = "String"
-  value = aws_iam_role.approvals_eventbridge_role.arn
 }
 
 resource "aws_schemas_registry_policy" "event_registry_policy" {
@@ -204,4 +220,32 @@ resource "aws_schemas_registry_policy" "event_registry_policy" {
       }
     ]
   })
+}
+
+#################################################################################################
+#### SSM OPERATIONAL CONTRACTS (consumed by schema, service, and subscription roots)
+#################################################################################################
+
+resource "aws_ssm_parameter" "approvals_event_bus_name" {
+  name  = "/uni-prop/${var.stage}/ApprovalsEventBus"
+  type  = "String"
+  value = aws_cloudwatch_event_bus.approvals_event_bus.name
+}
+
+resource "aws_ssm_parameter" "approvals_event_bus_arn" {
+  name  = "/uni-prop/${var.stage}/ApprovalsEventBusArn"
+  type  = "String"
+  value = aws_cloudwatch_event_bus.approvals_event_bus.arn
+}
+
+resource "aws_ssm_parameter" "approvals_schema_registry_name" {
+  name  = "/uni-prop/${var.stage}/ApprovalsSchemaRegistryName"
+  type  = "String"
+  value = aws_schemas_registry.approvals_schema_registry.name
+}
+
+resource "aws_ssm_parameter" "approvals_eventbridge_role_arn" {
+  name  = "/uni-prop/${var.stage}/ApprovalsEventBridgeRoleArn"
+  type  = "String"
+  value = aws_iam_role.approvals_eventbridge_role.arn
 }

@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 variable "stage" {
   description = "Deployment stage (local, dev, prod)"
   type        = string
@@ -12,11 +15,3 @@ variable "region" {
   description = "AWS region"
   type        = string
 }
-
-
-
-
-
-
-
-

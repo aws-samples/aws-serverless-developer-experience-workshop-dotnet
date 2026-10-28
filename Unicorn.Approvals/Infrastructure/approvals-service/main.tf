@@ -1,3 +1,23 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
+# Unicorn Approvals service workload root (deployment phase 4: workloads).
+#
+# PublicationApprovalRequested events (forwarded from Web) start the approval
+# state machine, which checks content and image safety and waits until the
+# property's contract is approved. ContractStatusChanged events (forwarded from
+# Contracts) keep ContractStatusTable current. The workflow publishes
+# PublicationEvaluationCompleted to the Approvals event bus.
+#
+# Reads:  /uni-prop/{UnicornApprovalsNamespace, UnicornContractsNamespace, UnicornWebNamespace},
+#         /uni-prop/<stage>/{ApprovalsEventBus, ApprovalsEventBusArn, ImagesBucket}
+# Layout: locals.tf holds naming, sam_build placeholders, and packaging inputs;
+#         PropertyApproval.asl.json is the Step Functions definition.
+
+#################################################################################################
+#### DATA SOURCES (skipped when sam_build = true; locals.tf supplies placeholders)
+#################################################################################################
+
 data "aws_caller_identity" "current" {
   count = var.sam_build ? 0 : 1
 }
@@ -77,6 +97,12 @@ resource "aws_sqs_queue" "approvals_service_dlq" {
 #### LAMBDA FUNCTIONS
 #################################################################################################
 
+# Lambda packaging. `make package-service` writes a deterministic ZIP and manifest
+# under .terraform/. On a normal plan or apply, the external data source checks
+# that the package matches the current source and the precondition stops the run
+# if it is missing or stale. During `make build` (sam_build = true) the
+# null_resource builds the package instead, and the sam_metadata_* resources tell
+# the SAM Terraform hook where each function's source and built ZIP live.
 data "external" "lambda_package_freshness" {
   count   = var.sam_build ? 0 : 1
   program = ["python3", local.package_freshness_script_path]
@@ -138,7 +164,8 @@ resource "null_resource" "sam_metadata_wait_for_contract_approval" {
   depends_on = [null_resource.build_approvals_service]
 }
 
-# ContractStatusChangedHandlerFunction
+# ContractStatusChangedHandlerFunction: records each contract's latest status
+# in ContractStatusTable from ContractStatusChanged events.
 resource "aws_iam_role" "contract_status_changed_handler_role" {
   name = "uni-prop-${var.stage}-contract-status-changed-handler-role"
 
@@ -253,7 +280,8 @@ resource "aws_cloudwatch_log_group" "contract_status_changed_handler" {
   retention_in_days = local.logs_retention_days
 }
 
-# EventBridge rule to trigger ContractStatusChangedHandler
+# EventBridge rule to trigger ContractStatusChangedHandler. The literal name
+# mirrors the SAM RuleName.
 resource "aws_cloudwatch_event_rule" "contract_status_changed" {
   name           = "unicorn-approvals-ContractStatusChanged"
   event_bus_name = local.approvals_event_bus_name
@@ -321,7 +349,8 @@ resource "aws_sqs_queue_policy" "approvals_event_bus_rule_dlq" {
   })
 }
 
-# PropertiesApprovalSyncFunction
+# PropertiesApprovalSyncFunction: reads the table stream and resumes paused
+# workflow executions (SendTaskSuccess) once a contract is approved.
 resource "aws_iam_role" "properties_approval_sync_role" {
   name = "uni-prop-${var.stage}-properties-approval-sync-role"
 
@@ -468,7 +497,8 @@ resource "aws_lambda_event_source_mapping" "properties_approval_sync_dynamodb" {
   }
 }
 
-# WaitForContractApprovalFunction
+# WaitForContractApprovalFunction: called by the state machine with a task
+# token, which it stores until the contract is approved.
 resource "aws_iam_role" "wait_for_contract_approval_role" {
   name = "uni-prop-${var.stage}-wait-for-contract-approval-role"
 
@@ -674,6 +704,8 @@ resource "aws_cloudwatch_log_group" "approval_state_machine" {
   retention_in_days = local.logs_retention_days
 }
 
+# The workflow definition is PropertyApproval.asl.json; templatefile() fills in
+# the function, table, bucket, bus, and service names.
 resource "aws_sfn_state_machine" "approval_state_machine" {
   name     = "${local.stack_name}-ApprovalStateMachine"
   role_arn = aws_iam_role.approval_state_machine_role.arn
@@ -697,7 +729,8 @@ resource "aws_sfn_state_machine" "approval_state_machine" {
   }
 }
 
-# EventBridge rule to trigger the Step Functions state machine
+# EventBridge rule to trigger the Step Functions state machine. The literal
+# name mirrors the SAM RuleName.
 resource "aws_cloudwatch_event_rule" "publication_approval_requested" {
   name           = "unicorn-approvals-PublicationApprovalRequested"
   event_bus_name = local.approvals_event_bus_name
@@ -805,6 +838,9 @@ resource "aws_cloudwatch_event_rule" "unicorn_approvals_catch_all" {
   })
 }
 
+# The catch-all rule exists for debugging and writes to a log group; SAM excludes
+# the matching serverless rule (ES4000), so this target has no DLQ either.
+# tflint-ignore: aws_cloudwatch_event_target_no_dlq
 resource "aws_cloudwatch_event_target" "unicorn_approvals_catch_all" {
   rule           = aws_cloudwatch_event_rule.unicorn_approvals_catch_all.name
   event_bus_name = local.approvals_event_bus_name

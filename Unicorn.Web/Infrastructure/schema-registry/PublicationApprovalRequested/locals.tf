@@ -1,8 +1,14 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
+
 locals {
   # SSM parameter values are marked sensitive by the AWS provider; the namespace
   # values are public workshop constants, so unwrap them for use in names/outputs.
   unicorn_web_namespace = nonsensitive(data.aws_ssm_parameter.unicorn_web_namespace.value)
   schema_name           = "${local.unicorn_web_namespace}@PublicationApprovalRequested"
+
+  # AWSEvent describes the EventBridge envelope; the detail object is the
+  # PublicationApprovalRequested payload that consumers deserialize.
   schema_content = jsonencode({
     openapi = "3.0.0"
     info = {
