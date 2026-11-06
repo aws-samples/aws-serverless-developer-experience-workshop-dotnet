@@ -10,15 +10,15 @@
       },
       "Amazon.Lambda.CloudWatchEvents": {
         "type": "Direct",
-        "requested": "[5.0.0, )",
-        "resolved": "5.0.0",
-        "contentHash": "yguApqRkkczjyjaoBYyTkf2jb0CFDCc/WkUlmmY7F6DPylDiweJLPIqHZG73bF3MKxpn7GN4BMvXxFmgpXxfqg=="
+        "requested": "[5.1.0, )",
+        "resolved": "5.1.0",
+        "contentHash": "jHex7GIBBTMiChXzf9LwDgmleOteEkYZopTBCHw6P4zPbVhlAe3RwcGJ2fwVSTCqUaKo50xYgFwGX/GFhkfnXA=="
       },
       "Amazon.Lambda.Core": {
         "type": "Direct",
-        "requested": "[3.3.0, )",
-        "resolved": "3.3.0",
-        "contentHash": "CZKlX8ZDMi6aKPo5lPAjmsJFDXNJHX00aiiYeRQOEszP8cjx6qklBvTPj4qpr4dlp3YYQjmB87CqAiWV7vk2fA=="
+        "requested": "[3.4.0, )",
+        "resolved": "3.4.0",
+        "contentHash": "6fJGF73aKUBgENi1UIdS93LuYeEHUCHZEJh0QBAlCavUV5XQzA5kWqawAYAKNz4AAyIrLQeUg2bmD9T/g6mXVg=="
       },
       "Amazon.Lambda.Serialization.SystemTextJson": {
         "type": "Direct",
@@ -68,29 +68,29 @@
       },
       "AWSSDK.DynamoDBv2": {
         "type": "Direct",
-        "requested": "[4.0.103.3, )",
-        "resolved": "4.0.103.3",
-        "contentHash": "VSDAka/4hlIqfMF/AhLVO3ApCPOXFDsnkhnV0arOMJ2eDVc8j7FE32wxqXP1/MaANE0pzKkscgCNM29gXNb4Yg==",
+        "requested": "[4.0.110.1, )",
+        "resolved": "4.0.110.1",
+        "contentHash": "AFK7WXW9Isrxv2KZ/7pfRrTo5ygWfDzzyxHn1qa+dW9V1TB+4KH33Wscx3jE/FDMfA3ZU6ejHKl4v3aINEbqVg==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.101.1, 5.0.0)"
+          "AWSSDK.Core": "[4.0.102.18, 5.0.0)"
         }
       },
       "AWSSDK.EventBridge": {
         "type": "Direct",
-        "requested": "[4.0.100.9, )",
-        "resolved": "4.0.100.9",
-        "contentHash": "mqk+FJl496YZnW7j4dH6wsU8Y6wKXDPQjBL9vb2M1WWrhpxgkJDnIcQhgElOLOPaSY4jSbr/AJC8HczdAg/d0A==",
+        "requested": "[4.0.101.10, )",
+        "resolved": "4.0.101.10",
+        "contentHash": "60gAK/uBeR0pZufhEW26doVNAahbgqxwez9YjBxsFaGAzNd4yuIydJ8rw8xWlI1gEC5xJ8PaAhRWutoCPGgRJA==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.101.1, 5.0.0)"
+          "AWSSDK.Core": "[4.0.102.18, 5.0.0)"
         }
       },
       "AWSSDK.XRay": {
         "type": "Direct",
-        "requested": "[4.0.100.9, )",
-        "resolved": "4.0.100.9",
-        "contentHash": "hE402MuflWSNHlGlD2KhXY6Up8zyYKAqJe59x0TAzt94Vfqo2dZjGgReHf/IutOZvk5RAw4HlIIKOyUiUqAfzg==",
+        "requested": "[4.0.101.4, )",
+        "resolved": "4.0.101.4",
+        "contentHash": "nVFOUaihhdtH5O/V6RCG02q2wU35ougzlMqzLvrOMoVJBiD69sX+yV5FkUEBg4sCPee/OjAbtx53WOppN8k50A==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.101.1, 5.0.0)"
+          "AWSSDK.Core": "[4.0.102.18, 5.0.0)"
         }
       },
       "AWSXRayRecorder.Handlers.AwsSdk": {
@@ -114,8 +114,8 @@
       },
       "AWSSDK.Core": {
         "type": "Transitive",
-        "resolved": "4.0.101.1",
-        "contentHash": "NtMRfAGDrdb5PVnTL4vIrnPuPSXbBw0j9+voVMYmgsH5Ep5H4tuNMkPJZCOO9q99mh0L9ClOwVkQHCliR5uOLA=="
+        "resolved": "4.0.102.18",
+        "contentHash": "NjdKTry9Jqm0jGM7Af8TxzDi01MmWmjbGDnc4178S2w6A8b1pSCU0enBEcRoHpyXLafHJUewqeetu+fep1l/pw=="
       },
       "AWSXRayRecorder.Core": {
         "type": "Transitive",
@@ -129,8 +129,8 @@
       },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
-        "resolved": "18.9.0",
-        "contentHash": "MtegCIKGuG0r/LCdIjoR1HgzCGIUBhR3aNdbtQpts5vMXQuqBDZ2Jsd2uFKoHFM2XrQV6ZrDf3F5oLi3SLTp8w=="
+        "resolved": "18.11.0",
+        "contentHash": "MhN9wpvL1Es4hfIYslrsVgIsUdDFxuOBTbAl9mGIMvFo8PP5CLf4DrGdNrfwWSyn0lqi6sssm+I/qkkLL3MU+g=="
       },
       "Microsoft.Extensions.Configuration": {
         "type": "Transitive",
@@ -231,36 +231,36 @@
       },
       "Microsoft.NET.Test.Sdk": {
         "type": "Transitive",
-        "resolved": "18.9.0",
-        "contentHash": "xIzVXa/VpKXqDWzyC/5Hw8JbFY5u9k3Jc53CpcjBiOXvkQGio484LD9FNwOiGUSMDcYL3Rcw9sNgGi5WrswlPQ==",
+        "resolved": "18.11.0",
+        "contentHash": "xf/bR0LNkhK0SnadDRlZIQmC4sac5Wk0e1WAdiQjRN3MSo6gQ9M2c4c1XRNnVGjfOvckh704W5CJ19AL0/Xsdg==",
         "dependencies": {
-          "Microsoft.CodeCoverage": "18.9.0",
-          "Microsoft.TestPlatform.TestHost": "18.9.0"
+          "Microsoft.CodeCoverage": "18.11.0",
+          "Microsoft.TestPlatform.TestHost": "18.11.0"
         }
       },
       "Microsoft.TestPlatform.ObjectModel": {
         "type": "Transitive",
-        "resolved": "18.9.0",
-        "contentHash": "Fz/qXC52VXXopzHj7v2reCKcCqSxkTDCkEDfkNAH0vni/7qK/KLMiEYtRmnUanxO2F2g2zZZ60qCpxF0AF7URA=="
+        "resolved": "18.11.0",
+        "contentHash": "BXBHYnwSOljKute8UYCMXOLAdB7awxEMppPSpqOF1ZxLD/W/OH+vTBgFaXA7q0aditJTVXSMVenel+wOkEIyNg=="
       },
       "Microsoft.TestPlatform.TestHost": {
         "type": "Transitive",
-        "resolved": "18.9.0",
-        "contentHash": "Oq+Pma/J86aZL72t71bcESvDszDsTjUfl6PIsuDdPoKTHZfNMhKamCfLD5fKx51W/u0KozXtJo2/3fnt0sgPxg==",
+        "resolved": "18.11.0",
+        "contentHash": "AKjwKpyRBwoQFQmpcchtoYlfJEBlaY/40uxBRi+qXP4NR7xT8t+XTJtOyEyumfvfJcH5pASs75LwNdXYRr4XNA==",
         "dependencies": {
-          "Microsoft.TestPlatform.ObjectModel": "18.9.0"
+          "Microsoft.TestPlatform.ObjectModel": "18.11.0"
         }
       },
       "Unicorn.Web.Common": {
         "type": "Project",
         "dependencies": {
-          "AWSSDK.DynamoDBv2": "[4.0.103.3, )",
-          "AWSSDK.XRay": "[4.0.100.9, )",
+          "AWSSDK.DynamoDBv2": "[4.0.110.1, )",
+          "AWSSDK.XRay": "[4.0.101.4, )",
           "AWSXRayRecorder.Handlers.AwsSdk": "[2.14.0, )",
           "Amazon.Lambda.APIGatewayEvents": "[3.0.1, )",
-          "Amazon.Lambda.CloudWatchEvents": "[5.0.0, )",
-          "Amazon.Lambda.Core": "[3.3.0, )",
-          "Microsoft.NET.Test.Sdk": "[18.9.0, )"
+          "Amazon.Lambda.CloudWatchEvents": "[5.1.0, )",
+          "Amazon.Lambda.Core": "[3.4.0, )",
+          "Microsoft.NET.Test.Sdk": "[18.11.0, )"
         }
       }
     }
