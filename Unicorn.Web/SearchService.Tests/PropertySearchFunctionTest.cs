@@ -12,6 +12,7 @@ using Xunit;
 
 namespace Unicorn.Web.SearchService.Tests;
 
+[Collection("Sequential")]
 public class PropertySearchFunctionTest
 {
     public PropertySearchFunctionTest()
