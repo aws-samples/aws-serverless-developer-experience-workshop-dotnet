@@ -1,35 +1,62 @@
-name: Build .NET
+name: Build
 
+# Runs the same checks as `make ci` in each service folder. Every job reports a
+# result on every push and pull request, so the jobs can be required checks.
 on:
   push:
-    branches: [ develop, main ]
+    branches: [develop, main]
   pull_request:
-    branches: [ develop, main ]
-
+    branches: [develop, main]
 
 permissions:
   contents: read
 
-defaults:
-  run:
-    working-directory: ./
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    name: ${{ matrix.service }}
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: contracts
+            directory: Unicorn.Contracts
+          - service: approvals
+            directory: Unicorn.Approvals
+          - service: web
+            directory: Unicorn.Web
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup .NET 10.0
-        uses: actions/setup-dotnet@607fce577a46308457984d59e4954e075820f10a
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install cfn-lint
+        run: python -m pip install cfn-lint==1.61.0 cfn-lint-serverless==0.3.6
+
+      - name: Set up AWS SAM CLI
+        uses: aws-actions/setup-sam@341eee193f458fa5aae5d52c94b0c5cf3a1c5a52 # v3
+        with:
+          use-installer: true
+          version: 1.174.0
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: 10.0.x
-      - name: Install solution dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-      - name: Test
-        env:
-          AWS_DEFAULT_REGION: us-west-2
-          AWS_REGION: us-west-2
-        run: dotnet test
+
+      - name: Run CI checks
+        run: make ci
