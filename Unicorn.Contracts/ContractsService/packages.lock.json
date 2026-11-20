@@ -62,20 +62,20 @@
       },
       "AWSSDK.DynamoDBv2": {
         "type": "Direct",
-        "requested": "[4.0.110.1, )",
-        "resolved": "4.0.110.1",
-        "contentHash": "AFK7WXW9Isrxv2KZ/7pfRrTo5ygWfDzzyxHn1qa+dW9V1TB+4KH33Wscx3jE/FDMfA3ZU6ejHKl4v3aINEbqVg==",
+        "requested": "[4.1.0.3, )",
+        "resolved": "4.1.0.3",
+        "contentHash": "E/HlGsFqZnGVbQ4mNDqc9tBehKZXJXFM76uYLkPpvbA0NTn41BSTJ10zrfYE4VjB4ujTmFqrGIjEvYLmZLf44Q==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.102.18, 5.0.0)"
+          "AWSSDK.Core": "[4.1.1.2, 5.0.0)"
         }
       },
       "AWSSDK.XRay": {
         "type": "Direct",
-        "requested": "[4.0.101.4, )",
-        "resolved": "4.0.101.4",
-        "contentHash": "nVFOUaihhdtH5O/V6RCG02q2wU35ougzlMqzLvrOMoVJBiD69sX+yV5FkUEBg4sCPee/OjAbtx53WOppN8k50A==",
+        "requested": "[4.1.0.2, )",
+        "resolved": "4.1.0.2",
+        "contentHash": "4QgOehq1VB50BiVISpCLI1TsvnwBFPjHalfVuVMXziCGLb8+gQwbaSWAElJrPL1lDVlSVt5XlWpCtqjYdHo1vw==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.102.18, 5.0.0)"
+          "AWSSDK.Core": "[4.1.1.1, 5.0.0)"
         }
       },
       "AWSXRayRecorder.Handlers.AwsSdk": {
@@ -99,8 +99,17 @@
       },
       "AWSSDK.Core": {
         "type": "Transitive",
-        "resolved": "4.0.102.18",
-        "contentHash": "NjdKTry9Jqm0jGM7Af8TxzDi01MmWmjbGDnc4178S2w6A8b1pSCU0enBEcRoHpyXLafHJUewqeetu+fep1l/pw=="
+        "resolved": "4.1.1.2",
+        "contentHash": "RETCWprYHiCwwL6mgLnhCF/w7gwpHaGVIKU+Th+xDs0yzs2b7rgz09nicLT5+k0qm7OJxze6fqiU4ZdmC3tu5A==",
+        "dependencies": {
+          "AWSSDK.Extensions.Numerics": "[4.1.0, 5.0.0)",
+          "System.IO.Hashing": "11.0.0"
+        }
+      },
+      "AWSSDK.Extensions.Numerics": {
+        "type": "Transitive",
+        "resolved": "4.1.0",
+        "contentHash": "hhoiXT1aUyVgIiQbQoqG3L1EEneqXDh2GKyH5izUlO6Rzi9GAAi8S6mlLiVwow23+EGg77zHjdmUi+ia3RSUTg=="
       },
       "AWSXRayRecorder.Core": {
         "type": "Transitive",
@@ -208,6 +217,11 @@
         "type": "Transitive",
         "resolved": "8.0.0",
         "contentHash": "bXJEZrW9ny8vjMF1JV253WeLhpEVzFo1lyaZu1vQ4ZxWUlVvknZ/+ftFgVheLubb4eZPSwwxBeqS1JkCOjxd8g=="
+      },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "U+Bv2qCYt6eONi+arSP0QIp4uTO6os6uceBsqiAwruZ+Wo2HrRhO/0tj38M9URJtS+4DhAtT3ka2TGNFYsnhyQ=="
       }
     }
   }
