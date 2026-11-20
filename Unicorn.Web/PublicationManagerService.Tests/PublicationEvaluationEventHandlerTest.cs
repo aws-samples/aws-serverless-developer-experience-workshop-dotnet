@@ -12,6 +12,7 @@ using Xunit;
 
 namespace Unicorn.Web.PublicationManagerService.Tests;
 
+[Collection("Sequential")]
 public class PublicationEvaluationEventHandlerTest
 {
     public PublicationEvaluationEventHandlerTest()

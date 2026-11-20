@@ -5,7 +5,7 @@ STAGE ?= local
 REGION ?= ap-southeast-2
 STACK_PREFIX = uni-prop-$(STAGE)
 
-.PHONY: help build deploy deploy-domain deploy-schema deploy-service test lint clean delete
+.PHONY: help build deploy deploy-domain deploy-schema deploy-service test lint clean delete ci
 
 help: ## Show available commands
 	@echo "Unicorn Contracts Service Infrastructure"
@@ -66,6 +66,11 @@ lint: ## Lint CloudFormation templates
 	@cfn-lint Infrastructure/contracts-service/template.yaml -a cfn_lint_serverless.rules
 	@cfn-lint Infrastructure/domain.yaml
 	@cfn-lint Infrastructure/schema-registry/ContractStatusChanged-schema.yaml
+
+# The AWS SDK clients need a region even in unit tests; credentials are never needed.
+ci: export AWS_REGION ?= $(REGION)
+ci: export AWS_DEFAULT_REGION ?= $(REGION)
+ci: lint build test ## Run the same checks as CI (lint, build, test); needs no AWS credentials
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."
