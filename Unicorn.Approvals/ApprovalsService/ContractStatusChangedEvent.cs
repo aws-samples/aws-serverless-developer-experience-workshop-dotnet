@@ -15,7 +15,12 @@ public class ContractStatusChangedEvent : IEvent
     public string PropertyId { get; set; } = null!;
     public Guid ContractId { get; set; }
     public string ContractStatus { get; set; } = null!;
-    public DateTime ContractLastModifiedOn { get; set; }
+    /// <summary>
+    /// Last modification time, kept as the string the Contracts service wrote (<c>yyyy-MM-ddTHH:mm:ssZ</c>).
+    /// It is stored back unchanged, so it must not be parsed into a date type:
+    /// the DynamoDB SDK would rewrite it as <c>yyyy-MM-ddTHH:mm:ss.fffZ</c>.
+    /// </summary>
+    public string ContractLastModifiedOn { get; set; } = null!;
 }
 
 public interface IEvent

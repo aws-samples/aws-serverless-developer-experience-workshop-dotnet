@@ -38,7 +38,7 @@ public class WaitForContractApprovalFunctionTest
             PropertyId = propertyId,
             ContractId = Guid.NewGuid(),
             ContractStatus = "DRAFT",
-            ContractLastModifiedOn = DateTime.Today,
+            ContractLastModifiedOn = TestHelpers.SampleLastModifiedOn,
             SfnWaitApprovedTaskToken = null
         };
 
@@ -60,7 +60,9 @@ public class WaitForContractApprovalFunctionTest
         await mockDynamoDbContext.Received(1)
             .SaveAsync(Arg.Is<ContractStatusItem>(item =>
                 item.PropertyId == propertyId &&
-                item.SfnWaitApprovedTaskToken == taskToken), Arg.Any<CancellationToken>());
+                item.SfnWaitApprovedTaskToken == taskToken &&
+                // storing the token must not change the timestamp
+                item.ContractLastModifiedOn == TestHelpers.SampleLastModifiedOn), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -97,7 +99,7 @@ public class WaitForContractApprovalFunctionTest
             PropertyId = propertyId,
             ContractId = Guid.NewGuid(),
             ContractStatus = "DRAFT",
-            ContractLastModifiedOn = DateTime.Today,
+            ContractLastModifiedOn = TestHelpers.SampleLastModifiedOn,
             SfnWaitApprovedTaskToken = null
         };
 

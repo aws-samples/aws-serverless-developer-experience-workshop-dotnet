@@ -17,7 +17,10 @@ public class ContractStatusItem
     
     public string? ContractStatus { get; set; }
     
-    public DateTime? ContractLastModifiedOn { get; set; }
+    /// <summary>
+    /// Last modification time as the string received on the event. Stored unchanged (see <see cref="ContractStatusChangedEvent"/>).
+    /// </summary>
+    public string? ContractLastModifiedOn { get; set; }
     
     public string? SfnWaitApprovedTaskToken { get; set; }
 }
