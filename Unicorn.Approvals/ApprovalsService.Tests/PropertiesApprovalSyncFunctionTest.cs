@@ -47,7 +47,7 @@ public class PropertiesApprovalSyncFunctionTest
                 PropertyId = "usa/anytown/main-street/999",
                 ContractId = Guid.NewGuid(),
                 ContractStatus = "DRAFT",
-                ContractLastModifiedOn = DateTime.Today,
+                ContractLastModifiedOn = TestHelpers.SampleLastModifiedOn,
                 SfnWaitApprovedTaskToken = null
             });
 
@@ -80,7 +80,7 @@ public class PropertiesApprovalSyncFunctionTest
                 PropertyId = "usa/anytown/main-street/999",
                 ContractId = Guid.NewGuid(),
                 ContractStatus = "APPROVED",
-                ContractLastModifiedOn = DateTime.Today,
+                ContractLastModifiedOn = TestHelpers.SampleLastModifiedOn,
                 SfnWaitApprovedTaskToken = null
             });
 
@@ -120,7 +120,7 @@ public class PropertiesApprovalSyncFunctionTest
                 PropertyId = "usa/anytown/main-street/999",
                 ContractId = Guid.NewGuid(),
                 ContractStatus = "APPROVED",
-                ContractLastModifiedOn = DateTime.Today,
+                ContractLastModifiedOn = TestHelpers.SampleLastModifiedOn,
                 SfnWaitApprovedTaskToken = Token
             });
         var context = TestHelpers.NewLambdaContext();

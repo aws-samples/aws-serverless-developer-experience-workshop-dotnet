@@ -15,10 +15,16 @@ namespace Unicorn.Approvals.ApprovalsService.Tests;
 public static class TestHelpers
 {
     /// <summary>
+    /// A fixed contract timestamp in the stored format (yyyy-MM-ddTHH:mm:ssZ). Tests use a literal, not the host clock,
+    /// so assertions on the stored string are exact and don't depend on the machine's date or time zone.
+    /// </summary>
+    public const string SampleLastModifiedOn = "2022-08-25T01:44:02Z";
+
+    /// <summary>
     /// Builds a CloudWatchEvent wrapping a ContractStatusChangedEvent detail for ContractStatusChangedEventHandler tests
     /// </summary>
     public static CloudWatchEvent<ContractStatusChangedEvent> NewContractStatusChangedEvent(
-        string propertyId, string contractStatus, Guid? contractId = null, DateTime? contractLastModifiedOn = null)
+        string propertyId, string contractStatus, Guid? contractId = null, string? contractLastModifiedOn = null)
     {
         return new CloudWatchEvent<ContractStatusChangedEvent>
         {
@@ -27,7 +33,7 @@ public static class TestHelpers
                 PropertyId = propertyId,
                 ContractId = contractId ?? Guid.NewGuid(),
                 ContractStatus = contractStatus,
-                ContractLastModifiedOn = contractLastModifiedOn ?? DateTime.Today
+                ContractLastModifiedOn = contractLastModifiedOn ?? SampleLastModifiedOn
             }
         };
     }

@@ -3,6 +3,6 @@
     "DetailType": "ContractStatusChanged",
     "Source": "unicorn-contracts",
     "EventBusName": "unicorn-approvals-eventbus-local",
-    "Detail": "{ \"ContractUpdatedOn\": \"10/08/2022 19:56:30\", \"ContractId\": \"f2bedc80-3dc8-4544-9140-9b606d71a6ee\", \"PropertyId\": \"usa/anytown/main-street/111\", \"ContractStatus\": \"DRAFT\" }"
+    "Detail": "{ \"ContractLastModifiedOn\": \"2022-08-10T19:56:30Z\", \"ContractId\": \"f2bedc80-3dc8-4544-9140-9b606d71a6ee\", \"PropertyId\": \"usa/anytown/main-street/111\", \"ContractStatus\": \"DRAFT\" }"
   }
 ]

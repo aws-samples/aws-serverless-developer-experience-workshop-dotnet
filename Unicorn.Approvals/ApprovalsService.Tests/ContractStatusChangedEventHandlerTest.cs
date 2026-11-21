@@ -45,7 +45,8 @@ public class ContractStatusChangedEventHandlerTest
         await mockDynamoDbContext.Received(1)
             .SaveAsync(Arg.Is<ContractStatusChangedEvent>(e =>
                 e.PropertyId == "usa/anytown/main-street/111" &&
-                e.ContractStatus == "DRAFT"), Arg.Any<CancellationToken>());
+                e.ContractStatus == "DRAFT" &&
+                e.ContractLastModifiedOn == TestHelpers.SampleLastModifiedOn), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -57,7 +58,7 @@ public class ContractStatusChangedEventHandlerTest
             .ThrowsAsync(new ArgumentException("Invalid event data"));
 
         var cloudWatchEvent = TestHelpers.NewContractStatusChangedEvent(
-            "", "", contractId: Guid.Empty, contractLastModifiedOn: DateTime.MinValue);
+            "", "", contractId: Guid.Empty, contractLastModifiedOn: "");
 
         var context = TestHelpers.NewLambdaContext();
 
