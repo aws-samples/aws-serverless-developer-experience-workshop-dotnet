@@ -1,7 +1,7 @@
 [
   {
     "Source": "unicorn-contracts",
-    "Detail": "{\"ContractUpdatedOn\":\"10/08/2022 20:36:30\",\"ContractId\": \"199\",\"PropertyId\":\"bbb\",\"ContractStatus\":\"APPROVED\"}",
+    "Detail": "{\"ContractLastModifiedOn\":\"2022-08-10T20:36:30Z\",\"ContractId\": \"199\",\"PropertyId\":\"bbb\",\"ContractStatus\":\"APPROVED\"}",
     "DetailType": "ContractStatusChanged",
     "EventBusName": "Dev-UnicornApprovalsEventBus"
   }

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
@@ -26,6 +27,9 @@ public class ContractEventHandlerTest
         Environment.SetEnvironmentVariable("DYNAMODB_TABLE", "uni-prop-local-contract-ContractsTable");
         Environment.SetEnvironmentVariable("POWERTOOLS_METRICS_NAMESPACE", "ContractService");
     }
+
+    // yyyy-MM-ddTHH:mm:ssZ: UTC, whole seconds, literal Z (20 characters)
+    private const string TimestampPattern = @"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$";
 
     private static SQSEvent CreateSqsEvent(string body, string httpMethod)
     {
@@ -52,8 +56,9 @@ public class ContractEventHandlerTest
         var payload = TestHelpers.LoadPayload("./events/create_contract_valid_1.json");
         var sqsEvent = CreateSqsEvent(payload, "POST");
 
+        PutItemRequest? putRequest = null;
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
-        mockDynamoDbClient.PutItemAsync(Arg.Any<PutItemRequest>())
+        mockDynamoDbClient.PutItemAsync(Arg.Do<PutItemRequest>(r => putRequest = r))
             .Returns(new PutItemResponse());
 
         var context = TestHelpers.NewLambdaContext();
@@ -64,6 +69,14 @@ public class ContractEventHandlerTest
 
         // Assert
         await mockDynamoDbClient.Received(1).PutItemAsync(Arg.Any<PutItemRequest>());
+
+        Assert.NotNull(putRequest);
+        var created = putRequest!.Item["ContractCreated"].S;
+        var lastModified = putRequest.Item["ContractLastModifiedOn"].S;
+        Assert.Matches(TimestampPattern, created);
+        Assert.Matches(TimestampPattern, lastModified);
+        // A new contract has one creation instant
+        Assert.Equal(created, lastModified);
     }
 
     [Fact]
@@ -73,8 +86,9 @@ public class ContractEventHandlerTest
         var payload = TestHelpers.LoadPayload("./events/update_contract_valid_1.json");
         var sqsEvent = CreateSqsEvent(payload, "PUT");
 
+        UpdateItemRequest? updateRequest = null;
         var mockDynamoDbClient = Substitute.ForPartsOf<AmazonDynamoDBClient>();
-        mockDynamoDbClient.UpdateItemAsync(Arg.Any<UpdateItemRequest>())
+        mockDynamoDbClient.UpdateItemAsync(Arg.Do<UpdateItemRequest>(r => updateRequest = r))
             .Returns(new UpdateItemResponse());
 
         var context = TestHelpers.NewLambdaContext();
@@ -86,6 +100,9 @@ public class ContractEventHandlerTest
         // Assert
         await mockDynamoDbClient.Received(1)
             .UpdateItemAsync(Arg.Any<UpdateItemRequest>());
+
+        Assert.NotNull(updateRequest);
+        Assert.Matches(TimestampPattern, updateRequest!.ExpressionAttributeValues[":md"].S);
     }
 
     [Fact]
