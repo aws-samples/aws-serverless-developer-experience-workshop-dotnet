@@ -38,6 +38,7 @@ make deploy-schema          # Event schema stack(s)
 make deploy-service         # Lambda, API Gateway, DynamoDB (service template)
 make test                   # dotnet test (xUnit)
 make lint                   # cfn-lint all infrastructure templates
+make format                 # dotnet format (C#)
 make ci                     # Everything CI runs: lint, build, test (no AWS credentials)
 make clean                  # Remove .aws-sam/ and dotnet clean
 make delete                 # Delete stacks in reverse dependency order
