@@ -1,0 +1,282 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "Amazon.Lambda.APIGatewayEvents": {
+        "type": "Direct",
+        "requested": "[3.0.1, )",
+        "resolved": "3.0.1",
+        "contentHash": "+gTGEtrcoCBRtCgcqEl3AlFrYrQY4pFreL22KkmpvXaNX1Lwlrbgk/crEcfuD3Q0wO2AspsJ3xMMj7pJxDYTKA=="
+      },
+      "Amazon.Lambda.CloudWatchEvents": {
+        "type": "Direct",
+        "requested": "[5.1.0, )",
+        "resolved": "5.1.0",
+        "contentHash": "jHex7GIBBTMiChXzf9LwDgmleOteEkYZopTBCHw6P4zPbVhlAe3RwcGJ2fwVSTCqUaKo50xYgFwGX/GFhkfnXA=="
+      },
+      "Amazon.Lambda.Core": {
+        "type": "Direct",
+        "requested": "[3.4.0, )",
+        "resolved": "3.4.0",
+        "contentHash": "6fJGF73aKUBgENi1UIdS93LuYeEHUCHZEJh0QBAlCavUV5XQzA5kWqawAYAKNz4AAyIrLQeUg2bmD9T/g6mXVg=="
+      },
+      "Amazon.Lambda.Serialization.SystemTextJson": {
+        "type": "Direct",
+        "requested": "[3.0.1, )",
+        "resolved": "3.0.1",
+        "contentHash": "QsHygaMyxQdgh5NPs5GGyBjK6mqQr5nv8rpqlrWC5+e1k7sVx+2xwDHv493S5IMw461S/PyHfjkUDjIQU5ArSA==",
+        "dependencies": {
+          "Amazon.Lambda.Core": "3.3.0"
+        }
+      },
+      "AWS.Lambda.Powertools.Logging": {
+        "type": "Direct",
+        "requested": "[3.2.2, )",
+        "resolved": "3.2.2",
+        "contentHash": "VZ2o/8cVtuo+1LaTORo62LEOx87SeRE+VAu2VRsg2AWdT3Wx4c+WSRnhWB1yP6jnvMzvy2FKjWQ5BU+dSoWY3A==",
+        "dependencies": {
+          "Amazon.Lambda.Core": "2.8.0",
+          "Amazon.Lambda.Serialization.SystemTextJson": "2.4.4",
+          "AspectInjector": "2.8.1",
+          "Microsoft.Extensions.Logging": "8.0.1",
+          "Microsoft.Extensions.Logging.Configuration": "8.0.1"
+        }
+      },
+      "AWS.Lambda.Powertools.Metrics": {
+        "type": "Direct",
+        "requested": "[3.2.2, )",
+        "resolved": "3.2.2",
+        "contentHash": "6YJKF3fs4OCzsE/eaJNXwgcj7GMHuAczCcXd11HIjYRoXTKd/0ubcOQ3mFOQDqkqzwW/fMWBucm1JUvzyBRzTA==",
+        "dependencies": {
+          "Amazon.Lambda.Core": "2.8.0",
+          "AspectInjector": "2.8.1"
+        }
+      },
+      "AWS.Lambda.Powertools.Tracing": {
+        "type": "Direct",
+        "requested": "[3.2.2, )",
+        "resolved": "3.2.2",
+        "contentHash": "RiATfbisiVTzxnXCTFuaOPFqzVP/Bf5jTVJ1PmjFCECPvO6FoLTMFoJGa7+Dsz5xpIzgFg+Ez3bo9IwLqrZwyQ==",
+        "dependencies": {
+          "AWSSDK.XRay": "4.0.3.7",
+          "AWSXRayRecorder.Core": "2.15.0",
+          "AWSXRayRecorder.Handlers.AwsSdk": "2.13.0",
+          "Amazon.Lambda.Core": "2.8.0",
+          "Amazon.Lambda.Serialization.SystemTextJson": "2.4.4",
+          "AspectInjector": "2.8.1"
+        }
+      },
+      "AWSSDK.DynamoDBv2": {
+        "type": "Direct",
+        "requested": "[4.1.0.3, )",
+        "resolved": "4.1.0.3",
+        "contentHash": "E/HlGsFqZnGVbQ4mNDqc9tBehKZXJXFM76uYLkPpvbA0NTn41BSTJ10zrfYE4VjB4ujTmFqrGIjEvYLmZLf44Q==",
+        "dependencies": {
+          "AWSSDK.Core": "[4.1.1.2, 5.0.0)"
+        }
+      },
+      "AWSSDK.EventBridge": {
+        "type": "Direct",
+        "requested": "[4.1.0.2, )",
+        "resolved": "4.1.0.2",
+        "contentHash": "gqFTV2by/5537RyemmcInN8SWB/G8DGYTHMS1wgBmnNnP8KrV4hyNjOwGkgkv8LxCGpRmsgCcyTC3AKDW7WTYg==",
+        "dependencies": {
+          "AWSSDK.Core": "[4.1.1.1, 5.0.0)"
+        }
+      },
+      "AWSSDK.XRay": {
+        "type": "Direct",
+        "requested": "[4.1.0.2, )",
+        "resolved": "4.1.0.2",
+        "contentHash": "4QgOehq1VB50BiVISpCLI1TsvnwBFPjHalfVuVMXziCGLb8+gQwbaSWAElJrPL1lDVlSVt5XlWpCtqjYdHo1vw==",
+        "dependencies": {
+          "AWSSDK.Core": "[4.1.1.1, 5.0.0)"
+        }
+      },
+      "AWSXRayRecorder.Handlers.AwsSdk": {
+        "type": "Direct",
+        "requested": "[2.14.0, )",
+        "resolved": "2.14.0",
+        "contentHash": "N4CZLxbyZF6qgwzP6MMFGdu9936sHv5fxTlscWFJa3tf0F1mFjRBUeHxbOlA91Si+S0u3XdMPGUBP3KhkCybqw==",
+        "dependencies": {
+          "AWSXRayRecorder.Core": "2.16.0"
+        }
+      },
+      "Amazon.Lambda.SQSEvents": {
+        "type": "Transitive",
+        "resolved": "2.1.0",
+        "contentHash": "a1xaCIuXDleJ8iRE3vHWWhtPqUiURmoQUS68INMEQmtfHr4wTz837TQZONo4cyubv5sZj78DDrYessZEzgFRGQ=="
+      },
+      "AspectInjector": {
+        "type": "Transitive",
+        "resolved": "2.8.1",
+        "contentHash": "8BScDeaLazJVFaa2Tt9hoWLhllnxXP3Sew+l/vktdZEcgoPOsqhlDqe6GXJvy7xVkdICAbKFsrcDJ0cfrDR6Mg=="
+      },
+      "AWSSDK.Core": {
+        "type": "Transitive",
+        "resolved": "4.1.1.2",
+        "contentHash": "RETCWprYHiCwwL6mgLnhCF/w7gwpHaGVIKU+Th+xDs0yzs2b7rgz09nicLT5+k0qm7OJxze6fqiU4ZdmC3tu5A==",
+        "dependencies": {
+          "AWSSDK.Extensions.Numerics": "[4.1.0, 5.0.0)",
+          "System.IO.Hashing": "11.0.0"
+        }
+      },
+      "AWSSDK.Extensions.Numerics": {
+        "type": "Transitive",
+        "resolved": "4.1.0",
+        "contentHash": "hhoiXT1aUyVgIiQbQoqG3L1EEneqXDh2GKyH5izUlO6Rzi9GAAi8S6mlLiVwow23+EGg77zHjdmUi+ia3RSUTg=="
+      },
+      "AWSXRayRecorder.Core": {
+        "type": "Transitive",
+        "resolved": "2.16.0",
+        "contentHash": "I4BMYX4Fs7SiDHtvKoS/TsRUp2flCrfotJOsYRvvn4+gU1wPjD6LEHkIiLNDSwS9Vbh2784dxeWfdAG7oct5MQ==",
+        "dependencies": {
+          "AWSSDK.Core": "3.3.25.1",
+          "Amazon.Lambda.Core": "2.8.0",
+          "Amazon.Lambda.SQSEvents": "2.1.0"
+        }
+      },
+      "Microsoft.CodeCoverage": {
+        "type": "Transitive",
+        "resolved": "18.12.0",
+        "contentHash": "OhOPSaCAQhBJgXF1OrX0uK3eTkwZ1XnM44iGLZplYgKrmgKzQUdv9xtGGaE568RuQ738TlrTJ3pm9aWL5FH7iw=="
+      },
+      "Microsoft.Extensions.Configuration": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "0J/9YNXTMWSZP2p2+nvl8p71zpSwokZXZuJW+VjdErkegAnFdO1XlqtA62SJtgVYHdKu3uPxJHcMR/r35HwFBA==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Primitives": "8.0.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration.Abstractions": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "3lE/iLSutpgX1CC0NOW70FJoGARRHbyKmG7dc0klnUZ9Dd9hS6N/POPWhKhMLCEuNN5nXEY5agmlFtH562vqhQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "8.0.0"
+        }
+      },
+      "Microsoft.Extensions.Configuration.Binder": {
+        "type": "Transitive",
+        "resolved": "8.0.2",
+        "contentHash": "7IQhGK+wjyGrNsPBjJcZwWAr+Wf6D4+TwOptUt77bWtgNkiV8tDEbhFS+dDamtQFZ2X7kWG9m71iZQRj2x3zgQ==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0"
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection": {
+        "type": "Transitive",
+        "resolved": "8.0.1",
+        "contentHash": "BmANAnR5Xd4Oqw7yQ75xOAYODybZQRzdeNucg7kS5wWKd2PNnMdYtJ2Vciy0QLylRmv42DGl5+AFL9izA6F1Rw==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2"
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions": {
+        "type": "Transitive",
+        "resolved": "8.0.2",
+        "contentHash": "3iE7UF7MQkCv1cxzCahz+Y/guQbTqieyxyaWKhrRO91itI9cOKO76OHeQDahqG4MmW5umr3CcCvGmK92lWNlbg=="
+      },
+      "Microsoft.Extensions.Logging": {
+        "type": "Transitive",
+        "resolved": "8.0.1",
+        "contentHash": "4x+pzsQEbqxhNf1QYRr5TDkLP9UsLT3A6MdRKDDEgrW7h1ljiEPgTNhKYUhNCCAaVpQECVQ+onA91PTPnIp6Lw==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection": "8.0.1",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
+          "Microsoft.Extensions.Options": "8.0.2"
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions": {
+        "type": "Transitive",
+        "resolved": "8.0.2",
+        "contentHash": "nroMDjS7hNBPtkZqVBbSiQaQjWRDxITI8Y7XnDs97rqG3EbzVTNLZQf7bIeUJcaHOV8bca47s1Uxq94+2oGdxA==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2"
+        }
+      },
+      "Microsoft.Extensions.Logging.Configuration": {
+        "type": "Transitive",
+        "resolved": "8.0.1",
+        "contentHash": "QWwTrsgOnJMmn+XUslm8D2H1n3PkP/u/v52FODtyBc/k4W9r3i2vcXXeeX/upnzllJYRRbrzVzT0OclfNJtBJA==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "8.0.0",
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Configuration.Binder": "8.0.2",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2",
+          "Microsoft.Extensions.Logging": "8.0.1",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.2",
+          "Microsoft.Extensions.Options": "8.0.2",
+          "Microsoft.Extensions.Options.ConfigurationExtensions": "8.0.0"
+        }
+      },
+      "Microsoft.Extensions.Options": {
+        "type": "Transitive",
+        "resolved": "8.0.2",
+        "contentHash": "dWGKvhFybsaZpGmzkGCbNNwBD1rVlWzrZKANLW/CcbFJpCEceMCGzT7zZwHOGBCbwM0SzBuceMj5HN1LKV1QqA==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Primitives": "8.0.0"
+        }
+      },
+      "Microsoft.Extensions.Options.ConfigurationExtensions": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "0f4DMRqEd50zQh+UyJc+/HiBsZ3vhAQALgdkcQEalSH1L2isdC7Yj54M3cyo5e+BeO5fcBQ7Dxly8XiBBcvRgw==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Configuration.Binder": "8.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Options": "8.0.0",
+          "Microsoft.Extensions.Primitives": "8.0.0"
+        }
+      },
+      "Microsoft.Extensions.Primitives": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "bXJEZrW9ny8vjMF1JV253WeLhpEVzFo1lyaZu1vQ4ZxWUlVvknZ/+ftFgVheLubb4eZPSwwxBeqS1JkCOjxd8g=="
+      },
+      "Microsoft.NET.Test.Sdk": {
+        "type": "Transitive",
+        "resolved": "18.12.0",
+        "contentHash": "MdVkskM2ZCKSlNts5DIbz9MZidX7SwcXKBoBqY4XT91b30hAwC8PkjWbdGKRak6BKAD1BQqaZnh/SD0AJGoDCQ==",
+        "dependencies": {
+          "Microsoft.CodeCoverage": "18.12.0",
+          "Microsoft.TestPlatform.TestHost": "18.12.0"
+        }
+      },
+      "Microsoft.TestPlatform.ObjectModel": {
+        "type": "Transitive",
+        "resolved": "18.12.0",
+        "contentHash": "ilT2o4v/c1joLgsfzS4dYQ71bWAy/RsA6fBY7f5OEUpUsUhwIzoliGeXdS3yctWuy4NZyuSVlO7dPX4ed7R06A=="
+      },
+      "Microsoft.TestPlatform.TestHost": {
+        "type": "Transitive",
+        "resolved": "18.12.0",
+        "contentHash": "WTT912JUqmFa2BkCeXPkMCUpbYOqsbeRfRJdhaIQROx49iokgnGPAlKvXmHWKC9nJwWrHwSQfR+k+Qn7NCxfzw==",
+        "dependencies": {
+          "Microsoft.TestPlatform.ObjectModel": "18.12.0"
+        }
+      },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "U+Bv2qCYt6eONi+arSP0QIp4uTO6os6uceBsqiAwruZ+Wo2HrRhO/0tj38M9URJtS+4DhAtT3ka2TGNFYsnhyQ=="
+      },
+      "Unicorn.Web.Common": {
+        "type": "Project",
+        "dependencies": {
+          "AWSSDK.DynamoDBv2": "[4.1.0.3, )",
+          "AWSSDK.XRay": "[4.1.0.2, )",
+          "AWSXRayRecorder.Handlers.AwsSdk": "[2.14.0, )",
+          "Amazon.Lambda.APIGatewayEvents": "[3.0.1, )",
+          "Amazon.Lambda.CloudWatchEvents": "[5.1.0, )",
+          "Amazon.Lambda.Core": "[3.4.0, )",
+          "Microsoft.NET.Test.Sdk": "[18.12.0, )"
+        }
+      }
+    }
+  }
+}

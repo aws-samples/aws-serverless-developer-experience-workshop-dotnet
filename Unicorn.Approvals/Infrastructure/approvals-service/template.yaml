@@ -254,8 +254,7 @@ Resources:
               MaximumRetryAttempts: 5
               MaximumEventAgeInSeconds: 900
             DeadLetterConfig:
-              Type: SQS
-              Destination: !GetAtt ApprovalsServiceDLQ.Arn
+              Arn: !GetAtt ApprovalsServiceDLQ.Arn
       DefinitionSubstitutions:
         WaitForContractApprovalArn: !GetAtt WaitForContractApprovalFunction.Arn
         TableName: !Ref ContractStatusTable
@@ -347,7 +346,7 @@ Resources:
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
-      Name: approvals.catchall
+      Name: "{{resolve:ssm:/uni-prop/UnicornApprovalsNamespace}}-CatchAllEvents"
       Description: Catchall rule used for development purposes.
       EventBusName: !Sub "{{resolve:ssm:/uni-prop/${Stage}/ApprovalsEventBus}}"
       EventPattern:

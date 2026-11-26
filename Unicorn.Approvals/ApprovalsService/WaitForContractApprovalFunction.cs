@@ -49,6 +49,15 @@ public class WaitForContractApprovalFunction
 
 
     /// <summary>
+    /// Testing constructor for WaitForContractApprovalFunction
+    /// </summary>
+    /// <param name="dynamoDbContext">DynamoDB context</param>
+    public WaitForContractApprovalFunction(IDynamoDBContext dynamoDbContext)
+    {
+        _dynamoDbContext = dynamoDbContext;
+    }
+
+    /// <summary>
     /// Event handler for ContractStatusChangedEvent
     /// </summary>
     /// <param name="input">The input payload</param>

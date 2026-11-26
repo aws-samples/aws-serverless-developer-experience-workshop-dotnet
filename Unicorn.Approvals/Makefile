@@ -5,7 +5,7 @@ STAGE ?= local
 REGION ?= ap-southeast-2
 STACK_PREFIX = uni-prop-$(STAGE)
 
-.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions deploy-contracts-subscriptions deploy-web-subscriptions delete-contracts-subscriptions delete-web-subscriptions test lint clean delete
+.PHONY: help build deploy deploy-domain deploy-service deploy-schema deploy-subscriptions deploy-contracts-subscriptions deploy-web-subscriptions delete-contracts-subscriptions delete-web-subscriptions test lint format clean delete ci
 
 help: ## Show available commands
 	@echo "Unicorn Approvals Service Infrastructure"
@@ -36,7 +36,6 @@ deploy-domain: ## Deploy domain resources (EventBridge, Schema Registry)
 deploy-service: build ## Deploy service resources (Lambda, Step Functions, DynamoDB)
 	@echo "Deploying service resources..."
 	@sam deploy \
-		--template-file Infrastructure/approvals-service/template.yaml \
 		--stack-name $(STACK_PREFIX)-approvals-service \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -94,7 +93,10 @@ delete-web-subscriptions: ## Deploy web event subscriptions
 	@aws cloudformation wait stack-delete-complete --stack-name $(STACK_PREFIX)-approvals-web-subscriptions --region $(REGION) || true
 	@echo "Done"
 
-deploy: deploy-domain deploy-service deploy-schema deploy-contracts-subscriptions ## Deploy all infrastructure and application
+# deploy-web-subscriptions depends on the Web service's domain stack (WebEventBusArn SSM
+# parameter); deploy that first if running this standalone rather than as part of the full
+# workshop deployment order.
+deploy: deploy-domain deploy-service deploy-schema deploy-contracts-subscriptions deploy-web-subscriptions ## Deploy all infrastructure and application
 
 test: ## Run tests
 	@echo "Running tests..."
@@ -107,6 +109,16 @@ lint: ## Lint CloudFormation templates
 	@cfn-lint Infrastructure/schema-registry/PublicationEvaluationCompleted-schema.yaml
 	@cfn-lint Infrastructure/subscriptions/unicorn-contracts-subscriptions.yaml
 	@cfn-lint Infrastructure/subscriptions/unicorn-web-subscriptions.yaml
+
+format: ## Format C# code (dotnet format)
+	@echo "Formatting C# code..."
+	@dotnet format ApprovalsService/ApprovalsService.csproj
+	@dotnet format ApprovalsService.Tests/ApprovalsService.Tests.csproj
+
+# The AWS SDK clients need a region even in unit tests; credentials are never needed.
+ci: export AWS_REGION ?= $(REGION)
+ci: export AWS_DEFAULT_REGION ?= $(REGION)
+ci: lint build test ## Run the same checks as CI (lint, build, test); needs no AWS credentials
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."

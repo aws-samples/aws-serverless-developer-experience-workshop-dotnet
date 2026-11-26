@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "Amazon.Lambda.APIGatewayEvents": {
+        "type": "Direct",
+        "requested": "[3.0.1, )",
+        "resolved": "3.0.1",
+        "contentHash": "+gTGEtrcoCBRtCgcqEl3AlFrYrQY4pFreL22KkmpvXaNX1Lwlrbgk/crEcfuD3Q0wO2AspsJ3xMMj7pJxDYTKA=="
+      },
+      "Amazon.Lambda.CloudWatchEvents": {
+        "type": "Direct",
+        "requested": "[5.1.0, )",
+        "resolved": "5.1.0",
+        "contentHash": "jHex7GIBBTMiChXzf9LwDgmleOteEkYZopTBCHw6P4zPbVhlAe3RwcGJ2fwVSTCqUaKo50xYgFwGX/GFhkfnXA=="
+      },
+      "Amazon.Lambda.Core": {
+        "type": "Direct",
+        "requested": "[3.4.0, )",
+        "resolved": "3.4.0",
+        "contentHash": "6fJGF73aKUBgENi1UIdS93LuYeEHUCHZEJh0QBAlCavUV5XQzA5kWqawAYAKNz4AAyIrLQeUg2bmD9T/g6mXVg=="
+      },
+      "AWSSDK.DynamoDBv2": {
+        "type": "Direct",
+        "requested": "[4.1.0.3, )",
+        "resolved": "4.1.0.3",
+        "contentHash": "E/HlGsFqZnGVbQ4mNDqc9tBehKZXJXFM76uYLkPpvbA0NTn41BSTJ10zrfYE4VjB4ujTmFqrGIjEvYLmZLf44Q==",
+        "dependencies": {
+          "AWSSDK.Core": "[4.1.1.2, 5.0.0)"
+        }
+      },
+      "AWSSDK.XRay": {
+        "type": "Direct",
+        "requested": "[4.1.0.2, )",
+        "resolved": "4.1.0.2",
+        "contentHash": "4QgOehq1VB50BiVISpCLI1TsvnwBFPjHalfVuVMXziCGLb8+gQwbaSWAElJrPL1lDVlSVt5XlWpCtqjYdHo1vw==",
+        "dependencies": {
+          "AWSSDK.Core": "[4.1.1.1, 5.0.0)"
+        }
+      },
+      "AWSXRayRecorder.Handlers.AwsSdk": {
+        "type": "Direct",
+        "requested": "[2.14.0, )",
+        "resolved": "2.14.0",
+        "contentHash": "N4CZLxbyZF6qgwzP6MMFGdu9936sHv5fxTlscWFJa3tf0F1mFjRBUeHxbOlA91Si+S0u3XdMPGUBP3KhkCybqw==",
+        "dependencies": {
+          "AWSXRayRecorder.Core": "2.16.0"
+        }
+      },
+      "Microsoft.NET.Test.Sdk": {
+        "type": "Direct",
+        "requested": "[18.12.0, )",
+        "resolved": "18.12.0",
+        "contentHash": "MdVkskM2ZCKSlNts5DIbz9MZidX7SwcXKBoBqY4XT91b30hAwC8PkjWbdGKRak6BKAD1BQqaZnh/SD0AJGoDCQ==",
+        "dependencies": {
+          "Microsoft.CodeCoverage": "18.12.0",
+          "Microsoft.TestPlatform.TestHost": "18.12.0"
+        }
+      },
+      "Amazon.Lambda.SQSEvents": {
+        "type": "Transitive",
+        "resolved": "2.1.0",
+        "contentHash": "a1xaCIuXDleJ8iRE3vHWWhtPqUiURmoQUS68INMEQmtfHr4wTz837TQZONo4cyubv5sZj78DDrYessZEzgFRGQ=="
+      },
+      "AWSSDK.Core": {
+        "type": "Transitive",
+        "resolved": "4.1.1.2",
+        "contentHash": "RETCWprYHiCwwL6mgLnhCF/w7gwpHaGVIKU+Th+xDs0yzs2b7rgz09nicLT5+k0qm7OJxze6fqiU4ZdmC3tu5A==",
+        "dependencies": {
+          "AWSSDK.Extensions.Numerics": "[4.1.0, 5.0.0)",
+          "System.IO.Hashing": "11.0.0"
+        }
+      },
+      "AWSSDK.Extensions.Numerics": {
+        "type": "Transitive",
+        "resolved": "4.1.0",
+        "contentHash": "hhoiXT1aUyVgIiQbQoqG3L1EEneqXDh2GKyH5izUlO6Rzi9GAAi8S6mlLiVwow23+EGg77zHjdmUi+ia3RSUTg=="
+      },
+      "AWSXRayRecorder.Core": {
+        "type": "Transitive",
+        "resolved": "2.16.0",
+        "contentHash": "I4BMYX4Fs7SiDHtvKoS/TsRUp2flCrfotJOsYRvvn4+gU1wPjD6LEHkIiLNDSwS9Vbh2784dxeWfdAG7oct5MQ==",
+        "dependencies": {
+          "AWSSDK.Core": "3.3.25.1",
+          "Amazon.Lambda.Core": "2.8.0",
+          "Amazon.Lambda.SQSEvents": "2.1.0"
+        }
+      },
+      "Microsoft.CodeCoverage": {
+        "type": "Transitive",
+        "resolved": "18.12.0",
+        "contentHash": "OhOPSaCAQhBJgXF1OrX0uK3eTkwZ1XnM44iGLZplYgKrmgKzQUdv9xtGGaE568RuQ738TlrTJ3pm9aWL5FH7iw=="
+      },
+      "Microsoft.TestPlatform.ObjectModel": {
+        "type": "Transitive",
+        "resolved": "18.12.0",
+        "contentHash": "ilT2o4v/c1joLgsfzS4dYQ71bWAy/RsA6fBY7f5OEUpUsUhwIzoliGeXdS3yctWuy4NZyuSVlO7dPX4ed7R06A=="
+      },
+      "Microsoft.TestPlatform.TestHost": {
+        "type": "Transitive",
+        "resolved": "18.12.0",
+        "contentHash": "WTT912JUqmFa2BkCeXPkMCUpbYOqsbeRfRJdhaIQROx49iokgnGPAlKvXmHWKC9nJwWrHwSQfR+k+Qn7NCxfzw==",
+        "dependencies": {
+          "Microsoft.TestPlatform.ObjectModel": "18.12.0"
+        }
+      },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "U+Bv2qCYt6eONi+arSP0QIp4uTO6os6uceBsqiAwruZ+Wo2HrRhO/0tj38M9URJtS+4DhAtT3ka2TGNFYsnhyQ=="
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@ STAGE ?= local
 REGION ?= ap-southeast-2
 STACK_PREFIX = uni-prop-$(STAGE)
 
-.PHONY: help build deploy deploy-domain deploy-schema deploy-subscriptions deploy-service test lint clean delete
+.PHONY: help build deploy deploy-domain deploy-schema deploy-subscriptions deploy-service test lint format clean delete ci
 
 help: ## Show available commands
 	@echo "Unicorn Web Service Infrastructure"
@@ -59,7 +59,6 @@ deploy-subscriptions: ## Deploy event subscriptions
 deploy-service: build ## Deploy web service
 	@echo "Deploying web service..."
 	@sam deploy \
-		--template-file Infrastructure/web-service/template.yaml \
 		--stack-name $(STACK_PREFIX)-web-service \
 		--parameter-overrides Stage=$(STAGE) \
 		--capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
@@ -72,8 +71,8 @@ deploy: deploy-domain deploy-schema deploy-subscriptions deploy-service ## Deplo
 
 test: ## Run tests
 	@echo "Running tests..."
-	@dotnet test PublicationManagerService.Test/PublicationManagerService.Tests.csproj
-	@dotnet test SearchService.Test/SearchService.Tests.csproj
+	@dotnet test PublicationManagerService.Tests/PublicationManagerService.Tests.csproj
+	@dotnet test SearchService.Tests/SearchService.Tests.csproj
 
 lint: ## Lint CloudFormation templates
 	@echo "Linting CloudFormation templates..."
@@ -81,6 +80,19 @@ lint: ## Lint CloudFormation templates
 	@cfn-lint Infrastructure/domain.yaml
 	@cfn-lint Infrastructure/schema-registry/PublicationApprovalRequested-schema.yaml
 	@cfn-lint Infrastructure/subscriptions/unicorn-approvals-subscriptions.yaml
+
+format: ## Format C# code (dotnet format)
+	@echo "Formatting C# code..."
+	@dotnet format Common/Common.csproj
+	@dotnet format PublicationManagerService/PublicationManagerService.csproj
+	@dotnet format PublicationManagerService.Tests/PublicationManagerService.Tests.csproj
+	@dotnet format SearchService/SearchService.csproj
+	@dotnet format SearchService.Tests/SearchService.Tests.csproj
+
+# The AWS SDK clients need a region even in unit tests; credentials are never needed.
+ci: export AWS_REGION ?= $(REGION)
+ci: export AWS_DEFAULT_REGION ?= $(REGION)
+ci: lint build test ## Run the same checks as CI (lint, build, test); needs no AWS credentials
 
 clean: ## Clean build artifacts
 	@echo "Cleaning build artifacts..."

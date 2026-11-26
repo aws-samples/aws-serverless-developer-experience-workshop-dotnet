@@ -113,13 +113,18 @@ public class ContractEventHandler
                 PropertyNameCaseInsensitive = true
             });
 
-        var contract = new Contract // ContractCreated and ContractLastModifiedOn set in constructor
+        // One clock reading, so a new contract's two timestamps are identical.
+        var now = ContractTimestamp.Now();
+
+        var contract = new Contract
         {
             PropertyId = createContractRequest.PropertyId,
             ContractId = Guid.NewGuid(),
             Address = createContractRequest?.Address,
             SellerName = createContractRequest?.SellerName,
-            ContractStatus = ContractStatus.Draft
+            ContractStatus = ContractStatus.Draft,
+            ContractCreated = now,
+            ContractLastModifiedOn = now
         };
 
         try
@@ -149,10 +154,10 @@ public class ContractEventHandler
                     { "Address", new AttributeValue { M = contract.Address.ToMap() } },
                     { "SellerName", new AttributeValue { S = contract.SellerName } },
                     { "ContractStatus", new AttributeValue { S = contract.ContractStatus } },
-                    { "ContractCreated", new AttributeValue { S = contract.ContractCreated.ToString("O") } },
+                    { "ContractCreated", new AttributeValue { S = contract.ContractCreated } },
                     {
                         "ContractLastModifiedOn",
-                        new AttributeValue { S = contract.ContractLastModifiedOn.ToString("O") }
+                        new AttributeValue { S = contract.ContractLastModifiedOn }
                     }
                 } 
             };
@@ -164,7 +169,7 @@ public class ContractEventHandler
             Logger.LogInformation(response);
 
             // Add custom metric for "New Contracts"
-            Metrics.AddMetric("NewContracts", 1, MetricUnit.Count, MetricResolution.Standard);
+            Metrics.AddMetric("ContractCreated", 1, MetricUnit.Count, MetricResolution.Standard);
         }
         catch (ConditionalCheckFailedException e)
         {
@@ -214,7 +219,7 @@ public class ContractEventHandler
                 },
                 ExpressionAttributeValues = new Dictionary<string, AttributeValue>
                 {
-                    { ":md", new AttributeValue { S = DateTime.Now.ToString("O") } },
+                    { ":md", new AttributeValue { S = ContractTimestamp.Now() } },
                     { ":cs", new AttributeValue { S = ContractStatus.Approved } },
                     { ":draft_status", new AttributeValue { S = ContractStatus.Draft } }
                 },
@@ -222,8 +227,9 @@ public class ContractEventHandler
             };
 
             var response = await _dynamoDbClient.UpdateItemAsync(request);
-        
+
             Logger.LogInformation(response);
+            Metrics.AddMetric("ContractUpdated", 1, MetricUnit.Count, MetricResolution.Standard);
         }
         catch (ConditionalCheckFailedException e)
         {

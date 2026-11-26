@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using System.Globalization;
 using Amazon.DynamoDBv2.Model;
 
 namespace Unicorn.Contracts.ContractService;
@@ -20,13 +20,40 @@ public class Contract
 
     public string ContractStatus { get; set; } = Unicorn.Contracts.ContractService.ContractStatus.Draft;
 
-    public DateTime ContractCreated { get; } = DateTime.Now;
+    /// <summary>
+    /// Creation time as a <see cref="ContractTimestamp"/> string.
+    /// </summary>
+    public required string ContractCreated { get; init; }
 
-    public DateTime ContractLastModifiedOn { get; set; } = DateTime.Now;
+    /// <summary>
+    /// Last modification time as a <see cref="ContractTimestamp"/> string.
+    /// </summary>
+    public required string ContractLastModifiedOn { get; set; }
 
     public Address? Address { get; set; }
 
     public string? SellerName { get; set; }
+}
+
+/// <summary>
+/// Formats the contract timestamps stored in DynamoDB as strings.
+/// The form is <c>yyyy-MM-ddTHH:mm:ssZ</c>: UTC, whole seconds (any fraction is truncated), literal <c>Z</c>.
+/// Every value has the same width, so comparing the strings orders them by time.
+/// </summary>
+public static class ContractTimestamp
+{
+    private const string Format = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+    /// <summary>
+    /// Formats an instant as a contract timestamp. A non-UTC value is converted to UTC first.
+    /// </summary>
+    public static string From(DateTime instant) =>
+        instant.ToUniversalTime().ToString(Format, CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// The current instant as a contract timestamp.
+    /// </summary>
+    public static string Now() => From(DateTime.UtcNow);
 }
 
 /// <summary>
@@ -62,10 +89,8 @@ public class Address
 /// </summary>
 public class CreateContractRequest
 {
-    [JsonPropertyName("property_id")]
     public string? PropertyId { get; set; }
     public Address? Address { get; set; }
-    [JsonPropertyName("seller_name")]
     public string? SellerName { get; set; }
 }
 
@@ -74,6 +99,5 @@ public class CreateContractRequest
 /// </summary>
 public class UpdateContractRequest
 {
-    [JsonPropertyName("property_id")]
     public string? PropertyId { get; set; }
 }

@@ -46,6 +46,15 @@ public class ContractStatusChangedEventHandler
 
 
     /// <summary>
+    /// Testing constructor for ContractStatusChangedEventHandler
+    /// </summary>
+    /// <param name="dynamoDbContext">DynamoDB context</param>
+    public ContractStatusChangedEventHandler(IDynamoDBContext dynamoDbContext)
+    {
+        _dynamoDbContext = dynamoDbContext;
+    }
+
+    /// <summary>
     /// Event handler for ContractStatusChangedEvent
     /// </summary>
     /// <param name="contractStatusChangedEvent">EventBridge event that triggers this function</param>
