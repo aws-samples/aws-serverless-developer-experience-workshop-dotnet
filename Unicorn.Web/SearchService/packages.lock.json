@@ -25,9 +25,9 @@
       },
       "AWS.Lambda.Powertools.Logging": {
         "type": "Direct",
-        "requested": "[3.2.2, )",
-        "resolved": "3.2.2",
-        "contentHash": "VZ2o/8cVtuo+1LaTORo62LEOx87SeRE+VAu2VRsg2AWdT3Wx4c+WSRnhWB1yP6jnvMzvy2FKjWQ5BU+dSoWY3A==",
+        "requested": "[3.3.0, )",
+        "resolved": "3.3.0",
+        "contentHash": "VqOaZkDnVW/WOg+ETlm5EYBmXC/lvAjYLa/zTz4sw2ZvJxhytRQOtDHo6GSnDqfKUMb7jxpv9jmBkSJwB39XvA==",
         "dependencies": {
           "Amazon.Lambda.Core": "2.8.0",
           "Amazon.Lambda.Serialization.SystemTextJson": "2.4.4",
@@ -38,9 +38,9 @@
       },
       "AWS.Lambda.Powertools.Metrics": {
         "type": "Direct",
-        "requested": "[3.2.2, )",
-        "resolved": "3.2.2",
-        "contentHash": "6YJKF3fs4OCzsE/eaJNXwgcj7GMHuAczCcXd11HIjYRoXTKd/0ubcOQ3mFOQDqkqzwW/fMWBucm1JUvzyBRzTA==",
+        "requested": "[3.3.0, )",
+        "resolved": "3.3.0",
+        "contentHash": "woa0Fpt/6Pc/+tVjWaPJtjrlvEELuqRos4jha7cKk2rUIaTNW/QEKST9QHydce+eZOlFRKl26NHQmup7An41iw==",
         "dependencies": {
           "Amazon.Lambda.Core": "2.8.0",
           "AspectInjector": "2.8.1"
@@ -48,9 +48,9 @@
       },
       "AWS.Lambda.Powertools.Tracing": {
         "type": "Direct",
-        "requested": "[3.2.2, )",
-        "resolved": "3.2.2",
-        "contentHash": "RiATfbisiVTzxnXCTFuaOPFqzVP/Bf5jTVJ1PmjFCECPvO6FoLTMFoJGa7+Dsz5xpIzgFg+Ez3bo9IwLqrZwyQ==",
+        "requested": "[3.3.0, )",
+        "resolved": "3.3.0",
+        "contentHash": "ZtcKIE0Jnbd6iUGXnFFvzq4FaxZOrZp14fcJhwgQM4n6ITWHzX1j+Df0KxQlKAbPpwM+jXzN+Lcaluybg59yDA==",
         "dependencies": {
           "AWSSDK.XRay": "4.0.3.7",
           "AWSXRayRecorder.Core": "2.15.0",
